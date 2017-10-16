@@ -87,6 +87,21 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  /* Initialize all unused LEDs to off */
+  LedOff(CYAN);
+  LedOff(PURPLE);
+  LedOff(BLUE);
+  LedOff(GREEN);
+  LedOff(YELLOW);
+  LedOff(ORANGE);
+  LedOff(RED);
+  
+  /* Turn on desired LEDs using the ON function */
+
+  /* Set an LED to blink at 2Hz */
+
+  /* Set an LED to the dimmest state we have (0% duty cycle) */
+  LedPWM(WHITE, LED_PWM_0);
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -136,7 +151,30 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u16 u16PWMCount = 0;
+  static u8 u8FadeState = 0;
+  static LedRateType eWhiteCurrentRate = LED_PWM_0;
+  
+  if(eWhiteCurrentRate == LED_PWM_0)
+    u8FadeState = 0;
+  else if(eWhiteCurrentRate == LED_PWM_100)
+    u8FadeState = 1;
 
+  u16PWMCount++;
+  if(u16PWMCount == 40)
+  {
+    u16PWMCount = 0;
+    if(u8FadeState == 0)
+    {
+      eWhiteCurrentRate++;
+      LedPWM(WHITE, eWhiteCurrentRate);
+    }
+    if(u8FadeState == 1)
+    {
+      eWhiteCurrentRate--;
+      LedPWM(WHITE, eWhiteCurrentRate);
+    }
+  }
 } /* end UserApp1SM_Idle() */
     
 

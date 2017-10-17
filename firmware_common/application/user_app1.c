@@ -146,7 +146,7 @@ State Machine Function Definitions
 static void UserApp1SM_Idle(void)
 {
   /* Counter for each step */
-  static u16 u16PWMCount = 0;
+  static u16 u16StepCount = 0;
   /* Variable to indicate which stage to implement */
   static u8 u8Stage = 0;
   /* Counter for each time through stage 0 */
@@ -162,10 +162,10 @@ static void UserApp1SM_Idle(void)
   /* Set initial to 0% duty cycle */
   static LedRateType eCurrentRate = LED_PWM_0;
   
-  u16PWMCount++;
-  if(u16PWMCount == 20) //step every 20 ms
+  u16StepCount++;
+  if(u16StepCount == 20) //step every 20 ms
   {
-    u16PWMCount = 0;
+    u16StepCount = 0;
     
     //STAGE 0
     // White, blue, green, and orange LEDs fade in and out together

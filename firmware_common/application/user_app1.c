@@ -153,24 +153,29 @@ static void UserApp1SM_Idle(void)
 {
   static u16 u16PWMCount = 0;
   static u8 u8Stage = 0;
+  static u8 u8Stage0Count = 1;
   static u8 u8FadeState = 0;
   static u8 u8WaveState = 1;
   static u8 u8WaveDir = 0;
+  static u8 u8WhiteOn = 1;
   static LedRateType eCurrentRate = LED_PWM_0;
   
   u16PWMCount++;
   if(u16PWMCount == 20)
   {
     u16PWMCount = 0;
+    
+    //STAGE 0
     if(u8Stage == 0)
     {
       if(u8FadeState == 0)
       {
         eCurrentRate++;
-        LedPWM(PURPLE, eCurrentRate);
-        LedPWM(CYAN, eCurrentRate);
-        LedPWM(YELLOW, eCurrentRate);
-        LedPWM(RED, eCurrentRate);
+        if(u8Stage0Count != 0 || (u8Stage0Count == 0 && eCurrentRate >= LED_PWM_20))
+          LedPWM(WHITE, eCurrentRate);
+        LedPWM(BLUE, eCurrentRate);
+        LedPWM(GREEN, eCurrentRate);
+        LedPWM(ORANGE, eCurrentRate);
         
         if(eCurrentRate == LED_PWM_100)
           u8FadeState = 1;
@@ -178,27 +183,37 @@ static void UserApp1SM_Idle(void)
       else if(u8FadeState == 1)
       {
         eCurrentRate--;
-        LedPWM(PURPLE, eCurrentRate);
-        LedPWM(CYAN, eCurrentRate);
-        LedPWM(YELLOW, eCurrentRate);
-        LedPWM(RED, eCurrentRate);
+        if(u8Stage0Count != 2 || (u8Stage0Count == 2 && eCurrentRate >= LED_PWM_20))
+          LedPWM(WHITE, eCurrentRate);
+        LedPWM(BLUE, eCurrentRate);
+        LedPWM(GREEN, eCurrentRate);
+        LedPWM(ORANGE, eCurrentRate);
         
         if(eCurrentRate == LED_PWM_0)
         {
+          u8Stage0Count++;
           u8FadeState = 0;
-          u8Stage=1;
+          if(u8Stage0Count == 3)
+          {
+            u8Stage0Count = 0;
+            u8Stage = 2;
+          }
+          else
+            u8Stage = 1;
         }
       }
     }
     
+    //STAGE 1
     else if(u8Stage == 1)
     {
       if(u8FadeState == 0)
       {
         eCurrentRate++;
-        LedPWM(BLUE, eCurrentRate);
-        LedPWM(GREEN, eCurrentRate);
-        LedPWM(ORANGE, eCurrentRate);
+        LedPWM(PURPLE, eCurrentRate);
+        LedPWM(CYAN, eCurrentRate);
+        LedPWM(YELLOW, eCurrentRate);
+        LedPWM(RED, eCurrentRate);
         
         if(eCurrentRate == LED_PWM_100)
           u8FadeState = 1;
@@ -206,18 +221,20 @@ static void UserApp1SM_Idle(void)
       else if(u8FadeState == 1)
       {
         eCurrentRate--;
-        LedPWM(BLUE, eCurrentRate);
-        LedPWM(GREEN, eCurrentRate);
-        LedPWM(ORANGE, eCurrentRate);
+        LedPWM(PURPLE, eCurrentRate);
+        LedPWM(CYAN, eCurrentRate);
+        LedPWM(YELLOW, eCurrentRate);
+        LedPWM(RED, eCurrentRate);
         
         if(eCurrentRate == LED_PWM_0)
         {
           u8FadeState = 0;
-          u8Stage = 2;
+          u8Stage = 0;
         }
       }
     }
 
+    //STAGE 2
     else if(u8Stage == 2)
     {
       if(u8FadeState == 0)
@@ -225,10 +242,8 @@ static void UserApp1SM_Idle(void)
         eCurrentRate++;
         if(u8WaveState == 1)
         {
-          LedPWM(WHITE, eCurrentRate);
-          LedPWM(BLUE, eCurrentRate);
-          LedPWM(GREEN, eCurrentRate);
-          LedPWM(RED, eCurrentRate);
+          if(u8WhiteOn == 0)
+            LedPWM(WHITE, eCurrentRate);
         }
         else if(u8WaveState == 2)
           LedPWM(PURPLE, eCurrentRate);
@@ -245,7 +260,7 @@ static void UserApp1SM_Idle(void)
         else
           LedPWM(RED, eCurrentRate);
         
-        if(eCurrentRate == LED_PWM_100)
+        if(eCurrentRate == LED_PWM_20)
           u8FadeState = 1;
       }
       else if(u8FadeState == 1)
@@ -253,10 +268,8 @@ static void UserApp1SM_Idle(void)
         eCurrentRate--;
         if(u8WaveState == 1)
         {
-          LedPWM(WHITE, eCurrentRate);
-          LedPWM(BLUE, eCurrentRate);
-          LedPWM(GREEN, eCurrentRate);
-          LedPWM(RED, eCurrentRate);
+          if(u8WhiteOn == 1)
+            LedPWM(WHITE, eCurrentRate);
         }
         else if(u8WaveState == 2)
           LedPWM(PURPLE, eCurrentRate);
@@ -283,6 +296,7 @@ static void UserApp1SM_Idle(void)
             {
               u8WaveDir = 1;
               u8WaveState = 7;
+              u8WhiteOn = 0;
             }
           }
           else if(u8WaveDir == 1)
@@ -292,6 +306,7 @@ static void UserApp1SM_Idle(void)
             {
               u8WaveDir = 0;
               u8WaveState = 1;
+              u8WhiteOn = 1;
               u8Stage = 0;
             }
           }

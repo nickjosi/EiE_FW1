@@ -88,13 +88,6 @@ Promises:
 void UserApp1Initialize(void)
 {
   /* Initialize all unused LEDs to off */
-  LedOff(CYAN);
-  LedOff(PURPLE);
-  LedOff(BLUE);
-  LedOff(GREEN);
-  LedOff(YELLOW);
-  LedOff(ORANGE);
-  LedOff(RED);
   
   /* Turn on desired LEDs using the ON function */
 
@@ -102,6 +95,13 @@ void UserApp1Initialize(void)
 
   /* Set an LED to the dimmest state we have (0% duty cycle) */
   LedPWM(WHITE, LED_PWM_0);
+  LedPWM(PURPLE, LED_PWM_0);
+  LedPWM(BLUE, LED_PWM_0);
+  LedPWM(CYAN, LED_PWM_0);
+  LedPWM(GREEN, LED_PWM_0);
+  LedPWM(YELLOW, LED_PWM_0);
+  LedPWM(ORANGE, LED_PWM_0);
+  LedPWM(RED, LED_PWM_0);
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -152,28 +152,154 @@ State Machine Function Definitions
 static void UserApp1SM_Idle(void)
 {
   static u16 u16PWMCount = 0;
+  static u8 u8Stage = 0;
   static u8 u8FadeState = 0;
-  static LedRateType eWhiteCurrentRate = LED_PWM_0;
+  static u8 u8WaveState = 1;
+  static u8 u8WaveDir = 0;
+  static LedRateType eCurrentRate = LED_PWM_0;
   
-  if(eWhiteCurrentRate == LED_PWM_0)
-    u8FadeState = 0;
-  else if(eWhiteCurrentRate == LED_PWM_100)
-    u8FadeState = 1;
-
   u16PWMCount++;
-  if(u16PWMCount == 40)
+  if(u16PWMCount == 20)
   {
     u16PWMCount = 0;
-    if(u8FadeState == 0)
+    if(u8Stage == 0)
     {
-      eWhiteCurrentRate++;
-      LedPWM(WHITE, eWhiteCurrentRate);
+      if(u8FadeState == 0)
+      {
+        eCurrentRate++;
+        LedPWM(PURPLE, eCurrentRate);
+        LedPWM(CYAN, eCurrentRate);
+        LedPWM(YELLOW, eCurrentRate);
+        LedPWM(RED, eCurrentRate);
+        
+        if(eCurrentRate == LED_PWM_100)
+          u8FadeState = 1;
+      }
+      else if(u8FadeState == 1)
+      {
+        eCurrentRate--;
+        LedPWM(PURPLE, eCurrentRate);
+        LedPWM(CYAN, eCurrentRate);
+        LedPWM(YELLOW, eCurrentRate);
+        LedPWM(RED, eCurrentRate);
+        
+        if(eCurrentRate == LED_PWM_0)
+        {
+          u8FadeState = 0;
+          u8Stage=1;
+        }
+      }
     }
-    if(u8FadeState == 1)
+    
+    else if(u8Stage == 1)
     {
-      eWhiteCurrentRate--;
-      LedPWM(WHITE, eWhiteCurrentRate);
+      if(u8FadeState == 0)
+      {
+        eCurrentRate++;
+        LedPWM(BLUE, eCurrentRate);
+        LedPWM(GREEN, eCurrentRate);
+        LedPWM(ORANGE, eCurrentRate);
+        
+        if(eCurrentRate == LED_PWM_100)
+          u8FadeState = 1;
+      }
+      else if(u8FadeState == 1)
+      {
+        eCurrentRate--;
+        LedPWM(BLUE, eCurrentRate);
+        LedPWM(GREEN, eCurrentRate);
+        LedPWM(ORANGE, eCurrentRate);
+        
+        if(eCurrentRate == LED_PWM_0)
+        {
+          u8FadeState = 0;
+          u8Stage = 2;
+        }
+      }
     }
+
+    else if(u8Stage == 2)
+    {
+      if(u8FadeState == 0)
+      {
+        eCurrentRate++;
+        if(u8WaveState == 1)
+        {
+          LedPWM(WHITE, eCurrentRate);
+          LedPWM(BLUE, eCurrentRate);
+          LedPWM(GREEN, eCurrentRate);
+          LedPWM(RED, eCurrentRate);
+        }
+        else if(u8WaveState == 2)
+          LedPWM(PURPLE, eCurrentRate);
+        else if(u8WaveState == 3)
+          LedPWM(BLUE, eCurrentRate);
+        else if(u8WaveState == 4)
+          LedPWM(CYAN, eCurrentRate);
+        else if(u8WaveState == 5)
+          LedPWM(GREEN, eCurrentRate);
+        else if(u8WaveState == 6)
+          LedPWM(YELLOW, eCurrentRate);
+        else if(u8WaveState == 7)
+          LedPWM(ORANGE, eCurrentRate);
+        else
+          LedPWM(RED, eCurrentRate);
+        
+        if(eCurrentRate == LED_PWM_100)
+          u8FadeState = 1;
+      }
+      else if(u8FadeState == 1)
+      {
+        eCurrentRate--;
+        if(u8WaveState == 1)
+        {
+          LedPWM(WHITE, eCurrentRate);
+          LedPWM(BLUE, eCurrentRate);
+          LedPWM(GREEN, eCurrentRate);
+          LedPWM(RED, eCurrentRate);
+        }
+        else if(u8WaveState == 2)
+          LedPWM(PURPLE, eCurrentRate);
+        else if(u8WaveState == 3)
+          LedPWM(BLUE, eCurrentRate);
+        else if(u8WaveState == 4)
+          LedPWM(CYAN, eCurrentRate);
+        else if(u8WaveState == 5)
+          LedPWM(GREEN, eCurrentRate);
+        else if(u8WaveState == 6)
+          LedPWM(YELLOW, eCurrentRate);
+        else if(u8WaveState == 7)
+          LedPWM(ORANGE, eCurrentRate);
+        else
+          LedPWM(RED, eCurrentRate);
+        
+        if(eCurrentRate == LED_PWM_0)
+        {
+          u8FadeState = 0;
+          if(u8WaveDir == 0)
+          {
+            u8WaveState++;
+            if(u8WaveState == 9)
+            {
+              u8WaveDir = 1;
+              u8WaveState = 7;
+            }
+          }
+          else if(u8WaveDir == 1)
+          {
+            u8WaveState--;
+            if(u8WaveState == 0)
+            {
+              u8WaveDir = 0;
+              u8WaveState = 1;
+              u8Stage = 0;
+            }
+          }
+        }
+      }
+    }
+    
+    
   }
 } /* end UserApp1SM_Idle() */
     

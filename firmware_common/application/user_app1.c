@@ -144,60 +144,92 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static bool bLedBlink = FALSE;
-  static LedRateType aeBlinkRate[] = {LED_1HZ, LED_2HZ, LED_4HZ, LED_8HZ};
-  static u8 u8BlinkRateIndex = 0;
+  static bool bPassEnt = FALSE;
+  static bool bPassCorr = TRUE;
+  static u8 u8PassCounter = 0;
+  u8 PASS[] = {0, 0, 0, 1 ,2};
   
-  //Yellow LED
-  if(WasButtonPressed(BUTTON1))
+  if(!bPassEnt)
   {
-    ButtonAcknowledge(BUTTON1);
+    LedOn(RED);
     
-    if(bLedBlink)
+    if(WasButtonPressed(BUTTON0))
     {
-      bLedBlink = FALSE;
-      LedOff(YELLOW);
+      ButtonAcknowledge(BUTTON0);
+      if(0 != PASS[u8PassCounter])
+      {
+        bPassCorr = FALSE;
+      }
+      u8PassCounter++;
     }
-    else
+       
+    if(WasButtonPressed(BUTTON1))
     {
-      bLedBlink = TRUE;
-      LedBlink(YELLOW, aeBlinkRate[u8BlinkRateIndex]);
+      ButtonAcknowledge(BUTTON1);
+      if(1 != PASS[u8PassCounter])
+      {
+        bPassCorr = FALSE;
+      }
+      u8PassCounter++;
     }
-  }
-  
-  if(WasButtonPressed(BUTTON2))
-  {
-    ButtonAcknowledge(BUTTON2);
     
-    if(bLedBlink)
+    if(WasButtonPressed(BUTTON2))
     {
-      u8BlinkRateIndex++;
-      if(u8BlinkRateIndex == 4)
-        u8BlinkRateIndex = 0;
-      
-      LedBlink(YELLOW, aeBlinkRate[u8BlinkRateIndex]);
+      ButtonAcknowledge(BUTTON2);
+      if(2 != PASS[u8PassCounter])
+      {
+        bPassCorr = FALSE;
+      }
+      u8PassCounter++;
+    }
+       
+    if(WasButtonPressed(BUTTON3))
+    {
+      ButtonAcknowledge(BUTTON3);
+      bPassEnt = TRUE;
+      if(bPassCorr && u8PassCounter == sizeof(PASS))
+      {
+        LedOff(RED);
+        LedBlink(GREEN, LED_2HZ);
+      }
+      else
+      {
+        LedBlink(RED, LED_2HZ);
+        bPassCorr = TRUE;
+      }
+      u8PassCounter = 0;
     }
   }
-  
-  //Purple LED with Button 1
-  if(IsButtonPressed(BUTTON1))
-  {
-    LedOn(PURPLE);
-  }
+       
+       
   else
   {
-    LedOff(PURPLE);
+    if(WasButtonPressed(BUTTON0))
+    {
+      ButtonAcknowledge(BUTTON0);
+      LedOff(GREEN);
+      bPassEnt = FALSE;
+    }
+    if(WasButtonPressed(BUTTON1))
+    {
+      ButtonAcknowledge(BUTTON1);
+      LedOff(GREEN);
+      bPassEnt = FALSE;
+    }
+    if(WasButtonPressed(BUTTON2))
+    {
+      ButtonAcknowledge(BUTTON2);
+      LedOff(GREEN);
+      bPassEnt = FALSE;
+    }
+    if(WasButtonPressed(BUTTON3))
+    {
+      ButtonAcknowledge(BUTTON3);
+      LedOff(GREEN);
+      bPassEnt = FALSE;
+    }
   }
   
-  //Blue LED with Button 2
-  if(IsButtonPressed(BUTTON2))
-  {
-    LedOn(BLUE);
-  }
-  else
-  {
-    LedOff(BLUE);
-  }
 } /* end UserApp1SM_Idle() */
     
 

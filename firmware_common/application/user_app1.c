@@ -144,10 +144,11 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  u8 PASS[] = {0, 0, 0, 1 ,2};
+  
   static bool bPassEnt = FALSE;
   static bool bPassCorr = TRUE;
   static u8 u8PassCounter = 0;
-  u8 PASS[] = {0, 0, 0, 1 ,2};
   
   if(!bPassEnt)
   {

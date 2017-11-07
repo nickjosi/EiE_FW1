@@ -94,7 +94,7 @@ void UserApp1Initialize(void)
   LedOff(GREEN);
   LedOff(YELLOW);
   LedOff(ORANGE);
-  LedOff(RED);
+  LedOn(RED);
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -144,7 +144,7 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  u8 PASS[] = {0, 0, 0, 1 ,2};
+  static u8 u8PASS[] = {0, 0, 0, 1 ,2};
   
   static bool bPassEnt = FALSE;
   static bool bPassCorr = TRUE;
@@ -152,12 +152,10 @@ static void UserApp1SM_Idle(void)
   
   if(!bPassEnt)
   {
-    LedOn(RED);
-    
     if(WasButtonPressed(BUTTON0))
     {
       ButtonAcknowledge(BUTTON0);
-      if(0 != PASS[u8PassCounter])
+      if(0 != u8PASS[u8PassCounter])
       {
         bPassCorr = FALSE;
       }
@@ -167,7 +165,7 @@ static void UserApp1SM_Idle(void)
     if(WasButtonPressed(BUTTON1))
     {
       ButtonAcknowledge(BUTTON1);
-      if(1 != PASS[u8PassCounter])
+      if(1 != u8PASS[u8PassCounter])
       {
         bPassCorr = FALSE;
       }
@@ -177,7 +175,7 @@ static void UserApp1SM_Idle(void)
     if(WasButtonPressed(BUTTON2))
     {
       ButtonAcknowledge(BUTTON2);
-      if(2 != PASS[u8PassCounter])
+      if(2 != u8PASS[u8PassCounter])
       {
         bPassCorr = FALSE;
       }
@@ -188,7 +186,7 @@ static void UserApp1SM_Idle(void)
     {
       ButtonAcknowledge(BUTTON3);
       bPassEnt = TRUE;
-      if(bPassCorr && u8PassCounter == sizeof(PASS))
+      if(bPassCorr && u8PassCounter == sizeof(u8PASS))
       {
         LedOff(RED);
         LedBlink(GREEN, LED_2HZ);
@@ -209,24 +207,28 @@ static void UserApp1SM_Idle(void)
     {
       ButtonAcknowledge(BUTTON0);
       LedOff(GREEN);
+      LedOn(RED);
       bPassEnt = FALSE;
     }
     if(WasButtonPressed(BUTTON1))
     {
       ButtonAcknowledge(BUTTON1);
       LedOff(GREEN);
+      LedOn(RED);
       bPassEnt = FALSE;
     }
     if(WasButtonPressed(BUTTON2))
     {
       ButtonAcknowledge(BUTTON2);
       LedOff(GREEN);
+      LedOn(RED);
       bPassEnt = FALSE;
     }
     if(WasButtonPressed(BUTTON3))
     {
       ButtonAcknowledge(BUTTON3);
       LedOff(GREEN);
+      LedOn(RED);
       bPassEnt = FALSE;
     }
   }

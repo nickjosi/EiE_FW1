@@ -144,10 +144,13 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  //PASSWORD
   static u8 u8PASS[] = {0, 0, 0, 1 ,2};
   
   static bool bPassEnt = FALSE;
   static bool bPassCorr = TRUE;
+  static bool bUnlock = FALSE;
+  static bool bStartLed = FALSE;
   static u8 u8PassCounter = 0;
   
   if(!bPassEnt)
@@ -189,7 +192,8 @@ static void UserApp1SM_Idle(void)
       if(bPassCorr && u8PassCounter == sizeof(u8PASS))
       {
         LedOff(RED);
-        LedBlink(GREEN, LED_2HZ);
+        bUnlock = TRUE;
+        bStartLed = TRUE;
       }
       else
       {
@@ -203,38 +207,297 @@ static void UserApp1SM_Idle(void)
        
   else
   {
+    if(bUnlock)
+    {
+      LedUnlockEffect(bStartLed);
+      if(bStartLed) {
+        bStartLed = FALSE;
+      }
+    }
+    
     if(WasButtonPressed(BUTTON0))
     {
       ButtonAcknowledge(BUTTON0);
+      LedOff(WHITE);
+      LedOff(PURPLE);
+      LedOff(BLUE);
+      LedOff(CYAN);
       LedOff(GREEN);
+      LedOff(YELLOW);
+      LedOff(ORANGE);
       LedOn(RED);
       bPassEnt = FALSE;
+      bUnlock = FALSE;
     }
     if(WasButtonPressed(BUTTON1))
     {
       ButtonAcknowledge(BUTTON1);
+      LedOff(WHITE);
+      LedOff(PURPLE);
+      LedOff(BLUE);
+      LedOff(CYAN);
       LedOff(GREEN);
+      LedOff(YELLOW);
+      LedOff(ORANGE);
       LedOn(RED);
       bPassEnt = FALSE;
+      bUnlock = FALSE;
     }
     if(WasButtonPressed(BUTTON2))
     {
       ButtonAcknowledge(BUTTON2);
+      LedOff(WHITE);
+      LedOff(PURPLE);
+      LedOff(BLUE);
+      LedOff(CYAN);
       LedOff(GREEN);
+      LedOff(YELLOW);
+      LedOff(ORANGE);
       LedOn(RED);
       bPassEnt = FALSE;
+      bUnlock = FALSE;
     }
     if(WasButtonPressed(BUTTON3))
     {
       ButtonAcknowledge(BUTTON3);
+      LedOff(WHITE);
+      LedOff(PURPLE);
+      LedOff(BLUE);
+      LedOff(CYAN);
       LedOff(GREEN);
+      LedOff(YELLOW);
+      LedOff(ORANGE);
       LedOn(RED);
       bPassEnt = FALSE;
+      bUnlock = FALSE;
     }
   }
   
 } /* end UserApp1SM_Idle() */
+
+
+static void LedUnlockEffect(bool bStart)
+{
+  /* Counter for each step */
+  static u16 u16StepCount = 0;
+  /* Variable to indicate which stage to implement */
+  static u8 u8Stage = 0;
+  /* Counter for each time through stage 0 */
+  static u8 u8Stage0Count = 1;
+  /* Switch to control fade in (0) vs. fade out (1) */
+  static u8 u8FadeState = 0;
+  /* Variable to control the current LED during wave */
+  static u8 u8WaveState = 1;
+  /* Switch to control wave direction */
+  static u8 u8WaveDir = 0;
+  /* White LED state variable to help with transitions between stage 0 and 2 */
+  static u8 u8WhiteOn = 1;
+  /* Set initial to 0% duty cycle */
+  static LedRateType eCurrentRate = LED_PWM_0;
+  
+  if(bStart)
+  {
+    u16StepCount = 0;
+    u8Stage = 0;
+    u8Stage0Count = 1;
+    u8FadeState = 0;
+    u8WaveState = 1;
+    u8WaveDir = 0;
+    u8WhiteOn = 1;
+    eCurrentRate = LED_PWM_0;
+  }
+  
+  u16StepCount++;
+  if(u16StepCount == 20) //step every 20 ms
+  {
+    u16StepCount = 0;
     
+    //STAGE 0
+    // White, blue, green, and orange LEDs fade in and out together
+    if(u8Stage == 0)
+    {
+      if(u8FadeState == 0) //Fade in
+      {
+        eCurrentRate++;
+        /* White LED must be controlled differently due to transition to/from Stage 2 */
+        if(u8Stage0Count != 0 || (u8Stage0Count == 0 && eCurrentRate >= LED_PWM_20))
+          LedPWM(WHITE, eCurrentRate);
+        LedPWM(BLUE, eCurrentRate);
+        LedPWM(GREEN, eCurrentRate);
+        LedPWM(ORANGE, eCurrentRate);
+        
+        /* When LEDs reach full brightness, switch to fade out */
+        if(eCurrentRate == LED_PWM_100)
+          u8FadeState = 1;
+      }
+      
+      else if(u8FadeState == 1) //Fade out
+      {
+        eCurrentRate--;
+        /* White LED must be controlled differently due to transition to/from Stage 2 */
+        if(u8Stage0Count != 2 || (u8Stage0Count == 2 && eCurrentRate >= LED_PWM_20))
+          LedPWM(WHITE, eCurrentRate);
+        LedPWM(BLUE, eCurrentRate);
+        LedPWM(GREEN, eCurrentRate);
+        LedPWM(ORANGE, eCurrentRate);
+        
+        /* When LEDs reach 0% duty cycle, move to stage 1 or 2 */
+        if(eCurrentRate == LED_PWM_0)
+        {
+          u8Stage0Count++;
+          u8FadeState = 0;
+          if(u8Stage0Count == 3) //Once stage 0 has run 3 times, transition to stage 2 (wave sequence)
+          {
+            u8Stage0Count = 0;
+            u8Stage = 2;
+          }
+          else //If stage 0 has not run 3 times, go to stage 1
+            u8Stage = 1;
+        }
+      }
+    }
+    
+    //STAGE 1
+    // Purple, cyan, yellow, and red LEDs fade in and out together
+    else if(u8Stage == 1)
+    {
+      if(u8FadeState == 0) //Fade in
+      {
+        eCurrentRate++;
+        LedPWM(PURPLE, eCurrentRate);
+        LedPWM(CYAN, eCurrentRate);
+        LedPWM(YELLOW, eCurrentRate);
+        LedPWM(RED, eCurrentRate);
+        
+        /* When LEDs reach full brightness, switch to fade out */
+        if(eCurrentRate == LED_PWM_100)
+          u8FadeState = 1;
+      }
+      else if(u8FadeState == 1) //Fade out
+      {
+        eCurrentRate--;
+        LedPWM(PURPLE, eCurrentRate);
+        LedPWM(CYAN, eCurrentRate);
+        LedPWM(YELLOW, eCurrentRate);
+        LedPWM(RED, eCurrentRate);
+        
+        /* When LEDs reach 0% duty cycle, move back to stage 0 */
+        if(eCurrentRate == LED_PWM_0)
+        {
+          u8FadeState = 0;
+          u8Stage = 0;
+        }
+      }
+    }
+
+    //STAGE 2
+    // Wave sequence
+    else if(u8Stage == 2)
+    {
+      if(u8FadeState == 0) //Fade in
+      {
+        eCurrentRate++;
+        /* According to u8WaveState, only one LED will fade in */
+        if(u8WaveState == 1)
+        {
+          /* Only fade in when white LED is off */
+          /* This is in order to create smooth transitions with stage 0 */
+          if(u8WhiteOn == 0)
+            LedPWM(WHITE, eCurrentRate);
+        }
+        else if(u8WaveState == 2)
+          LedPWM(PURPLE, eCurrentRate);
+        else if(u8WaveState == 3)
+          LedPWM(BLUE, eCurrentRate);
+        else if(u8WaveState == 4)
+          LedPWM(CYAN, eCurrentRate);
+        else if(u8WaveState == 5)
+          LedPWM(GREEN, eCurrentRate);
+        else if(u8WaveState == 6)
+          LedPWM(YELLOW, eCurrentRate);
+        else if(u8WaveState == 7)
+          LedPWM(ORANGE, eCurrentRate);
+        else
+          LedPWM(RED, eCurrentRate);
+        
+        /* Once the LED reaches 20% duty cycle, switch to fade out */
+        if(eCurrentRate == LED_PWM_20)
+          u8FadeState = 1;
+      }
+      else if(u8FadeState == 1) //Fade out
+      {
+        eCurrentRate--;
+        /* According to u8WaveState, only the LED that is on will fade out */
+        if(u8WaveState == 1)
+        {
+          /* Only fade out when white LED is already on */
+          /* This is in order to create smooth transitions with stage 0*/
+          if(u8WhiteOn == 1)
+            LedPWM(WHITE, eCurrentRate);
+        }
+        else if(u8WaveState == 2)
+          LedPWM(PURPLE, eCurrentRate);
+        else if(u8WaveState == 3)
+          LedPWM(BLUE, eCurrentRate);
+        else if(u8WaveState == 4)
+          LedPWM(CYAN, eCurrentRate);
+        else if(u8WaveState == 5)
+          LedPWM(GREEN, eCurrentRate);
+        else if(u8WaveState == 6)
+          LedPWM(YELLOW, eCurrentRate);
+        else if(u8WaveState == 7)
+          LedPWM(ORANGE, eCurrentRate);
+        else
+          LedPWM(RED, eCurrentRate);
+        
+        /* Once the LED reaches 0% duty cycle, either:
+              a. move to fade in for next LED
+              b. change direction of wave
+              c. begin stage 0                       */
+        if(eCurrentRate == LED_PWM_0)
+        {
+          u8FadeState = 0;
+          
+          //Left-to-right direction
+          if(u8WaveDir == 0)
+          {
+            u8WaveState++; //move to the next LED to the right
+            
+            /* Once the red LED has faded in and out, reverse direction of wave 
+            beginning with the orange LED */
+            if(u8WaveState == 9)
+            {
+              u8WaveDir = 1;
+              u8WaveState = 7;
+              
+              /* Set to off so that the white LED will fade in during next wave direction */
+              u8WhiteOn = 0;
+            }
+          }
+          
+          //Right-to-left direction
+          else if(u8WaveDir == 1)
+          {
+            u8WaveState--; //move to the next LEd to the left
+            
+            /* Once the white LED has faded in, reset wave direction, wave state, and
+            the white LED state variable, and begin stage 0 */
+            if(u8WaveState == 0)
+            {
+              u8WaveDir = 0;
+              u8WaveState = 1;
+              u8WhiteOn = 1;
+              u8Stage = 0;
+            }
+          }
+        }
+      }
+    }
+    
+    
+  }
+
+}  /* End of LedUnlockEffect */
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */

@@ -55,6 +55,7 @@ void UserApp1RunActiveState(void);
 State Machine Declarations
 ***********************************************************************************************************************/
 static void UserApp1SM_Idle(void);    
+static void LedUnlockEffect(bool bStart);
 
 static void UserApp1SM_Error(void);         
 

@@ -144,8 +144,9 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  //PASSWORD
+  /* ------------- PASSWORD ------------- */
   static u8 u8PASS[] = {0, 0, 0, 1 ,2};
+  /* ------------------------------------- */
   
   static bool bPassEnt = FALSE;
   static bool bPassCorr = TRUE;
@@ -295,7 +296,7 @@ static void LedUnlockEffect(bool bStart)
   /* Set initial to 0% duty cycle */
   static LedRateType eCurrentRate = LED_PWM_0;
   
-  if(bStart)
+  if(bStart) //Reset all variables upon new unlock
   {
     u16StepCount = 0;
     u8Stage = 0;

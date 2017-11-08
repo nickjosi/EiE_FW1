@@ -52,6 +52,8 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
 
+extern u8 G_au8DebugScanfBuffer[];  /* From debug.c */
+extern u8 G_u8DebugScanfCharCount;  /* From debug.c */
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
@@ -87,7 +89,6 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  
   u8 au8String[] = "A string to print that returns cursor to start of next line.\n\r";
   u8 au8String2[] = "Here's a number: ";
   u8 au8String3[] = " < The 'cursor' was here after the number.";
@@ -149,7 +150,17 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+  static u8 u8NumCharsMessage[] = "\n\rCharacters in buffer: ";
+  
+  /* Print message with number of character in scanf buffer */
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    
+    DebugPrintf(u8NumCharsMessage);
+    DebugPrintNumber(G_u8DebugScanfCharCount);
+    DebugLineFeed();
+  }
 } /* end UserApp1SM_Idle() */
     
 

@@ -145,7 +145,7 @@ State Machine Function Definitions
 static void UserApp1SM_Idle(void)
 {
   /* ------------- PASSWORD ------------- */
-  static u8 u8PASS[] = {0, 0, 0, 1 ,2};
+  static u8 u8PASS[] = {0, 1, 2};
   /* ------------------------------------- */
   
   static bool bPassEnt = FALSE;

@@ -40,6 +40,10 @@ Runs current task state.  Should only be called once in main loop.
 Global variable definitions with scope across entire project.
 All Global variable names shall start with "G_UserApp1"
 ***********************************************************************************************************************/
+
+/* Char buffer */
+static u8 UserApp_au8UserInputBuffer[U16_USER_INPUT_BUFFER_SIZE];
+
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
 
@@ -89,6 +93,11 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  for (u16 i = 0; i <U16_USER_INPUT_BUFFER_SIZE; i++)
+  {
+    UserApp_au8UserInputBuffer[i] = 0;
+  }
+  
   u8 au8String[] = "A string to print that returns cursor to start of next line.\n\r";
   u8 au8String2[] = "Here's a number: ";
   u8 au8String3[] = " < The 'cursor' was here after the number.";
@@ -150,16 +159,38 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u8 u8NumCharsMessage[] = "\n\rCharacters in buffer: ";
+  static u8 au8NumCharsMessage[] = "\n\rCharacters in buffer: ";
+  static u8 au8BufferMessage[] = "\n\rBuffer contents\n\r";
+  static u8 au8EmptyMesssage[] = "EMPTY!\n\r";
+  u8 u8CharCount;
   
   /* Print message with number of character in scanf buffer */
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
     
-    DebugPrintf(u8NumCharsMessage);
+    DebugPrintf(au8NumCharsMessage);
     DebugPrintNumber(G_u8DebugScanfCharCount);
     DebugLineFeed();
+  }
+  
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    /* Read the buffer and print the contents */
+    u8CharCount = DebugScanf(UserApp_au8UserInputBuffer);
+    UserApp_au8UserInputBuffer[u8CharCount] = '\0';
+    DebugPrintf(au8BufferMessage);
+    if(u8CharCount > 0)
+    {
+      DebugPrintf(UserApp_au8UserInputBuffer);
+      DebugLineFeed();
+    }
+    else
+    {
+      DebugPrintf(au8EmptyMesssage);
+    }
   }
 } /* end UserApp1SM_Idle() */
     

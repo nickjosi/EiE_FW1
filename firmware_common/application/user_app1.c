@@ -146,44 +146,64 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u8 au8NumCharsMessage[] = "\n\rCharacters in buffer: ";
-  static u8 au8BufferMessage[] = "\n\rBuffer contents\n\r";
-  static u8 au8EmptyMesssage[] = "EMPTY!\n\r";
+  /* Strings to be printed to create the box around the current count */
+  static u8 au8SingleDigitBoxTop[] = "\n\r***\n\r*";
+  static u8 au8SingleDigitBoxBottom[] = "*\n\r***\n\r";
+  static u8 au8DoubleDigitBoxTop[] = "\n\r****\n\r*";
+  static u8 au8DoubleDigitBoxBottom[] = "*\n\r****\n\r";
+  static u8 au8TripleDigitBoxTop[] = "\n\r*****\n\r*";
+  static u8 au8TripleDigitBoxBottom[] = "*\n\r*****\n\r";
   
+  /* ----- NAME TO BE DETECTED ----- */
+  static u8 au8Name[] = "Nick";
   
-  static u8 au8Name[] = "nick";
+  /* Other variables */
   static u8 u8NameIndex = 0;
-  static u8 u8NameLength;
-  static u8 u8Counter;
+  static u8 u8NameLength = sizeof(au8Name) - 1;
+  static u32 u32Counter = 0;
+  u8 u8CharCount;
   
-  /* Print message with number of character in scanf buffer */
-  if(WasButtonPressed(BUTTON0))
-  {
-    ButtonAcknowledge(BUTTON0);
-    
-    DebugPrintf(au8NumCharsMessage);
-    DebugPrintNumber(G_u8DebugScanfCharCount);
-    DebugLineFeed();
-  }
   
-  if(WasButtonPressed(BUTTON1))
+  u8CharCount = DebugScanf(UserApp_au8UserInputBuffer);
+  if(u8CharCount > 0)
   {
-    ButtonAcknowledge(BUTTON1);
-    
-    /* Read the buffer and print the contents */
-    u8CharCount = DebugScanf(UserApp_au8UserInputBuffer);
-    UserApp_au8UserInputBuffer[u8CharCount] = '\0';
-    DebugPrintf(au8BufferMessage);
-    if(u8CharCount > 0)
+    if(au8Name[u8NameIndex] == UserApp_au8UserInputBuffer[0])
     {
-      DebugPrintf(UserApp_au8UserInputBuffer);
-      DebugLineFeed();
+      u8NameIndex++;
+      if(u8NameIndex == u8NameLength)
+      {
+        u8NameIndex = 0;
+        u32Counter++;
+        if(u32Counter < 10)
+        {
+          DebugPrintf(au8SingleDigitBoxTop);
+          DebugPrintNumber(u32Counter);
+          DebugPrintf(au8SingleDigitBoxBottom);
+        }
+        else if (u32Counter < 100)
+        {
+          DebugPrintf(au8DoubleDigitBoxTop);
+          DebugPrintNumber(u32Counter);
+          DebugPrintf(au8DoubleDigitBoxBottom);
+        }
+        else
+        {
+          DebugPrintf(au8TripleDigitBoxTop);
+          DebugPrintNumber(u32Counter);
+          DebugPrintf(au8TripleDigitBoxBottom);
+        }
+      }
+    }
+    else if(au8Name[0] == UserApp_au8UserInputBuffer[0])
+    {
+      u8NameIndex = 1;
     }
     else
     {
-      DebugPrintf(au8EmptyMesssage);
+      u8NameIndex = 0;
     }
   }
+
 } /* end UserApp1SM_Idle() */
     
 

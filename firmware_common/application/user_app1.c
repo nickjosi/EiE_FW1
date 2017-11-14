@@ -97,19 +97,6 @@ void UserApp1Initialize(void)
   {
     UserApp_au8UserInputBuffer[i] = 0;
   }
-  
-  u8 au8String[] = "A string to print that returns cursor to start of next line.\n\r";
-  u8 au8String2[] = "Here's a number: ";
-  u8 au8String3[] = " < The 'cursor' was here after the number.";
-  u32 u32Number = 1234567;
-  
-  DebugPrintf(au8String);
-  DebugPrintf(au8String2);
-  DebugPrintNumber(u32Number);
-  DebugPrintf(au8String3);
-  DebugLineFeed();
-  DebugPrintf(au8String3);
-  DebugLineFeed();
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -162,7 +149,12 @@ static void UserApp1SM_Idle(void)
   static u8 au8NumCharsMessage[] = "\n\rCharacters in buffer: ";
   static u8 au8BufferMessage[] = "\n\rBuffer contents\n\r";
   static u8 au8EmptyMesssage[] = "EMPTY!\n\r";
-  u8 u8CharCount;
+  
+  
+  static u8 au8Name[] = "nick";
+  static u8 u8NameIndex = 0;
+  static u8 u8NameLength;
+  static u8 u8Counter;
   
   /* Print message with number of character in scanf buffer */
   if(WasButtonPressed(BUTTON0))

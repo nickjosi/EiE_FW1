@@ -87,6 +87,7 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  PWMAudioSetFrequency(BUZZER1, 500);
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -136,7 +137,14 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+  if(IsButtonPressed(BUTTON0))
+  {
+    PWMAudioOn(BUZZER1);
+  }
+  else
+  {
+    PWMAudioOff(BUZZER1);
+  }
 } /* end UserApp1SM_Idle() */
     
 

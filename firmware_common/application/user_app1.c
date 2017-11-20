@@ -137,78 +137,95 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u16 au16Freq[] = {262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494};
+  static u16 au16C2Freqs[] = {65, 69, 73, 78, 82, 87, 93, 98, 104, 110, 117, 124};
+  static u16 au16C3Freqs[] = {131, 139, 147, 156, 166, 175, 185, 196, 208, 220, 233, 247};
+  static u16 au16C4Freqs[] = {262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494};
+  static u16 au16C5Freqs[] = {523, 554, 587, 622, 659, 699, 740, 784, 831, 880, 932, 988};
+  static u16 *pu16Freq = &au16C4Freqs[0];
+  
   static u8 au8InputBuffer[3];
   u8 u8CharCount;
+  static bool bPlay = FALSE;
+  static u32 u32Timer = 0;
   
   u8CharCount = DebugScanf(au8InputBuffer);
   if(u8CharCount > 0)
   { 
+    bPlay = TRUE;
     if(au8InputBuffer[0] == 'q') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[0]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[0]);
     }
     else if(au8InputBuffer[0] == 'w') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[1]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[1]);
     }
     else if(au8InputBuffer[0] == 'e') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[2]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[2]);
     }
     else if(au8InputBuffer[0] == 'r') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[3]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[3]);
     }
     else if(au8InputBuffer[0] == 'a') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[4]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[4]);
     }
     else if(au8InputBuffer[0] == 's') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[5]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[5]);
     }
     else if(au8InputBuffer[0] == 'd') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[6]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[6]);
     }
     else if(au8InputBuffer[0] == 'f') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[7]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[7]);
     }
     else if(au8InputBuffer[0] == 'z') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[8]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[8]);
     }
     else if(au8InputBuffer[0] == 'x') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[9]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[9]);
     }
     else if(au8InputBuffer[0] == 'c') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[10]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[10]);
     }
     else if(au8InputBuffer[0] == 'v') {
-      PWMAudioSetFrequency(BUZZER1, au16Freq[11]);
+      PWMAudioSetFrequency(BUZZER1, pu16Freq[11]);
     }
-    
+  }
+  
+  
+  if(bPlay) {
     PWMAudioOn(BUZZER1);
+    u32Timer++;
+    if(u32Timer == 100) {
+      u32Timer = 0;
+      bPlay = FALSE;
+    }
   }
   else {
     PWMAudioOff(BUZZER1);
   }
-  /*
+  
+  //CHANGE OCTAVE
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
-    PWMAudioSetFrequency(BUZZER1, 262);
+    pu16Freq = &au16C2Freqs[0];
   }
   if(WasButtonPressed(BUTTON1))
   {
     ButtonAcknowledge(BUTTON1);
-    PWMAudioSetFrequency(BUZZER1, 294);
+    pu16Freq = &au16C3Freqs[0];
   }
   if(WasButtonPressed(BUTTON2))
   {
     ButtonAcknowledge(BUTTON2);
-    PWMAudioSetFrequency(BUZZER1, 330);
+    pu16Freq = &au16C4Freqs[0];
   }
   if(WasButtonPressed(BUTTON3))
   {
     ButtonAcknowledge(BUTTON3);
-    PWMAudioSetFrequency(BUZZER1, 392);
+    pu16Freq = &au16C5Freqs[0];
   }
-  */
   
+  /*
   if(IsButtonPressed(BUTTON0) || IsButtonPressed(BUTTON1) || IsButtonPressed(BUTTON2) || IsButtonPressed(BUTTON3))
   {
     PWMAudioOn(BUZZER1);
@@ -217,6 +234,7 @@ static void UserApp1SM_Idle(void)
   {
     PWMAudioOff(BUZZER1);
   }
+  */
 } /* end UserApp1SM_Idle() */
     
 

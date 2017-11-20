@@ -41,9 +41,6 @@ Global variable definitions with scope across entire project.
 All Global variable names shall start with "G_UserApp1"
 ***********************************************************************************************************************/
 
-/* Char buffer */
-static u8 UserApp_au8UserInputBuffer[U16_USER_INPUT_BUFFER_SIZE];
-
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
 
@@ -66,6 +63,8 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+/* Char buffer */
+static u8 UserApp_au8UserInputBuffer[U16_USER_INPUT_BUFFER_SIZE];
 
 /**********************************************************************************************************************
 Function Definitions

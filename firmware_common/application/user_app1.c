@@ -152,6 +152,7 @@ static void UserApp1SM_Idle(void)
   if(u8CharCount > 0)
   { 
     bPlay = TRUE;
+    u32Timer = 0;
     if(au8InputBuffer[0] == 'q') {
       PWMAudioSetFrequency(BUZZER1, pu16Freq[0]);
     }
@@ -187,6 +188,9 @@ static void UserApp1SM_Idle(void)
     }
     else if(au8InputBuffer[0] == 'v') {
       PWMAudioSetFrequency(BUZZER1, pu16Freq[11]);
+    }
+    else {
+      bPlay = FALSE;
     }
   }
   
@@ -225,16 +229,6 @@ static void UserApp1SM_Idle(void)
     pu16Freq = &au16C5Freqs[0];
   }
   
-  /*
-  if(IsButtonPressed(BUTTON0) || IsButtonPressed(BUTTON1) || IsButtonPressed(BUTTON2) || IsButtonPressed(BUTTON3))
-  {
-    PWMAudioOn(BUZZER1);
-  }
-  else
-  {
-    PWMAudioOff(BUZZER1);
-  }
-  */
 } /* end UserApp1SM_Idle() */
     
 

@@ -137,6 +137,14 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u8 au8InputBuffer[3];
+  u8 u8CharCount;
+  
+  u8CharCount = DebugScanf(au8InputBuffer);
+  if(u8CharCount > 0)
+  {
+  }
+  
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);

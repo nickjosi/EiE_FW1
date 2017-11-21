@@ -208,7 +208,6 @@ static void UserApp1SM_Idle(void)
     
     //a note will play for 100ms unless interrupted by another key press
     if(u32Timer == 100) {
-      u32Timer = 0;
       bPlay = FALSE;
     }
   }

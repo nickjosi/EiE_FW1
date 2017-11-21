@@ -149,6 +149,7 @@ static void UserApp1SM_Idle(void)
   u8 u8CharCount;
   
   //VARIABLES FOR PLAYING THE NOTES
+  static u8 au8AssignedKeys[] = "qwerasdfzxcv";
   static bool bPlay = FALSE;
   static u32 u32Timer = 0;
   
@@ -159,45 +160,15 @@ static void UserApp1SM_Idle(void)
     u32Timer = 0; //reset timer each time a key is pressed
     
     //set the frequency according to which key is pressed
-    if(au8InputBuffer[0] == 'q') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[0]);
-    }
-    else if(au8InputBuffer[0] == 'w') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[1]);
-    }
-    else if(au8InputBuffer[0] == 'e') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[2]);
-    }
-    else if(au8InputBuffer[0] == 'r') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[3]);
-    }
-    else if(au8InputBuffer[0] == 'a') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[4]);
-    }
-    else if(au8InputBuffer[0] == 's') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[5]);
-    }
-    else if(au8InputBuffer[0] == 'd') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[6]);
-    }
-    else if(au8InputBuffer[0] == 'f') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[7]);
-    }
-    else if(au8InputBuffer[0] == 'z') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[8]);
-    }
-    else if(au8InputBuffer[0] == 'x') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[9]);
-    }
-    else if(au8InputBuffer[0] == 'c') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[10]);
-    }
-    else if(au8InputBuffer[0] == 'v') {
-      PWMAudioSetFrequency(BUZZER1, pu16Freq[11]);
-    }
-    //if an unassigned key is pressed, play nothing
-    else {
-      bPlay = FALSE;
+    for(u8 i = 0; i < sizeof(au8AssignedKeys)-1; i++)
+    {
+      if(au8InputBuffer[0] == au8AssignedKeys[i]) {
+        PWMAudioSetFrequency(BUZZER1, pu16Freq[i]);
+        break;
+      }
+      if(i == sizeof(au8AssignedKeys)-2) {
+        bPlay = FALSE;
+      }
     }
   }
   

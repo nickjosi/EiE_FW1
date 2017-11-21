@@ -137,14 +137,18 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  //OCTAVE FREQUENCIES
   static u16 au16C2Freqs[] = {65, 69, 73, 78, 82, 87, 93, 98, 104, 110, 117, 124};
   static u16 au16C3Freqs[] = {131, 139, 147, 156, 166, 175, 185, 196, 208, 220, 233, 247};
   static u16 au16C4Freqs[] = {262, 277, 294, 311, 330, 349, 370, 392, 415, 440, 466, 494};
   static u16 au16C5Freqs[] = {523, 554, 587, 622, 659, 699, 740, 784, 831, 880, 932, 988};
   static u16 *pu16Freq = &au16C4Freqs[0];
   
+  //INPUT BUFFER ARRAY AND INPUT CHAR COUNT
   static u8 au8InputBuffer[3];
   u8 u8CharCount;
+  
+  //VARIABLES FOR PLAYING THE NOTES
   static bool bPlay = FALSE;
   static u32 u32Timer = 0;
   
@@ -152,7 +156,9 @@ static void UserApp1SM_Idle(void)
   if(u8CharCount > 0)
   { 
     bPlay = TRUE;
-    u32Timer = 0;
+    u32Timer = 0; //reset timer each time a key is pressed
+    
+    //set the frequency according to which key is pressed
     if(au8InputBuffer[0] == 'q') {
       PWMAudioSetFrequency(BUZZER1, pu16Freq[0]);
     }
@@ -189,6 +195,7 @@ static void UserApp1SM_Idle(void)
     else if(au8InputBuffer[0] == 'v') {
       PWMAudioSetFrequency(BUZZER1, pu16Freq[11]);
     }
+    //if an unassigned key is pressed, play nothing
     else {
       bPlay = FALSE;
     }
@@ -198,6 +205,8 @@ static void UserApp1SM_Idle(void)
   if(bPlay) {
     PWMAudioOn(BUZZER1);
     u32Timer++;
+    
+    //a note will play for 100ms unless interrupted by another key press
     if(u32Timer == 100) {
       u32Timer = 0;
       bPlay = FALSE;
@@ -207,7 +216,7 @@ static void UserApp1SM_Idle(void)
     PWMAudioOff(BUZZER1);
   }
   
-  //CHANGE OCTAVE
+  //CHANGE OCTAVE by moving the pointer to the respective array
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);

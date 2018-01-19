@@ -10,7 +10,7 @@ LimitSize=0
 ByteLimit=50
 [DebugChecksum]
 <<<<<<< HEAD
-Checksum=-956316723
+Checksum=1808644652
 =======
 Checksum=1464341029
 >>>>>>> c080c694e6eb3b5db5c649699ab09d322b1ac0ae
@@ -58,7 +58,7 @@ LogFile=_ ""
 Enabled=0
 [DriverProfiling]
 Enabled=0
-Mode=1
+Mode=0
 Graph=0
 Symbiont=0
 Exclusions=

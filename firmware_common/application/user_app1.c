@@ -43,7 +43,6 @@ All Global variable names shall start with "G_UserApp1"
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
 
-
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
 extern volatile u32 G_u32SystemFlags;                  /* From main.c */
@@ -58,7 +57,7 @@ Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
-//static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
+static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
 
 /**********************************************************************************************************************
@@ -87,11 +86,22 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  LedOff(WHITE);
+  LedOff(PURPLE);
+  LedOff(BLUE);
+  LedOff(CYAN);
+  LedOff(GREEN);
+  LedOff(YELLOW);
+  LedOff(ORANGE);
+  LedOff(RED);
+  
+  UserApp1SM_Timeout = 0;
+
   /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_StateMachine = UserApp1SM_ANTInitialize;
+    LedOn(RED);
   }
   else
   {
@@ -148,6 +158,99 @@ static void UserApp1SM_Error(void)
 } /* end UserApp1SM_Error() */
 
 
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Waits for good initialization */
+/* Red LED on */
+/* Button 0 -> Idle */
+/* Button 3 -> Error */
+static void UserApp1SM_ANTInitialize(void)
+{
+  if(WasButtonPressed(BUTTON0)) {
+    ButtonAcknowledge(BUTTON0);
+    UserApp1_StateMachine = UserApp1SM_ANTIdle;
+    LedOff(RED);
+    LedOn(YELLOW);
+  }
+  if(WasButtonPressed(BUTTON3)) {
+    ButtonAcknowledge(BUTTON3);
+    UserApp1_StateMachine = UserApp1SM_ANTError;
+    LedBlink(RED, LED_2HZ);
+  }
+} /* end UserApp1SM_ANTInitialize */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Handle an error */
+/* Red LED blinking */
+static void UserApp1SM_ANTError(void)
+{
+  
+} /* end UserApp1SM_ANTError */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Idle state */
+/* Yellow LED On */
+/* Button 0 -> WaitChannelOpen */
+static void UserApp1SM_ANTIdle(void)
+{
+  if(WasButtonPressed(BUTTON0)) {
+    ButtonAcknowledge(BUTTON0);
+    UserApp1_StateMachine = UserApp1SM_ANTWaitChannelOpen;
+    LedOff(YELLOW);
+    LedBlink(GREEN, LED_2HZ);
+  }
+} /* end UserApp1SM_ANTIdle */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* */
+static void UserApp1SM_ANTWaitChannelOpen(void)
+{
+  if(WasButtonPressed(BUTTON0)) {
+    ButtonAcknowledge(BUTTON0);
+    UserApp1_u32Timeout = 0;
+    UserApp1_StateMachine = UserApp1SM_ANTChannelOpen;
+    LedOff(GREEN);
+    LedBlink(BLUE, LED_2HZ);
+  }
+  UserApp1_u32Timeout++;
+  if(UserApp1_u32Timeout >= 10000) {
+    UserApp1_u32Timeout = 0;
+    UserApp1_StateMachine = UserApp1SM_ANTIdle;
+    LedOff(GREEN);
+    LedOn(YELLOW);
+  }
+} /* end UserApp1SM_ANTWaitChannelOpen */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+static void UserApp1SM_ANTChannelOpen(void)
+{
+  if(WasButtonPressed(BUTTON0)) {
+    ButtonAcknowledge(BUTTON0);
+    UserApp1_StateMachine = UserApp1SM_ANTWaitChannelClose;
+    LedOff(BLUE);
+    LedOn(GREEN);
+  }
+} /* end UserApp1SM_ANTChannelOpen */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+static void UserApp1SM_ANTWaitChannelClose(void)
+{
+  if(WasButtonPressed(BUTTON0)) {
+    ButtonAcknowledge(BUTTON0);
+    UserApp1_u32Timeout = 0;
+    UserApp1_StateMachine = UserApp1SM_ANTIdle;
+    LedOff(GREEN);
+    LedOn(YELLOW);
+  }
+  UserApp1_u32Timeout++;
+  if(UserApp1_u32Timeout >= 10000) {
+    UserApp1_u32Timeout = 0;
+    UserApp1_StateMachine = UserApp1SM_ANTError;
+    LedOff(GREEN);
+    LedBlink(RED, LED_2HZ);
+  }
+} /* end UserApp1SM_ANTWaitChannelClose */
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */

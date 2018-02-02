@@ -54,10 +54,21 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_Idle(void);    
+//static void UserApp1SM_Idle(void);    
 
-static void UserApp1SM_Error(void);         
+static void UserApp1SM_Error(void);       
 
+static void UserApp1SM_ANTInitialize(void);
+
+static void UserApp1SM_ANTError(void);
+
+static void UserApp1SM_ANTIdle(void);
+
+static void UserApp1SM_ANTWaitChannelOpen(void);
+
+static void UserApp1SM_ANTChannelOpen(void);
+
+static void UserApp1SM_ANTWaitChannelClose(void);
 
 #endif /* __USER_APP1_H */
 

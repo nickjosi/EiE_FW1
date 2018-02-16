@@ -29,6 +29,18 @@ Type Definitions
 Constants / Definitions
 **********************************************************************************************************************/
 
+/* Required constants for ANT channel configuration */
+#define ANT_CHANNEL_USERAPP             ANT_CHANNEL_0         
+#define ANT_CHANNEL_TYPE_USERAPP        CHANNEL_TYPE_SLAVE    
+#define ANT_DEVICEID_LO_USERAPP         (u8)0               
+#define ANT_DEVICEID_HI_USERAPP         (u8)0        
+#define ANT_DEVICE_TYPE_USERAPP         (u8)0        
+#define ANT_TRANSMISSION_TYPE_USERAPP   (u8)0             
+#define ANT_CHANNEL_PERIOD_LO_USERAPP   (u8)0x00       
+#define ANT_CHANNEL_PERIOD_HI_USERAPP   (u8)0x20      
+#define ANT_FREQUENCY_USERAPP           (u8)50           
+#define ANT_TX_POWER_USERAPP            RADIO_TX_POWER_4DBM 
+
 
 /**********************************************************************************************************************
 Function Declarations

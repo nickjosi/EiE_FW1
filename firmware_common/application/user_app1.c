@@ -147,7 +147,7 @@ void UserApp1Initialize(void)
     /* Channel is configured, so change LED to yellow */
     LedOff(RED);
     LedOn(YELLOW);
-    UserApp1_StateMachine = UserApp1SM_WaitChannelAssign;
+    UserApp1_StateMachine = UserApp1SM_ANTIdle;
   }
   else
   {
@@ -248,7 +248,7 @@ static void UserApp1SM_ANTIdle(void)
     LedOff(YELLOW);
     LedBlink(GREEN, LED_2HZ);
     
-    UserApp_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_ANTWaitChannelOpen;
   }
 } /* end UserApp1SM_ANTIdle */
@@ -261,16 +261,16 @@ static void UserApp1SM_ANTWaitChannelOpen(void)
   if(AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_OPEN)
   {
     LedOn(GREEN);
-    UserApp_StateMachine = UserApp1SM_ANTChannelOpen;
+    UserApp1_StateMachine = UserApp1SM_ANTChannelOpen;
   }
    
   /* Check for timeout */
-  if( IsTimeUp(&UserApp_u32Timeout, TIMEOUT_VALUE) )
+  if( IsTimeUp(&UserApp1_u32Timeout, TIMEOUT_VALUE) )
   {
     AntCloseChannelNumber(ANT_CHANNEL_USERAPP);
     LedOff(GREEN);
     LedOn(YELLOW);
-    UserApp_StateMachine = UserApp1SM_ANTIdle;
+    UserApp1_StateMachine = UserApp1SM_ANTIdle;
   }
 } /* end UserApp1SM_ANTWaitChannelOpen */
 
@@ -286,7 +286,7 @@ static void UserApp1SM_ANTChannelOpen(void)
     LedOff(BLUE);
     LedBlink(GREEN, LED_2HZ);
     
-    UserApp_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_ANTWaitChannelClose;
   }
   
@@ -296,8 +296,8 @@ static void UserApp1SM_ANTChannelOpen(void)
     LedOff(BLUE);
     u8LastState = 0xff;
     
-    UserApp_u32Timeout = G_u32SystemTime1ms;
-    UserApp_StateMachine = UserApp1SM_ANTWaitChannelClose;
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_ANTWaitChannelClose;
   }
   
   if( AntReadAppMessageBuffer() )
@@ -305,12 +305,54 @@ static void UserApp1SM_ANTChannelOpen(void)
      /* New data message: check what it is */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
-      UserApp_u32DataMsgCount++;
+      UserApp1_u32DataMsgCount++;
     }
     else if(G_eAntApiCurrentMessageClass == ANT_TICK)
     {
-      UserApp_u32TickMsgCount++;
-    }
+      UserApp1_u32TickMsgCount++;
+
+      /* Look at the TICK contents to check the event code and respond only if it's different */
+      if(u8LastState != G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX])
+      {
+        /* The state changed so update u8LastState and queue a debug message */
+        u8LastState = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
+        au8TickMessage[6] = HexToASCIICharUpper(u8LastState);
+        DebugPrintf(au8TickMessage);
+
+        /* Parse u8LastState to update LED status */
+        switch (u8LastState)
+        {
+          /* If we are paired but missing messages, blue blinks */
+          case EVENT_RX_FAIL:
+          {
+            LedOff(GREEN);
+            LedBlink(BLUE, LED_2HZ);
+            break;
+          }
+
+          /* If we drop to search, LED is green */
+          case EVENT_RX_FAIL_GO_TO_SEARCH:
+          {
+            LedOff(BLUE);
+            LedOn(GREEN);
+            break;
+          }
+
+          /* If the search times out, the channel should automatically close */
+          case EVENT_RX_SEARCH_TIMEOUT:
+          {
+            DebugPrintf("Search timeout\r\n");
+            break;
+          }
+
+          default:
+          {
+            DebugPrintf("Unexpected Event\r\n");
+            break;
+          }
+        } /* end switch (G_au8AntApiCurrentMessageBytes) */
+      } /* end if (u8LastState ...) */
+    } /* end else if(G_eAntApiCurrentMessageClass == ANT_TICK) */
   }
 } /* end UserApp1SM_ANTChannelOpen */
 
@@ -324,7 +366,7 @@ static void UserApp1SM_ANTWaitChannelClose(void)
     UserApp1_StateMachine = UserApp1SM_ANTIdle;
   }
 
-  if(IsTimeUp(&UserApp_u32Timeout, TIMEOUT_VALUE)) {
+  if(IsTimeUp(&UserApp1_u32Timeout, TIMEOUT_VALUE)) {
     LedOff(GREEN);
     LedOff(YELLOW);
     LedBlink(RED, LED_2HZ);

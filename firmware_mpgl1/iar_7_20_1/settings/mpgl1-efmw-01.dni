@@ -10,7 +10,7 @@ LimitSize=0
 ByteLimit=50
 [DebugChecksum]
 <<<<<<< HEAD
-Checksum=1808644652
+Checksum=-1801005665
 =======
 Checksum=1464341029
 >>>>>>> c080c694e6eb3b5db5c649699ab09d322b1ac0ae
@@ -51,9 +51,6 @@ Enabled=_ 0
 LoggingEnabled=_ 0
 LogFile=_ ""
 Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [CallStackLog]
 Enabled=0
 [DriverProfiling]
@@ -70,3 +67,6 @@ Count=1
 [Aliases]
 Count=0
 SuppressDialog=0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""

@@ -61,6 +61,9 @@ static u8 UserApp1_PaddlePosition;
 static u8 UserApp1_BallLevel;
 static u8 UserApp1_BallPosition;
 static bool UserApp1_bBallRight;
+static bool UserApp1_bBallApproach;
+
+static u32 UserApp1_Time;
 
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
@@ -142,11 +145,13 @@ void LoadMainMenu(void)
                              /*0123456789ABCDEF0123*/
   u8 au8UserApp1MainMenu1[] = "------- PONG -------";
   u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X     X";
+  u8 au8123[] = "0123456789ABCDEF0123";
   
   LCDCommand(LCD_CLEAR_CMD);
   LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
   
-  LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
+  LCDMessage(LINE1_START_ADDR, au8123);
+  //LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
   LCDMessage(LINE2_START_ADDR, au8UserApp1MainMenu2);
   
 } /* end LoadMainMenu() */
@@ -198,12 +203,17 @@ static void UserApp1SM_MainMenu(void)
     UserApp1_BallLevel = 5;
     UserApp1_BallPosition = 2;
     UserApp1_bBallRight = TRUE;
+    UserApp1_bBallApproach = TRUE;
     
     UserApp1_PaddlePosition = 9;
     LCDCommand(LCD_CLEAR_CMD);
     LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+    LCDMessage(LINE1_START_ADDR, "|                  |");
+    LCDMessage(LINE2_START_ADDR, "|                  |");
     LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
       
+    UserApp1_Time = G_u32SystemTime1s;
+    
     UserApp1_StateMachine = UserApp1SM_1PlyrStart;
   }
 } /* end UserApp1SM_MainMenu() */
@@ -221,7 +231,7 @@ static void UserApp1SM_1PlyrStart(void)
     ButtonAcknowledge(BUTTON0);
 
     /* Handle the case where the paddle is all the way to the left */
-    if(UserApp1_PaddlePosition != 0)
+    if(UserApp1_PaddlePosition != 1)
     {
       UserApp1_PaddlePosition--;
       
@@ -239,7 +249,7 @@ static void UserApp1SM_1PlyrStart(void)
     ButtonAcknowledge(BUTTON3);
 
     /* Handle the case where the paddle is all the way to the right */
-    if(UserApp1_PaddlePosition != 19)
+    if(UserApp1_PaddlePosition != 18)
     {
       UserApp1_PaddlePosition++;
 
@@ -256,6 +266,7 @@ static void UserApp1SM_1PlyrStart(void)
   {
     ButtonAcknowledge(BUTTON2);
 
+    AllLedsOff();
     LoadMainMenu();  
     
     UserApp1_StateMachine = UserApp1SM_MainMenu;
@@ -267,58 +278,137 @@ static void UserApp1SM_1PlyrStart(void)
   
   /* ---------- Ball Movement ----------*/
   
-  /* Ball location to be indicated by LEDs */
-  if(UserApp1_BallLevel > 1)
+  if(G_u32SystemTime1s == UserApp1_Time + 1)
   {
-    AllLedsOff();
-    
-    if(UserApp1_BallPosition <= 2)
-    {
-      LedPWM(WHITE, LED_PWM_100);
-    }
-    else if(UserApp1_BallPosition >= 3 && UserApp1_BallPosition <= 4)
-    {
-      LedPWM(PURPLE, LED_PWM_100);
-    }
-    else if(UserApp1_BallPosition >= 5 && UserApp1_BallPosition <= 6)
-    {
-      LedPWM(BLUE, LED_PWM_100);
-    }
-    else if(UserApp1_BallPosition >= 7 && UserApp1_BallPosition <= 9)
-    {
-      LedPWM(CYAN, LED_PWM_100);
-    }
-    else if(UserApp1_BallPosition >= 10 && UserApp1_BallPosition <= 12)
-    {
-      LedPWM(GREEN, LED_PWM_100);
-    }
-    else if(UserApp1_BallPosition >= 13 && UserApp1_BallPosition <= 14)
-    {
-      LedPWM(YELLOW, LED_PWM_100);
-    }
-    else if(UserApp1_BallPosition >= 15 && UserApp1_BallPosition <= 16)
-    {
-      LedPWM(ORANGE, LED_PWM_100);
-    }
-    else
-    {
-      LedPWM(RED, LED_PWM_100);
-    }
-  } /* end LEDs */
+    UserApp1_Time = G_u32SystemTime1s;
   
-  /* Update ball position */
-  if(UserApp1_bBallRight)
-  {
-    if(UserApp1_BallPosition == 19)
+    /* Ball location to be indicated by LEDs */
+    if(UserApp1_BallLevel > 1)
     {
-      UserApp1_bBallRight = FALSE;
-      UserApp1_BallPosition--;
+      AllLedsOff();
+      
+      if(UserApp1_BallPosition == 1)
+      {
+        LedPWM(WHITE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 2)
+      {
+        LedPWM(WHITE, LED_PWM_100);
+        LedPWM(PURPLE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 3)
+      {
+        LedPWM(PURPLE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 4 && UserApp1_BallPosition == 5)
+      {
+        LedPWM(PURPLE, LED_PWM_100);
+        LedPWM(BLUE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 6)
+      {
+        LedPWM(BLUE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 7)
+      {
+        LedPWM(BLUE, LED_PWM_100);
+        LedPWM(CYAN, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 8 && UserApp1_BallPosition == 9)
+      {
+        LedPWM(CYAN, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 10)
+      {
+        LedPWM(CYAN, LED_PWM_100);
+        LedPWM(GREEN, LED_PWM_100);
+      }
+     else if(UserApp1_BallPosition == 11)
+      {
+        LedPWM(GREEN, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 12)
+      {
+        LedPWM(GREEN, LED_PWM_100);
+        LedPWM(YELLOW, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 13)
+      {
+        LedPWM(YELLOW, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 14 && UserApp1_BallPosition == 15)
+      {
+        LedPWM(YELLOW, LED_PWM_100);
+        LedPWM(ORANGE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 16)
+      {
+        LedPWM(ORANGE, LED_PWM_100);
+      }
+      else if(UserApp1_BallPosition == 17)
+      {
+        LedPWM(ORANGE, LED_PWM_100);
+        LedPWM(RED, LED_PWM_100);
+      }
+      else
+      {
+        LedPWM(RED, LED_PWM_100);
+      }
+    } /* end LEDs */
+    
+    /* Update ball position (left/right) */
+    if(UserApp1_bBallRight)
+    {
+      if(UserApp1_BallPosition == 19)
+      {
+        UserApp1_bBallRight = FALSE;
+        UserApp1_BallPosition--;
+      }
+      else
+      {
+        UserApp1_BallPosition++;
+      }
     }
     else
     {
-      UserApp1_BallPosition++;
+      if(UserApp1_BallPosition == 0)
+      {
+        UserApp1_bBallRight = FALSE;
+        UserApp1_BallPosition++;
+      }
+      else
+      {
+        UserApp1_BallPosition--;
+      }
+    } /* end Ball Left/Right update */
+    
+    /* Update ball position (up/down) */
+    if(UserApp1_bBallApproach)
+    {
+      if(UserApp1_BallLevel == 0)
+      {
+        UserApp1_bBallApproach = FALSE;
+        UserApp1_BallLevel++;
+      }
+      else
+      {
+        UserApp1_BallLevel--;
+      }
     }
-  }
+    else
+    {
+      if(UserApp1_BallLevel == 6)
+      {
+        UserApp1_bBallApproach = TRUE;
+        UserApp1_BallLevel--;
+      }
+      else
+      {
+        UserApp1_BallLevel++;
+      }
+    } /* end Ball Left/Right update */
+  
+  } /* end time dependent section */
   
   /* ---------- Ball Movement End ---------- */
 

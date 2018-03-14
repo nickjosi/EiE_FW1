@@ -150,8 +150,8 @@ void LoadMainMenu(void)
   LCDCommand(LCD_CLEAR_CMD);
   LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
   
-  LCDMessage(LINE1_START_ADDR, au8123);
-  //LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
+  //LCDMessage(LINE1_START_ADDR, au8123);
+  LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
   LCDMessage(LINE2_START_ADDR, au8UserApp1MainMenu2);
   
 } /* end LoadMainMenu() */
@@ -170,6 +170,28 @@ void AllLedsOff(void)
   LedPWM(ORANGE, LED_PWM_0);
   LedPWM(RED, LED_PWM_0); 
 } /* end AllLedsOff() */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function UpdateGameScreen()
+*/
+void UpdateGameScreen(void)
+{
+  LCDCommand(LCD_CLEAR_CMD);
+  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+  LCDMessage(LINE1_START_ADDR, "|                  |");
+  LCDMessage(LINE2_START_ADDR, "|                  |");
+  LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+  
+  /* Ball location on LCD */
+  if(UserApp1_BallLevel == 1)
+  {
+    LCDMessage(LINE1_START_ADDR + UserApp1_BallPosition, "o"); 
+  }
+  else if(UserApp1_BallLevel == 0)
+  {
+    LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
+  } /* end Ball on LCD */
+} /* end UpdateGameScreen() */
 
 
 /**********************************************************************************************************************
@@ -206,11 +228,7 @@ static void UserApp1SM_MainMenu(void)
     UserApp1_bBallApproach = TRUE;
     
     UserApp1_PaddlePosition = 9;
-    LCDCommand(LCD_CLEAR_CMD);
-    LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-    LCDMessage(LINE1_START_ADDR, "|                  |");
-    LCDMessage(LINE2_START_ADDR, "|                  |");
-    LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+    UpdateGameScreen();
       
     UserApp1_Time = G_u32SystemTime1s;
     
@@ -236,9 +254,7 @@ static void UserApp1SM_1PlyrStart(void)
       UserApp1_PaddlePosition--;
       
       /* Update display with new paddle position */
-      LCDCommand(LCD_CLEAR_CMD);
-      LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-      LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+      UpdateGameScreen();
     }
   } /* end BUTTON0 */
   
@@ -254,9 +270,7 @@ static void UserApp1SM_1PlyrStart(void)
       UserApp1_PaddlePosition++;
 
       /* Update display with new paddle position */
-      LCDCommand(LCD_CLEAR_CMD);
-      LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-      LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+      UpdateGameScreen();
     }
   } /* end BUTTON3 */
   
@@ -286,57 +300,58 @@ static void UserApp1SM_1PlyrStart(void)
     if(UserApp1_BallLevel > 1)
     {
       AllLedsOff();
+      UpdateGameScreen();
       
       if(UserApp1_BallPosition == 1)
       {
-        LedPWM(WHITE, LED_PWM_100);
+        LedPWM(WHITE, LED_PWM_50);
       }
       else if(UserApp1_BallPosition == 2)
       {
-        LedPWM(WHITE, LED_PWM_100);
-        LedPWM(PURPLE, LED_PWM_100);
+        LedPWM(WHITE, LED_PWM_50);
+        LedPWM(PURPLE, LED_PWM_50);
       }
       else if(UserApp1_BallPosition == 3)
       {
-        LedPWM(PURPLE, LED_PWM_100);
+        LedPWM(PURPLE, LED_PWM_50);
       }
-      else if(UserApp1_BallPosition == 4 && UserApp1_BallPosition == 5)
+      else if(UserApp1_BallPosition == 4 || UserApp1_BallPosition == 5)
       {
-        LedPWM(PURPLE, LED_PWM_100);
-        LedPWM(BLUE, LED_PWM_100);
+        LedPWM(PURPLE, LED_PWM_50);
+        LedPWM(BLUE, LED_PWM_75);
       }
       else if(UserApp1_BallPosition == 6)
       {
-        LedPWM(BLUE, LED_PWM_100);
+        LedPWM(BLUE, LED_PWM_75);
       }
       else if(UserApp1_BallPosition == 7)
       {
-        LedPWM(BLUE, LED_PWM_100);
-        LedPWM(CYAN, LED_PWM_100);
+        LedPWM(BLUE, LED_PWM_75);
+        LedPWM(CYAN, LED_PWM_35);
       }
-      else if(UserApp1_BallPosition == 8 && UserApp1_BallPosition == 9)
+      else if(UserApp1_BallPosition == 8 || UserApp1_BallPosition == 9)
       {
-        LedPWM(CYAN, LED_PWM_100);
+        LedPWM(CYAN, LED_PWM_35);
       }
       else if(UserApp1_BallPosition == 10)
       {
-        LedPWM(CYAN, LED_PWM_100);
-        LedPWM(GREEN, LED_PWM_100);
+        LedPWM(CYAN, LED_PWM_35);
+        LedPWM(GREEN, LED_PWM_75);
       }
      else if(UserApp1_BallPosition == 11)
       {
-        LedPWM(GREEN, LED_PWM_100);
+        LedPWM(GREEN, LED_PWM_75);
       }
       else if(UserApp1_BallPosition == 12)
       {
-        LedPWM(GREEN, LED_PWM_100);
+        LedPWM(GREEN, LED_PWM_75);
         LedPWM(YELLOW, LED_PWM_100);
       }
       else if(UserApp1_BallPosition == 13)
       {
         LedPWM(YELLOW, LED_PWM_100);
       }
-      else if(UserApp1_BallPosition == 14 && UserApp1_BallPosition == 15)
+      else if(UserApp1_BallPosition == 14 || UserApp1_BallPosition == 15)
       {
         LedPWM(YELLOW, LED_PWM_100);
         LedPWM(ORANGE, LED_PWM_100);
@@ -356,10 +371,22 @@ static void UserApp1SM_1PlyrStart(void)
       }
     } /* end LEDs */
     
+    /* Ball location on LCD */
+    else if(UserApp1_BallLevel == 1)
+    {
+      AllLedsOff();
+      UpdateGameScreen(); 
+    }
+    else if(UserApp1_BallLevel == 0)
+    {
+      AllLedsOff();
+      UpdateGameScreen();
+    } /* end Ball on LCD */
+    
     /* Update ball position (left/right) */
     if(UserApp1_bBallRight)
     {
-      if(UserApp1_BallPosition == 19)
+      if(UserApp1_BallPosition == 18)
       {
         UserApp1_bBallRight = FALSE;
         UserApp1_BallPosition--;
@@ -371,9 +398,9 @@ static void UserApp1SM_1PlyrStart(void)
     }
     else
     {
-      if(UserApp1_BallPosition == 0)
+      if(UserApp1_BallPosition == 1)
       {
-        UserApp1_bBallRight = FALSE;
+        UserApp1_bBallRight = TRUE;
         UserApp1_BallPosition++;
       }
       else

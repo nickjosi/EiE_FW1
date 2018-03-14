@@ -151,7 +151,7 @@ void LoadMainMenu(void)
 {
                              /*0123456789ABCDEF0123*/
   u8 au8UserApp1MainMenu1[] = "------- PONG -------";
-  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X     X";
+  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X  COLR";
   //u8 au80123[] = "0123456789ABCDEF0123";
   
   LCDCommand(LCD_CLEAR_CMD);
@@ -256,14 +256,59 @@ static void UserApp1SM_MainMenu(void)
   {
     ButtonAcknowledge(BUTTON3);
     
-    if(UserApp1_LCDColour == 0)
+    UserApp1_LCDColour++;
+    if(UserApp1_LCDColour == 8)
     {
+      UserApp1_LCDColour = 0;
     }
-    if(UserApp1_LCDColour == 1)
+    
+    if(UserApp1_LCDColour == 0) //WHITE
     {
+      LedOn(LCD_RED);
+      LedOn(LCD_GREEN);
+      LedOn(LCD_BLUE);
     }
-    if(UserApp1_LCDColour == 2)
+    else if(UserApp1_LCDColour == 1) //BLUE
     {
+      LedOff(LCD_RED);
+      LedOff(LCD_GREEN);
+      LedOn(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 2) //CYAN
+    {
+      LedOff(LCD_RED);
+      LedOn(LCD_GREEN);
+      LedOn(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 3) //GREEN
+    {
+      LedOff(LCD_RED);
+      LedOn(LCD_GREEN);
+      LedOff(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 4) //YELLOW
+    {
+      LedOn(LCD_RED);
+      LedOn(LCD_GREEN);
+      LedOff(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 5) //RED
+    {
+      LedOn(LCD_RED);
+      LedOff(LCD_GREEN);
+      LedOff(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 6) //MAGENTA
+    {
+      LedOn(LCD_RED);
+      LedOff(LCD_GREEN);
+      LedOn(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 7) //OFF
+    {
+      LedOff(LCD_RED);
+      LedOff(LCD_GREEN);
+      LedOff(LCD_BLUE);
     }
   }
 } /* end UserApp1SM_MainMenu() */

@@ -64,6 +64,8 @@ static void UserApp1SM_MainMenu(void);
 
 static void UserApp1SM_1PlyrStart(void);
 
+static void UserApp1SM_GameOver(void);
+
 
 #endif /* __USER_APP1_H */
 

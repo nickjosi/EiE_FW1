@@ -58,6 +58,7 @@ Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
 static u8 UserApp1_PaddlePosition;
+
 static u8 UserApp1_BallLevel;
 static u8 UserApp1_BallPosition;
 static bool UserApp1_bBallRight;
@@ -145,12 +146,12 @@ void LoadMainMenu(void)
                              /*0123456789ABCDEF0123*/
   u8 au8UserApp1MainMenu1[] = "------- PONG -------";
   u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X     X";
-  u8 au8123[] = "0123456789ABCDEF0123";
+  //u8 au80123[] = "0123456789ABCDEF0123";
   
   LCDCommand(LCD_CLEAR_CMD);
   LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
   
-  //LCDMessage(LINE1_START_ADDR, au8123);
+  //LCDMessage(LINE1_START_ADDR, au80123);
   LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
   LCDMessage(LINE2_START_ADDR, au8UserApp1MainMenu2);
   
@@ -185,11 +186,18 @@ void UpdateGameScreen(void)
   /* Ball location on LCD */
   if(UserApp1_BallLevel == 1)
   {
-    LCDMessage(LINE1_START_ADDR + UserApp1_BallPosition, "o"); 
+    LCDMessage(LINE1_START_ADDR + UserApp1_BallPosition, "o");
   }
   else if(UserApp1_BallLevel == 0)
   {
-    LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
+    if(UserApp1_PaddlePosition == UserApp1_BallPosition)
+    {
+      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "#");
+    }
+    else
+    {
+      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
+    }
   } /* end Ball on LCD */
 } /* end UpdateGameScreen() */
 
@@ -295,7 +303,22 @@ static void UserApp1SM_1PlyrStart(void)
   if(G_u32SystemTime1s == UserApp1_Time + 1)
   {
     UserApp1_Time = G_u32SystemTime1s;
-  
+    
+    /* Check for missed ball */
+    if(UserApp1_BallLevel == 1 && !UserApp1_bBallApproach)
+    {
+      if((UserApp1_bBallRight && UserApp1_BallPosition != UserApp1_PaddlePosition + 1)
+         || (!UserApp1_bBallRight && UserApp1_BallPosition != UserApp1_PaddlePosition - 1))
+      {
+        LCDCommand(LCD_CLEAR_CMD);
+        LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+        LCDMessage(LINE1_START_ADDR, "======= GAME =======");
+        LCDMessage(LINE2_START_ADDR, "======= OVER =======");
+        
+        UserApp1_StateMachine = UserApp1SM_GameOver;
+      }
+    }
+    
     /* Ball location to be indicated by LEDs */
     if(UserApp1_BallLevel > 1)
     {
@@ -338,7 +361,7 @@ static void UserApp1SM_1PlyrStart(void)
         LedPWM(CYAN, LED_PWM_35);
         LedPWM(GREEN, LED_PWM_75);
       }
-     else if(UserApp1_BallPosition == 11)
+      else if(UserApp1_BallPosition == 11)
       {
         LedPWM(GREEN, LED_PWM_75);
       }
@@ -372,12 +395,7 @@ static void UserApp1SM_1PlyrStart(void)
     } /* end LEDs */
     
     /* Ball location on LCD */
-    else if(UserApp1_BallLevel == 1)
-    {
-      AllLedsOff();
-      UpdateGameScreen(); 
-    }
-    else if(UserApp1_BallLevel == 0)
+    else if(UserApp1_BallLevel <= 1)
     {
       AllLedsOff();
       UpdateGameScreen();
@@ -440,7 +458,20 @@ static void UserApp1SM_1PlyrStart(void)
   /* ---------- Ball Movement End ---------- */
 
 } /* end UserApp1SM_1PlyrStart() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_GameOver(void)
+{
+  if(UserApp1_Time == G_u32SystemTime1s + 5)
+  {
+    AllLedsOff();
+    LoadMainMenu();  
     
+    UserApp1_StateMachine = UserApp1SM_MainMenu;
+  }
+} /* end UserApp1SM_GameOver() */
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */

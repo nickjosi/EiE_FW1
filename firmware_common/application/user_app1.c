@@ -87,7 +87,17 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  LedOff(WHITE);
+  LedOff(PURPLE);
+  LedOff(BLUE);
+  LedOff(CYAN);
+  LedOff(GREEN);
+  LedOff(YELLOW);
+  LedOff(ORANGE);
+  LedOff(RED);
+  
+  LoadMainMenu();
+  
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -127,6 +137,22 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function LoadMainMenu()
+*/
+void LoadMainMenu(void)
+{
+                             /*0123456789ABCDEF0123*/
+  u8 au8UserApp1MainMenu1[] = " ------ PONG ------ ";
+  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X     X";
+  
+  LCDCommand(LCD_CLEAR_CMD);
+  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+  
+  LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
+  LCDMessage(LINE2_START_ADDR, au8UserApp1MainMenu2);
+  
+} /* end LoadMainMenu() */
 
 /**********************************************************************************************************************
 State Machine Function Definitions

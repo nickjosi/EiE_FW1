@@ -50,13 +50,18 @@ void UserApp1RunActiveState(void);
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 void LoadMainMenu(void);
+void AllLedsOff(void);
 
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
 static void UserApp1SM_Idle(void);    
 
-static void UserApp1SM_Error(void);         
+static void UserApp1SM_Error(void);
+
+static void UserApp1SM_MainMenu(void);
+
+static void UserApp1SM_1PlyrStart(void);
 
 
 #endif /* __USER_APP1_H */

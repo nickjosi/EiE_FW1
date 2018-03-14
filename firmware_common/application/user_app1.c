@@ -57,6 +57,11 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
+static u8 UserApp1_PaddlePosition;
+static u8 UserApp1_BallLevel;
+static u8 UserApp1_BallPosition;
+static bool UserApp1_bBallRight;
+
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
@@ -87,21 +92,13 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  LedOff(WHITE);
-  LedOff(PURPLE);
-  LedOff(BLUE);
-  LedOff(CYAN);
-  LedOff(GREEN);
-  LedOff(YELLOW);
-  LedOff(ORANGE);
-  LedOff(RED);
-  
+  AllLedsOff();
   LoadMainMenu();
   
   /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_StateMachine = UserApp1SM_MainMenu;
   }
   else
   {
@@ -143,7 +140,7 @@ Function LoadMainMenu()
 void LoadMainMenu(void)
 {
                              /*0123456789ABCDEF0123*/
-  u8 au8UserApp1MainMenu1[] = " ------ PONG ------ ";
+  u8 au8UserApp1MainMenu1[] = "------- PONG -------";
   u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X     X";
   
   LCDCommand(LCD_CLEAR_CMD);
@@ -153,6 +150,22 @@ void LoadMainMenu(void)
   LCDMessage(LINE2_START_ADDR, au8UserApp1MainMenu2);
   
 } /* end LoadMainMenu() */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function AllLedsOff()
+*/
+void AllLedsOff(void)
+{
+  LedPWM(WHITE, LED_PWM_0);
+  LedPWM(PURPLE, LED_PWM_0);
+  LedPWM(BLUE, LED_PWM_0);
+  LedPWM(CYAN, LED_PWM_0);
+  LedPWM(GREEN, LED_PWM_0);
+  LedPWM(YELLOW, LED_PWM_0);
+  LedPWM(ORANGE, LED_PWM_0);
+  LedPWM(RED, LED_PWM_0); 
+} /* end AllLedsOff() */
+
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -174,6 +187,143 @@ static void UserApp1SM_Error(void)
 } /* end UserApp1SM_Error() */
 
 
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_MainMenu(void)
+{
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    
+    UserApp1_BallLevel = 5;
+    UserApp1_BallPosition = 2;
+    UserApp1_bBallRight = TRUE;
+    
+    UserApp1_PaddlePosition = 9;
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+    LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+      
+    UserApp1_StateMachine = UserApp1SM_1PlyrStart;
+  }
+} /* end UserApp1SM_MainMenu() */
+  
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_1PlyrStart(void)
+{
+  /* ---------- Paddle Movement ---------- */
+  
+  /* BUTTON0 moves the paddle left one position */
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+
+    /* Handle the case where the paddle is all the way to the left */
+    if(UserApp1_PaddlePosition != 0)
+    {
+      UserApp1_PaddlePosition--;
+      
+      /* Update display with new paddle position */
+      LCDCommand(LCD_CLEAR_CMD);
+      LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+      LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+    }
+  } /* end BUTTON0 */
+  
+  
+  /* BUTTON3 moves the cursor right one position */
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+
+    /* Handle the case where the paddle is all the way to the right */
+    if(UserApp1_PaddlePosition != 19)
+    {
+      UserApp1_PaddlePosition++;
+
+      /* Update display with new paddle position */
+      LCDCommand(LCD_CLEAR_CMD);
+      LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+      LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+    }
+  } /* end BUTTON3 */
+  
+  
+  /* BUTTON2 exits to the main menu */
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+
+    LoadMainMenu();  
+    
+    UserApp1_StateMachine = UserApp1SM_MainMenu;
+  } /* end BUTTON 2 */
+  
+  /* ---------- Paddle Movement End ---------- */
+  
+  
+  
+  /* ---------- Ball Movement ----------*/
+  
+  /* Ball location to be indicated by LEDs */
+  if(UserApp1_BallLevel > 1)
+  {
+    AllLedsOff();
+    
+    if(UserApp1_BallPosition <= 2)
+    {
+      LedPWM(WHITE, LED_PWM_100);
+    }
+    else if(UserApp1_BallPosition >= 3 && UserApp1_BallPosition <= 4)
+    {
+      LedPWM(PURPLE, LED_PWM_100);
+    }
+    else if(UserApp1_BallPosition >= 5 && UserApp1_BallPosition <= 6)
+    {
+      LedPWM(BLUE, LED_PWM_100);
+    }
+    else if(UserApp1_BallPosition >= 7 && UserApp1_BallPosition <= 9)
+    {
+      LedPWM(CYAN, LED_PWM_100);
+    }
+    else if(UserApp1_BallPosition >= 10 && UserApp1_BallPosition <= 12)
+    {
+      LedPWM(GREEN, LED_PWM_100);
+    }
+    else if(UserApp1_BallPosition >= 13 && UserApp1_BallPosition <= 14)
+    {
+      LedPWM(YELLOW, LED_PWM_100);
+    }
+    else if(UserApp1_BallPosition >= 15 && UserApp1_BallPosition <= 16)
+    {
+      LedPWM(ORANGE, LED_PWM_100);
+    }
+    else
+    {
+      LedPWM(RED, LED_PWM_100);
+    }
+  } /* end LEDs */
+  
+  /* Update ball position */
+  if(UserApp1_bBallRight)
+  {
+    if(UserApp1_BallPosition == 19)
+    {
+      UserApp1_bBallRight = FALSE;
+      UserApp1_BallPosition--;
+    }
+    else
+    {
+      UserApp1_BallPosition++;
+    }
+  }
+  
+  /* ---------- Ball Movement End ---------- */
+
+} /* end UserApp1SM_1PlyrStart() */
+    
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */

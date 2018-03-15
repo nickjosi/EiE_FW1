@@ -151,7 +151,7 @@ void LoadMainMenu(void)
 {
                              /*0123456789ABCDEF0123*/
   u8 au8UserApp1MainMenu1[] = "------- PONG -------";
-  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  X  COLR";
+  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  COLR  X";
   //u8 au80123[] = "0123456789ABCDEF0123";
   
   LCDCommand(LCD_CLEAR_CMD);
@@ -252,52 +252,52 @@ static void UserApp1SM_MainMenu(void)
     UserApp1_StateMachine = UserApp1SM_1PlyrStart;
   }
   
-  if(WasButtonPressed(BUTTON3))
+  if(WasButtonPressed(BUTTON2))
   {
-    ButtonAcknowledge(BUTTON3);
+    ButtonAcknowledge(BUTTON2);
     
     UserApp1_LCDColour++;
     if(UserApp1_LCDColour == 6)
     {
       UserApp1_LCDColour = 0;
     }
+  }
     
-    if(UserApp1_LCDColour == 0) //WHITE
-    {
-      LedOn(LCD_RED);
-      LedOn(LCD_GREEN);
-      LedOn(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 1) //GREEN
-    {
-      LedOff(LCD_RED);
-      LedOn(LCD_GREEN);
-      LedOff(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 2) //MAGENTA
-    {
-      LedOn(LCD_RED);
-      LedOff(LCD_GREEN);
-      LedOn(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 3) //CYAN
-    {
-      LedOff(LCD_RED);
-      LedOn(LCD_GREEN);
-      LedOn(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 4) //YELLOW
-    {
-      LedOn(LCD_RED);
-      LedOn(LCD_GREEN);
-      LedOff(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 5) //OFF
-    {
-      LedOff(LCD_RED);
-      LedOff(LCD_GREEN);
-      LedOff(LCD_BLUE);
-    }
+  if(UserApp1_LCDColour == 0) //WHITE
+  {
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOn(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 1) //GREEN
+  {
+    LedOff(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 2) //MAGENTA
+  {
+    LedOn(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOn(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 3) //CYAN
+  {
+    LedOff(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOn(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 4) //YELLOW
+  {
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 5) //OFF
+  {
+    LedOff(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOff(LCD_BLUE);
   }
 } /* end UserApp1SM_MainMenu() */
   
@@ -373,6 +373,9 @@ static void UserApp1SM_1PlyrStart(void)
     {
       if(UserApp1_bBallHit == FALSE)
       {
+        LedOn(LCD_RED);
+        LedOff(LCD_GREEN);
+        LedOff(LCD_BLUE);
         LCDCommand(LCD_CLEAR_CMD);
         LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
         LCDMessage(LINE1_START_ADDR, "======= GAME =======");
@@ -537,15 +540,12 @@ static void UserApp1SM_1PlyrStart(void)
 /* Wait for ??? */
 static void UserApp1SM_GameOver(void)
 {
-  if(G_u32SystemTime1ms >= UserApp1_Time + 3000
-     || WasButtonPressed(BUTTON0) || WasButtonPressed(BUTTON1)
-     || WasButtonPressed(BUTTON2) || WasButtonPressed(BUTTON3))
+  if(G_u32SystemTime1ms >= UserApp1_Time + 3000)
   {
     ButtonAcknowledge(BUTTON0);
     ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
     ButtonAcknowledge(BUTTON3);
-    //AllLedsOff();
     LoadMainMenu();
     
     UserApp1_StateMachine = UserApp1SM_MainMenu;

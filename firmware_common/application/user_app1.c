@@ -35,6 +35,11 @@ Runs current task state.  Should only be called once in main loop.
 **********************************************************************************************************************/
 
 #include "configuration.h"
+#define M_GAME_TICK 500
+#define M_STARTING_BALL_LEV 4
+#define M_STARTING_PADD_POS 9
+
+
 
 /***********************************************************************************************************************
 Global variable definitions with scope across entire project.
@@ -67,7 +72,12 @@ static bool UserApp1_bBallApproach;
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
 
+static bool UserApp1_bSoundOn;
+static bool UserApp1_bPaddSound;
+static bool UserApp1_bGOSound;
+
 static u32 UserApp1_Time;
+static u32 UserApp1_SoundTimer;
 
 static u8 UserApp1_LCDColour;
 
@@ -102,8 +112,10 @@ Promises:
 void UserApp1Initialize(void)
 {
   AllLedsOff();
-  LoadMainMenu();
   UserApp1_LCDColour = 0;
+  UserApp1_bSoundOn = TRUE;
+  
+  LoadMainMenu();
   
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -151,7 +163,9 @@ void LoadMainMenu(void)
 {
                              /*0123456789ABCDEF0123*/
   u8 au8UserApp1MainMenu1[] = "------- PONG -------";
-  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR  COLR  X";
+  u8 au8UserApp1MainMenu2[] = "1PLYR 2PLYR        C";
+  u8 au8UserApp1SoundOn[] = "S:ON";
+  u8 au8UserApp1SoundOff[] = "S:OFF";
   //u8 au80123[] = "0123456789ABCDEF0123";
   
   LCDCommand(LCD_CLEAR_CMD);
@@ -160,6 +174,14 @@ void LoadMainMenu(void)
   //LCDMessage(LINE1_START_ADDR, au80123);
   LCDMessage(LINE1_START_ADDR, au8UserApp1MainMenu1);
   LCDMessage(LINE2_START_ADDR, au8UserApp1MainMenu2);
+  if(UserApp1_bSoundOn)
+  {
+    LCDMessage(LINE2_START_ADDR + 13, au8UserApp1SoundOn);
+  }
+  else
+  {
+    LCDMessage(LINE2_START_ADDR + 13, au8UserApp1SoundOff);
+  }
   
 } /* end LoadMainMenu() */
 
@@ -207,6 +229,62 @@ void UpdateGameScreen(void)
   } /* end Ball on LCD */
 } /* end UpdateGameScreen() */
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function MenuSound()
+*/
+void MenuSound(void)
+{
+  if(UserApp1_bSoundOn && G_u32SystemTime1ms <= UserApp1_SoundTimer + 100)
+  {
+    PWMAudioSetFrequency(BUZZER1, 550);
+    PWMAudioSetFrequency(BUZZER2, 550);
+    PWMAudioOn(BUZZER1);
+    PWMAudioOn(BUZZER2);
+  }
+  else
+  {
+    PWMAudioOff(BUZZER1);
+    PWMAudioOff(BUZZER2);
+  }
+} /* end MeunSound() */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function GameSound()
+*/
+void GameSound(void)
+{
+  if(UserApp1_bSoundOn)
+  {
+    if(UserApp1_bPaddSound)
+    {
+      PWMAudioSetFrequency(BUZZER1, 459);
+      PWMAudioSetFrequency(BUZZER2, 459);
+      PWMAudioOn(BUZZER1);
+      PWMAudioOn(BUZZER2);
+      if(G_u32SystemTime1ms >= UserApp1_SoundTimer + 100)
+      {
+        PWMAudioOff(BUZZER1);
+        PWMAudioOff(BUZZER2);
+        UserApp1_bPaddSound = FALSE;
+      }
+    }
+    
+    if(UserApp1_bGOSound)
+    {
+      PWMAudioSetFrequency(BUZZER1, 490);
+      PWMAudioSetFrequency(BUZZER2, 490);
+      PWMAudioOn(BUZZER1);
+      PWMAudioOn(BUZZER2);
+      if(G_u32SystemTime1ms >= UserApp1_SoundTimer + 500)
+      {
+        PWMAudioOff(BUZZER1);
+        PWMAudioOff(BUZZER2);
+        UserApp1_bGOSound = FALSE;
+      }
+    }
+  }
+} /* end GameSound() */
+
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -232,29 +310,54 @@ static void UserApp1SM_Error(void)
 /* Wait for ??? */
 static void UserApp1SM_MainMenu(void)
 {
+  MenuSound();
+  /* ----- BUTTON0 -----  */
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
     
-    UserApp1_BallLevel = 5;
-    UserApp1_BallPosition = 2;
+    UserApp1_BallLevel = M_STARTING_BALL_LEV;
+    UserApp1_BallPosition = (G_u32SystemTime1ms % 14) + 2;
     UserApp1_bBallRight = TRUE;
     UserApp1_bBallApproach = TRUE;
-    UserApp1_PaddlePosition = 9;
+    UserApp1_PaddlePosition = M_STARTING_PADD_POS;
     
     UserApp1_bBallHit = FALSE;
     UserApp1_bGameOver = FALSE;
+    UserApp1_bPaddSound = FALSE;
+    UserApp1_bGOSound = FALSE;
     
     UpdateGameScreen();
       
     UserApp1_Time = G_u32SystemTime1ms;
     
     UserApp1_StateMachine = UserApp1SM_1PlyrStart;
-  }
+  } /* end BUTTON0 */
   
+  
+  /* ----- BUTTON2 ----- */
   if(WasButtonPressed(BUTTON2))
   {
     ButtonAcknowledge(BUTTON2);
+    
+    if(!UserApp1_bSoundOn)
+    {
+      UserApp1_bSoundOn = TRUE;
+      UserApp1_SoundTimer = G_u32SystemTime1ms;
+    }
+    else
+    {
+      UserApp1_bSoundOn = FALSE;
+    }
+    
+    LoadMainMenu();
+  } /* end BUTTON2 */
+  
+  
+  /* ----- BUTTON3 ----- */
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
     
     UserApp1_LCDColour++;
     if(UserApp1_LCDColour == 6)
@@ -298,7 +401,8 @@ static void UserApp1SM_MainMenu(void)
     LedOff(LCD_RED);
     LedOff(LCD_GREEN);
     LedOff(LCD_BLUE);
-  }
+  } /* end BUTTON3 */
+  
 } /* end UserApp1SM_MainMenu() */
   
 
@@ -306,10 +410,17 @@ static void UserApp1SM_MainMenu(void)
 /* Wait for ??? */
 static void UserApp1SM_1PlyrStart(void)
 {
+  GameSound();
   /* Check for ball contact */
   if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
   {
     UserApp1_bBallHit = TRUE;
+    
+    if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+    {
+      UserApp1_SoundTimer = G_u32SystemTime1ms;
+      UserApp1_bPaddSound = TRUE;
+    }
   } /* end Check Ball Contact */
   
   
@@ -347,9 +458,10 @@ static void UserApp1SM_1PlyrStart(void)
   } /* end BUTTON3 */
   
   
-  /* BUTTON2 exits to the main menu */
-  if(WasButtonPressed(BUTTON2))
+  /* BUTTON1 or BUTTON2 exits to the main menu */
+  if(WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2))
   {
+    ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
 
     AllLedsOff();
@@ -364,12 +476,12 @@ static void UserApp1SM_1PlyrStart(void)
   
   /* ---------- Ball Movement ----------*/
   
-  if(G_u32SystemTime1ms >= UserApp1_Time + 750)
+  if(G_u32SystemTime1ms >= UserApp1_Time + M_GAME_TICK)
   {
     UserApp1_Time = G_u32SystemTime1ms;
     
     /* Check for missed ball */
-    if(UserApp1_BallLevel == 1 && !UserApp1_bBallApproach)
+    if(UserApp1_BallLevel == 0)
     {
       if(UserApp1_bBallHit == FALSE)
       {
@@ -382,6 +494,11 @@ static void UserApp1SM_1PlyrStart(void)
         LCDMessage(LINE2_START_ADDR, "======= OVER =======");
         
         UserApp1_bGameOver = TRUE;
+        if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+        {
+          UserApp1_SoundTimer = G_u32SystemTime1ms;
+          UserApp1_bGOSound = TRUE;
+        }
         UserApp1_StateMachine = UserApp1SM_GameOver;
       }
       else 
@@ -392,9 +509,76 @@ static void UserApp1SM_1PlyrStart(void)
     
     if(!UserApp1_bGameOver)
     {
+      /* Update ball position (left/right) */
+      if(UserApp1_bBallRight)
+      {
+        if(UserApp1_BallPosition == 18)
+        {
+          UserApp1_bBallRight = FALSE;
+          UserApp1_BallPosition--;
+        }
+        else
+        {
+          UserApp1_BallPosition++;
+        }
+      }
+      else
+      {
+        if(UserApp1_BallPosition == 1)
+        {
+          UserApp1_bBallRight = TRUE;
+          UserApp1_BallPosition++;
+        }
+        else
+        {
+          UserApp1_BallPosition--;
+        }
+      } /* end Ball Left/Right update */
+      
+      /* Update ball level (up/down) */
+      if(UserApp1_bBallApproach)
+      {
+        if(UserApp1_BallLevel == 0)
+        {
+          UserApp1_bBallApproach = FALSE;
+          UserApp1_BallLevel++;
+        }
+        else
+        {
+          UserApp1_BallLevel--;
+        }
+      }
+      else
+      {
+        if(UserApp1_BallLevel == 4)
+        {
+          AllLedsOff();
+          UserApp1_bBallApproach = TRUE;
+          
+          if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+          {
+            UserApp1_SoundTimer = G_u32SystemTime1ms;
+            UserApp1_bPaddSound = TRUE;
+          }
+          
+          u8 temp_rand = G_u32SystemTime1ms % 3;
+          if(temp_rand % 2 == 0)
+          {
+            UserApp1_bBallRight = TRUE;
+          }
+          else
+          {
+            UserApp1_bBallRight = FALSE;
+          }
+        }
+        else
+        {
+          UserApp1_BallLevel++;
+        }
+      } /* end Ball Level update */
     
       /* Ball location to be indicated by LEDs */
-      if(UserApp1_BallLevel > 1)
+      if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 4)
       {
         AllLedsOff();
         UpdateGameScreen();
@@ -475,58 +659,6 @@ static void UserApp1SM_1PlyrStart(void)
         UpdateGameScreen();
       } /* end Ball on LCD */
       
-      /* Update ball position (left/right) */
-      if(UserApp1_bBallRight)
-      {
-        if(UserApp1_BallPosition == 18)
-        {
-          UserApp1_bBallRight = FALSE;
-          UserApp1_BallPosition--;
-        }
-        else
-        {
-          UserApp1_BallPosition++;
-        }
-      }
-      else
-      {
-        if(UserApp1_BallPosition == 1)
-        {
-          UserApp1_bBallRight = TRUE;
-          UserApp1_BallPosition++;
-        }
-        else
-        {
-          UserApp1_BallPosition--;
-        }
-      } /* end Ball Left/Right update */
-      
-      /* Update ball position (up/down) */
-      if(UserApp1_bBallApproach)
-      {
-        if(UserApp1_BallLevel == 0)
-        {
-          UserApp1_bBallApproach = FALSE;
-          UserApp1_BallLevel++;
-        }
-        else
-        {
-          UserApp1_BallLevel--;
-        }
-      }
-      else
-      {
-        if(UserApp1_BallLevel == 6)
-        {
-          UserApp1_bBallApproach = TRUE;
-          UserApp1_BallLevel--;
-        }
-        else
-        {
-          UserApp1_BallLevel++;
-        }
-      } /* end Ball Left/Right update */
-      
     } /* end if(!GameOver) */
     
   } /* end time dependent section */
@@ -540,7 +672,10 @@ static void UserApp1SM_1PlyrStart(void)
 /* Wait for ??? */
 static void UserApp1SM_GameOver(void)
 {
-  if(G_u32SystemTime1ms >= UserApp1_Time + 3000)
+  GameSound();
+  
+  if(G_u32SystemTime1ms >= UserApp1_Time + 3000
+     || WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2))
   {
     ButtonAcknowledge(BUTTON0);
     ButtonAcknowledge(BUTTON1);

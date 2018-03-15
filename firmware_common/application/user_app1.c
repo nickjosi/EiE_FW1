@@ -257,7 +257,7 @@ static void UserApp1SM_MainMenu(void)
     ButtonAcknowledge(BUTTON3);
     
     UserApp1_LCDColour++;
-    if(UserApp1_LCDColour == 8)
+    if(UserApp1_LCDColour == 6)
     {
       UserApp1_LCDColour = 0;
     }
@@ -268,23 +268,23 @@ static void UserApp1SM_MainMenu(void)
       LedOn(LCD_GREEN);
       LedOn(LCD_BLUE);
     }
-    else if(UserApp1_LCDColour == 1) //BLUE
-    {
-      LedOff(LCD_RED);
-      LedOff(LCD_GREEN);
-      LedOn(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 2) //CYAN
-    {
-      LedOff(LCD_RED);
-      LedOn(LCD_GREEN);
-      LedOn(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 3) //GREEN
+    else if(UserApp1_LCDColour == 1) //GREEN
     {
       LedOff(LCD_RED);
       LedOn(LCD_GREEN);
       LedOff(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 2) //MAGENTA
+    {
+      LedOn(LCD_RED);
+      LedOff(LCD_GREEN);
+      LedOn(LCD_BLUE);
+    }
+    else if(UserApp1_LCDColour == 3) //CYAN
+    {
+      LedOff(LCD_RED);
+      LedOn(LCD_GREEN);
+      LedOn(LCD_BLUE);
     }
     else if(UserApp1_LCDColour == 4) //YELLOW
     {
@@ -292,19 +292,7 @@ static void UserApp1SM_MainMenu(void)
       LedOn(LCD_GREEN);
       LedOff(LCD_BLUE);
     }
-    else if(UserApp1_LCDColour == 5) //RED
-    {
-      LedOn(LCD_RED);
-      LedOff(LCD_GREEN);
-      LedOff(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 6) //MAGENTA
-    {
-      LedOn(LCD_RED);
-      LedOff(LCD_GREEN);
-      LedOn(LCD_BLUE);
-    }
-    else if(UserApp1_LCDColour == 7) //OFF
+    else if(UserApp1_LCDColour == 5) //OFF
     {
       LedOff(LCD_RED);
       LedOff(LCD_GREEN);

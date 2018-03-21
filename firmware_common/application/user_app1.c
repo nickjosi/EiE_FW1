@@ -411,6 +411,7 @@ static void UserApp1SM_MainMenu(void)
 static void UserApp1SM_1PlyrStart(void)
 {
   GameSound();
+  //UpdateGameScreen();
   /* Check for ball contact */
   if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
   {
@@ -662,6 +663,8 @@ static void UserApp1SM_1PlyrStart(void)
     } /* end if(!GameOver) */
     
   } /* end time dependent section */
+  
+  //UpdateGameScreen();
   
   /* ---------- Ball Movement End ---------- */
 

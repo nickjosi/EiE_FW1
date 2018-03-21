@@ -36,6 +36,7 @@ Runs current task state.  Should only be called once in main loop.
 
 #include "configuration.h"
 #define M_GAME_TICK 500
+#define M_PADD_TICK 250
 #define M_STARTING_BALL_LEV 4
 #define M_STARTING_PADD_POS 8
 
@@ -80,6 +81,7 @@ static bool UserApp1_bPaddSound;
 static bool UserApp1_bGOSound;
 
 static u32 UserApp1_Time;
+static u32 UserApp1_Time2;
 static u32 UserApp1_SoundTimer;
 
 static u8 UserApp1_LCDColour;
@@ -208,10 +210,10 @@ Function LoadGameScreen()
 */
 void LoadGameScreen(void)
 {
-  LCDCommand(LCD_CLEAR_CMD);
-  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+  //LCDCommand(LCD_CLEAR_CMD);
+  //LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
   LCDMessage(LINE1_START_ADDR, "|                |  ");
-  LCDMessage(LINE2_START_ADDR, "|                |");
+  LCDMessage(LINE2_START_ADDR, "|                |  ");
   LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
   LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
   LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
@@ -233,6 +235,28 @@ void LoadGameScreen(void)
     }
   } /* end Ball on LCD */
 } /* end LoadGameScreen() */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function UpdateLCDPaddle()
+*/
+void UpdateLCDPaddle(void)
+{
+  LCDMessage(LINE2_START_ADDR, "|                |  ");
+  LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
+  LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
+  LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+  if(UserApp1_BallLevel == 0)
+  {
+    if(UserApp1_PaddlePosition == UserApp1_BallPosition)
+    {
+      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "x");
+    }
+    else
+    {
+      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
+    }
+  }
+} /* end UpdateLCDPaddle() */
 
 /*--------------------------------------------------------------------------------------------------------------------
 Function MenuSound()
@@ -339,6 +363,7 @@ static void UserApp1SM_MainMenu(void)
     //UpdateLCDPaddle();
       
     UserApp1_Time = G_u32SystemTime1ms;
+    UserApp1_Time2 = G_u32SystemTime1ms;
     
     UserApp1_StateMachine = UserApp1SM_1PlyrStart;
   } /* end BUTTON0 */
@@ -447,7 +472,8 @@ static void UserApp1SM_1PlyrStart(void)
       UserApp1_PaddlePosition--;
       
       /* Update display with new paddle position */
-      LoadGameScreen();
+      //LoadGameScreen();
+      //UpdateLCDPaddle();
     }
   } /* end BUTTON0 */
   
@@ -463,7 +489,8 @@ static void UserApp1SM_1PlyrStart(void)
       UserApp1_PaddlePosition++;
 
       /* Update display with new paddle position */
-      LoadGameScreen();
+      //LoadGameScreen();
+      //UpdateLCDPaddle();
     }
   } /* end BUTTON3 */
   
@@ -591,7 +618,7 @@ static void UserApp1SM_1PlyrStart(void)
       if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 4)
       {
         AllLedsOff();
-        LoadGameScreen();
+        //LoadGameScreen();
         
         if(UserApp1_BallPosition == 1)
         {
@@ -672,7 +699,7 @@ static void UserApp1SM_1PlyrStart(void)
       else if(UserApp1_BallLevel <= 1)
       {
         AllLedsOff();
-        LoadGameScreen();
+        //LoadGameScreen();
       } /* end Ball on LCD */
       
     } /* end if(!GameOver) */
@@ -683,6 +710,14 @@ static void UserApp1SM_1PlyrStart(void)
   
   /* ---------- Ball Movement End ---------- */
 
+  if(G_u32SystemTime1ms >= UserApp1_Time2 + M_PADD_TICK && !UserApp1_bGameOver)
+  {
+    UserApp1_Time2 = G_u32SystemTime1ms;
+    
+    LoadGameScreen();
+  }
+  
+  
 } /* end UserApp1SM_1PlyrStart() */
 
 

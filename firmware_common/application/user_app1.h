@@ -52,6 +52,7 @@ void UserApp1RunActiveState(void);
 void LoadMainMenu(void);
 void AllLedsOff(void);
 void LoadGameScreen(void);
+void UpdateLCDPaddle(void);
 void MenuSound(void);
 void GameSound(void);
 

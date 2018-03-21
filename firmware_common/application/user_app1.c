@@ -70,9 +70,9 @@ static u8 UserApp1_BallPosition;
 static bool UserApp1_bBallRight;
 static bool UserApp1_bBallApproach;
 
-static u8 UserApp1_ScoreTENS[] = "0";
-static u8 UserApp1_ScoreONES[] = "0";
 static u8 UserApp1_Score1;
+static u8 UserApp1_Score2;
+static u8 UserApp1_HiScore;
 
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
@@ -119,6 +119,7 @@ void UserApp1Initialize(void)
 {
   AllLedsOff();
   UserApp1_LCDColour = 0;
+  UserApp1_HiScore = 0;
   UserApp1_bSoundOn = TRUE;
   
   LoadMainMenu();
@@ -211,18 +212,16 @@ Function LoadGameScreen()
 */
 void LoadGameScreen(void)
 {
-  //LCDCommand(LCD_CLEAR_CMD);
-  //LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-  LCDMessage(LINE1_START_ADDR, "|                |  ");
+  LCDMessage(LINE1_START_ADDR, "|                |");
   LCDMessage(LINE2_START_ADDR, "|                |  ");
-  //LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
-  //LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
+  
   u8 scoretempTENS = (UserApp1_Score1 / 10) + 48;
   u8 scoretempONES = (UserApp1_Score1 % 10) + 48;
   u8* au8ScoreTENS = &scoretempTENS;
   u8* au8ScoreONES = &scoretempONES;
   LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
   LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
+  
   LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
   
   /* Ball location on LCD */
@@ -244,28 +243,6 @@ void LoadGameScreen(void)
 } /* end LoadGameScreen() */
 
 /*--------------------------------------------------------------------------------------------------------------------
-Function UpdateLCDPaddle()
-*/
-void UpdateLCDPaddle(void)
-{
-  LCDMessage(LINE2_START_ADDR, "|                |  ");
-  LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
-  LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
-  LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
-  if(UserApp1_BallLevel == 0)
-  {
-    if(UserApp1_PaddlePosition == UserApp1_BallPosition)
-    {
-      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "x");
-    }
-    else
-    {
-      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
-    }
-  }
-} /* end UpdateLCDPaddle() */
-
-/*--------------------------------------------------------------------------------------------------------------------
 Function MenuSound()
 */
 void MenuSound(void)
@@ -282,7 +259,7 @@ void MenuSound(void)
     PWMAudioOff(BUZZER1);
     PWMAudioOff(BUZZER2);
   }
-} /* end MeunSound() */
+} /* end MenuSound() */
 
 /*--------------------------------------------------------------------------------------------------------------------
 Function GameSound()
@@ -357,9 +334,7 @@ static void UserApp1SM_MainMenu(void)
     UserApp1_bBallRight = TRUE;
     UserApp1_bBallApproach = TRUE;
     UserApp1_PaddlePosition = M_STARTING_PADD_POS;
-   
-    //UserApp1_ScoreTENS = "1";
-    //UserApp1_ScoreONES = "4";
+
     UserApp1_Score1 = 0;
     
     UserApp1_bBallHit = FALSE;
@@ -368,7 +343,14 @@ static void UserApp1SM_MainMenu(void)
     UserApp1_bGOSound = FALSE;
     
     LoadGameScreen();
-    //UpdateLCDPaddle();
+    
+    /* Print hiscore to the LCD */
+    u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
+    u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
+    u8* au8ScoreTENS = &scoretempTENS;
+    u8* au8ScoreONES = &scoretempONES;
+    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS);
+    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES);
       
     UserApp1_Time = G_u32SystemTime1ms;
     UserApp1_Time2 = G_u32SystemTime1ms;
@@ -460,7 +442,6 @@ static void UserApp1SM_MainMenu(void)
 static void UserApp1SM_1PlyrStart(void)
 {
   GameSound();
-  //LoadGameScreen();
   /* Check for ball contact */
   if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
   {
@@ -485,10 +466,6 @@ static void UserApp1SM_1PlyrStart(void)
     if(UserApp1_PaddlePosition > 1)
     {
       UserApp1_PaddlePosition--;
-      
-      /* Update display with new paddle position */
-      //LoadGameScreen();
-      //UpdateLCDPaddle();
     }
   } /* end BUTTON0 */
   
@@ -501,10 +478,6 @@ static void UserApp1SM_1PlyrStart(void)
     if(UserApp1_PaddlePosition < 16)
     {
       UserApp1_PaddlePosition++;
-
-      /* Update display with new paddle position */
-      //LoadGameScreen();
-      //UpdateLCDPaddle();
     }
   } /* end BUTTON3 */
   
@@ -523,6 +496,7 @@ static void UserApp1SM_1PlyrStart(void)
     {
       if(UserApp1_bBallHit == FALSE)
       {
+        AllLedsOff();
         LedOn(LCD_RED);
         LedOff(LCD_GREEN);
         LedOff(LCD_BLUE);
@@ -620,7 +594,6 @@ static void UserApp1SM_1PlyrStart(void)
       if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 5)
       {
         AllLedsOff();
-        //LoadGameScreen();
         
         if(UserApp1_BallPosition == 1)
         {
@@ -699,11 +672,9 @@ static void UserApp1SM_1PlyrStart(void)
       else if(UserApp1_BallLevel <= 1)
       {
         AllLedsOff();
-        //LoadGameScreen();
       } /* end Ball on LCD */
       
-      
-      
+          
       /* Use red LED to indicate ball level */
       if(UserApp1_BallLevel == 0)
       {
@@ -728,24 +699,20 @@ static void UserApp1SM_1PlyrStart(void)
       else if(UserApp1_BallLevel == 5)
       {
         LedPWM(RED, LED_PWM_0);
-      }
-      
+      }     
     } /* end if(!GameOver) */
     
-  } /* end time dependent section */
-  
-  //UpdateGameScreen();
-  
+  } /* end game tick section */  
   /* ---------- Ball Movement End ---------- */
 
+  /* Do LCD updates every paddle tick */
   if(G_u32SystemTime1ms >= UserApp1_Time2 + M_PADD_TICK && !UserApp1_bGameOver)
   {
     UserApp1_Time2 = G_u32SystemTime1ms;
     
     LoadGameScreen();
   }
-  
-  
+  /* end paddle tick section */
   
   /* BUTTON1 or BUTTON2 exits to the main menu */
   if(WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2))
@@ -753,6 +720,11 @@ static void UserApp1SM_1PlyrStart(void)
     ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
 
+    if(UserApp1_Score1 > UserApp1_HiScore)
+    {
+      UserApp1_HiScore = UserApp1_Score1;
+    }
+    
     AllLedsOff();
     LoadMainMenu();  
     
@@ -775,6 +747,12 @@ static void UserApp1SM_GameOver(void)
     ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
     ButtonAcknowledge(BUTTON3);
+    
+    if(UserApp1_Score1 > UserApp1_HiScore)
+    {
+      UserApp1_HiScore = UserApp1_Score1;
+    }
+    
     LoadMainMenu();
     
     UserApp1_StateMachine = UserApp1SM_MainMenu;

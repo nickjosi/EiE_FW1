@@ -28,6 +28,17 @@ Type Definitions
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
+/* Required constants for ANT channel configuration */
+#define ANT_CHANNEL_TYPE_USERAPP        CHANNEL_TYPE_MASTER   // Device is a MASTER
+#define ANT_CHANNEL_USERAPP             ANT_CHANNEL_0         // Channel 0 - 7
+#define ANT_DEVICEID_LO_USERAPP         (u8)0x19              // Low byte of two-byte Device #
+#define ANT_DEVICEID_HI_USERAPP         (u8)0x25              // High byte of two-byte Device #
+#define ANT_DEVICE_TYPE_USERAPP         (u8)1                 // 1 - 255
+#define ANT_TRANSMISSION_TYPE_USERAPP   (u8)1                 // 1-127 (MSB is pairing bit)
+#define ANT_CHANNEL_PERIOD_LO_USERAPP   (u8)0x00              // Low byte of two-byte channel period 0x0001 - 0x7fff
+#define ANT_CHANNEL_PERIOD_HI_USERAPP   (u8)0x20              // High byte of two-byte channel period
+#define ANT_FREQUENCY_USERAPP           (u8)50                // 2400MHz + this number 0 - 99
+#define ANT_TX_POWER_USERAPP            RADIO_TX_POWER_4DBM   // RADIO_TX_POWER_0DBM, RADIO_TX_POWER_MINUS5DBM, RADIO_TX_POWER_MINUS10DBM, RADIO_TX_POWER_MINUS20DBM
 
 
 /**********************************************************************************************************************
@@ -67,6 +78,10 @@ static void UserApp1SM_MainMenu(void);
 static void UserApp1SM_1PlyrStart(void);
 
 static void UserApp1SM_GameOver(void);
+
+static void UserApp1SM_AntChannelAssign(void);
+
+static void UserApp1SM_AntIdle(void);
 
 
 #endif /* __USER_APP1_H */

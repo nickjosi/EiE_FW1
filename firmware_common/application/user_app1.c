@@ -39,6 +39,8 @@ Runs current task state.  Should only be called once in main loop.
 #define M_PADD_TICK 100
 #define M_STARTING_BALL_LEV 5
 #define M_STARTING_PADD_POS 9
+#define M_ONEPLAYER 0
+#define M_TWOPLAYER 1
 
 
 
@@ -52,6 +54,11 @@ volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
+extern u32 G_u32AntApiCurrentMessageTimeStamp;                    /* From ant_api.c */
+extern AntApplicationMessageType G_eAntApiCurrentMessageClass;    /* From ant_api.c */
+extern u8 G_au8AntApiCurrentMessageBytes[ANT_APPLICATION_MESSAGE_BYTES];  /* From ant_api.c */
+extern AntExtendedDataType G_sAntApiCurrentMessageExtData;                /* From ant_api.c */
+
 extern volatile u32 G_u32SystemFlags;                  /* From main.c */
 extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
@@ -74,6 +81,8 @@ static u8 UserApp1_Score1;
 static u8 UserApp1_Score2;
 static u8 UserApp1_HiScore;
 
+static u8 UserApp1_GameMode;
+
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
 
@@ -87,9 +96,14 @@ static u32 UserApp1_SoundTimer;
 
 static u8 UserApp1_LCDColour;
 
-static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
-//static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+
+static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
+static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
+
+static AntAssignChannelInfoType UserApp1_sChannelInfo; /* ANT setup parameters */
+
+static u8 UserApp1_au8MessageFail[] = "\n\r***ANT channel setup failed***\n\n\r";
 
 /**********************************************************************************************************************
 Function Definitions
@@ -123,6 +137,25 @@ void UserApp1Initialize(void)
   UserApp1_bSoundOn = TRUE;
   
   LoadMainMenu();
+  
+  /* Configure ANT for this application */
+  UserApp1_sChannelInfo.AntChannel          = ANT_CHANNEL_USERAPP;
+  UserApp1_sChannelInfo.AntChannelType      = ANT_CHANNEL_TYPE_USERAPP;
+  UserApp1_sChannelInfo.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP;
+  UserApp1_sChannelInfo.AntChannelPeriodHi  = ANT_CHANNEL_PERIOD_HI_USERAPP;
+
+  UserApp1_sChannelInfo.AntDeviceIdLo       = ANT_DEVICEID_LO_USERAPP;
+  UserApp1_sChannelInfo.AntDeviceIdHi       = ANT_DEVICEID_HI_USERAPP;
+  UserApp1_sChannelInfo.AntDeviceType       = ANT_DEVICE_TYPE_USERAPP;
+  UserApp1_sChannelInfo.AntTransmissionType = ANT_TRANSMISSION_TYPE_USERAPP;
+  UserApp1_sChannelInfo.AntFrequency        = ANT_FREQUENCY_USERAPP;
+  UserApp1_sChannelInfo.AntTxPower          = ANT_TX_POWER_USERAPP;
+
+  UserApp1_sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
+  for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
+  {
+    UserApp1_sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+  }
   
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -315,7 +348,9 @@ static void UserApp1SM_Idle(void)
 /* Handle an error */
 static void UserApp1SM_Error(void)          
 {
-  
+  AllLedsOff();
+  LedPWM(RED, LED_PWM_100);
+  LedPWM(YELLOW, LED_PWM_100);
 } /* end UserApp1SM_Error() */
 
 
@@ -334,6 +369,8 @@ static void UserApp1SM_MainMenu(void)
     UserApp1_bBallRight = TRUE;
     UserApp1_bBallApproach = TRUE;
     UserApp1_PaddlePosition = M_STARTING_PADD_POS;
+    
+    UserApp1_GameMode = M_ONEPLAYER;
 
     UserApp1_Score1 = 0;
     
@@ -363,6 +400,18 @@ static void UserApp1SM_MainMenu(void)
   if(WasButtonPressed(BUTTON1))
   {
     ButtonAcknowledge(BUTTON1);
+    
+    if( AntAssignChannel(&UserApp1_sChannelInfo) )
+    {
+      UserApp1_u32Timeout = G_u32SystemTime1ms;
+      UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
+    }
+    else
+    {
+      /* The task isn't properly initialized, so shut it down and don't run */
+      DebugPrintf(UserApp1_au8MessageFail);
+      UserApp1_StateMachine = UserApp1SM_Error;
+    }
   } /* end BUTTON1 */
   
   
@@ -731,6 +780,54 @@ static void UserApp1SM_1PlyrStart(void)
     UserApp1_StateMachine = UserApp1SM_MainMenu;
   } /* end BUTTON 2 */
   
+  
+  
+  if(UserApp1_GameMode == M_TWOPLAYER)
+  {
+    static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
+    u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+
+    /* Check all the buttons and update au8TestMessage according to the button state */
+    au8TestMessage[0] = UserApp1_BallLevel;
+
+    au8TestMessage[1] = UserApp1_BallPosition;
+
+    au8TestMessage[2] = 0x00;
+
+    au8TestMessage[3] = 0x00;
+
+    if( AntReadAppMessageBuffer() )
+    {
+       /* New message from ANT task: check what it is */
+      if(G_eAntApiCurrentMessageClass == ANT_DATA)
+      {
+        /* We got some data: parse it into au8DataContent[] */
+        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+        {
+          au8DataContent[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
+          au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+        }
+
+        LCDMessage(LINE2_START_ADDR, au8DataContent);
+
+      }
+      else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+      {
+       /* Update and queue the new message data */
+        au8TestMessage[7]++;
+        if(au8TestMessage[7] == 0)
+        {
+          au8TestMessage[6]++;
+          if(au8TestMessage[6] == 0)
+          {
+            au8TestMessage[5]++;
+          }
+        }
+        AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
+      }
+    } /* end AntReadData() */
+  }
+  
 } /* end UserApp1SM_1PlyrStart() */
 
 
@@ -758,6 +855,125 @@ static void UserApp1SM_GameOver(void)
     UserApp1_StateMachine = UserApp1SM_MainMenu;
   }
 } /* end UserApp1SM_GameOver() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ANT channel assignment */
+static void UserApp1SM_AntChannelAssign()
+{
+  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CONFIGURED)
+  {
+    /* Channel assignment is successful, so open channel and
+    proceed to Idle state */
+    AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
+    UserApp1_GameMode = M_TWOPLAYER;
+    
+    /*
+    UserApp1_BallLevel = M_STARTING_BALL_LEV;
+    UserApp1_BallPosition = (G_u32SystemTime1ms % 8) + 3;
+    UserApp1_bBallRight = TRUE;
+    UserApp1_bBallApproach = TRUE;
+    UserApp1_PaddlePosition = M_STARTING_PADD_POS;
+
+    UserApp1_Score1 = 0;
+    
+    UserApp1_bBallHit = FALSE;
+    UserApp1_bGameOver = FALSE;
+    UserApp1_bPaddSound = FALSE;
+    UserApp1_bGOSound = FALSE;
+    
+    LoadGameScreen();
+    
+    /* Print hiscore to the LCD */ /*
+    u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
+    u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
+    u8* au8ScoreTENS = &scoretempTENS;
+    u8* au8ScoreONES = &scoretempONES;
+    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS);
+    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES);
+      
+    UserApp1_Time = G_u32SystemTime1ms;
+    UserApp1_Time2 = G_u32SystemTime1ms;
+    */
+    
+    UserApp1_StateMachine = UserApp1SM_AntIdle;
+  }
+
+  /* Watch for time out */
+  if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+  {
+    DebugPrintf(UserApp1_au8MessageFail);
+    UserApp1_StateMachine = UserApp1SM_Error;
+  }
+
+} /* end UserApp1SM_AntChannelAssign */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_AntIdle(void)
+{
+  static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
+  u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+
+  /* Check all the buttons and update au8TestMessage according to the button state */
+  au8TestMessage[0] = 0x00;
+  if( IsButtonPressed(BUTTON0) )
+  {
+    au8TestMessage[0] = 0xff;
+  }
+
+  au8TestMessage[1] = 0x00;
+  if( IsButtonPressed(BUTTON1) )
+  {
+    au8TestMessage[1] = 0xff;
+  }
+
+  au8TestMessage[2] = 0x00;
+  if( IsButtonPressed(BUTTON2) )
+  {
+    au8TestMessage[2] = 0xff;
+  }
+
+  au8TestMessage[3] = 0x00;
+  if( IsButtonPressed(BUTTON3) )
+  {
+    au8TestMessage[3] = 0xff;
+  }
+
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      /* We got some data: parse it into au8DataContent[] */
+      for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+      {
+        au8DataContent[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
+        au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+      }
+
+      LCDMessage(LINE2_START_ADDR, au8DataContent);
+
+    }
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
+    }
+  } /* end AntReadData() */
+
+} /* end UserApp1SM_Idle() */
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */

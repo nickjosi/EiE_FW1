@@ -331,6 +331,40 @@ void GameSound(void)
   }
 } /* end GameSound() */
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function InitializeGame()
+*/
+void InitializeGame(void)
+{
+  UserApp1_BallLevel = M_STARTING_BALL_LEV;
+    UserApp1_BallPosition = (G_u32SystemTime1ms % 8) + 3;
+    UserApp1_bBallRight = TRUE;
+    UserApp1_bBallApproach = TRUE;
+    UserApp1_PaddlePosition = M_STARTING_PADD_POS;
+    
+    UserApp1_GameMode = M_ONEPLAYER;
+
+    UserApp1_Score1 = 0;
+    
+    UserApp1_bBallHit = FALSE;
+    UserApp1_bGameOver = FALSE;
+    UserApp1_bPaddSound = FALSE;
+    UserApp1_bGOSound = FALSE;
+    
+    LoadGameScreen();
+    
+    /* Print hiscore to the LCD */
+    u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
+    u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
+    u8* au8ScoreTENS = &scoretempTENS;
+    u8* au8ScoreONES = &scoretempONES;
+    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS);
+    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES);
+      
+    UserApp1_Time = G_u32SystemTime1ms;
+    UserApp1_Time2 = G_u32SystemTime1ms;
+} /* end InitializeGame() */
+
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -868,35 +902,9 @@ static void UserApp1SM_AntChannelAssign()
     AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
     UserApp1_GameMode = M_TWOPLAYER;
     
-    /*
-    UserApp1_BallLevel = M_STARTING_BALL_LEV;
-    UserApp1_BallPosition = (G_u32SystemTime1ms % 8) + 3;
-    UserApp1_bBallRight = TRUE;
-    UserApp1_bBallApproach = TRUE;
-    UserApp1_PaddlePosition = M_STARTING_PADD_POS;
-
-    UserApp1_Score1 = 0;
+    //InitializeGame();
     
-    UserApp1_bBallHit = FALSE;
-    UserApp1_bGameOver = FALSE;
-    UserApp1_bPaddSound = FALSE;
-    UserApp1_bGOSound = FALSE;
-    
-    LoadGameScreen();
-    
-    /* Print hiscore to the LCD */ /*
-    u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
-    u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
-    u8* au8ScoreTENS = &scoretempTENS;
-    u8* au8ScoreONES = &scoretempONES;
-    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS);
-    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES);
-      
-    UserApp1_Time = G_u32SystemTime1ms;
-    UserApp1_Time2 = G_u32SystemTime1ms;
-    */
-    
-    UserApp1_StateMachine = UserApp1SM_AntIdle;
+    UserApp1_StateMachine = UserApp1SM_1PlyrStart;
   }
 
   /* Watch for time out */

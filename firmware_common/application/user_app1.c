@@ -377,6 +377,13 @@ static void UserApp1SM_MainMenu(void)
   } /* end BUTTON0 */
   
   
+  /* ----- BUTTON1 ----- */
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+  } /* end BUTTON1 */
+  
+  
   /* ----- BUTTON2 ----- */
   if(WasButtonPressed(BUTTON2))
   {
@@ -617,58 +624,57 @@ static void UserApp1SM_1PlyrStart(void)
         
         if(UserApp1_BallPosition == 1)
         {
-          LedPWM(WHITE, LED_PWM_50);
+          LedPWM(WHITE, LED_PWM_25);
         }
         else if(UserApp1_BallPosition == 2)
         {
-          LedPWM(WHITE, LED_PWM_25);
-          LedPWM(PURPLE, LED_PWM_25);
+          LedPWM(WHITE, LED_PWM_10);
+          LedPWM(PURPLE, LED_PWM_10);
         }
         else if(UserApp1_BallPosition == 3)
         {
-          LedPWM(PURPLE, LED_PWM_50);
+          LedPWM(PURPLE, LED_PWM_25);
         }
         else if(UserApp1_BallPosition == 4)
         {
-          LedPWM(PURPLE, LED_PWM_25);
+          LedPWM(PURPLE, LED_PWM_10);
           LedPWM(BLUE, LED_PWM_25);
         }
         else if(UserApp1_BallPosition == 5)
         {
-          LedPWM(PURPLE, LED_PWM_10);
           LedPWM(BLUE, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 6)
         {
-          LedPWM(BLUE, LED_PWM_75);
+          LedPWM(BLUE, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 7)
         {
-          LedPWM(BLUE, LED_PWM_35);
-          LedPWM(CYAN, LED_PWM_35);
+          LedPWM(BLUE, LED_PWM_25);
+          LedPWM(CYAN, LED_PWM_10);
         }
         else if(UserApp1_BallPosition == 8)
         {
-          LedPWM(CYAN, LED_PWM_60);
+          LedPWM(CYAN, LED_PWM_25);
         }
          else if(UserApp1_BallPosition == 9)
         {
-          LedPWM(CYAN, LED_PWM_40);
-          LedPWM(GREEN, LED_PWM_35);
+          LedPWM(CYAN, LED_PWM_25);
+          LedPWM(GREEN, LED_PWM_25);
         }
         else if(UserApp1_BallPosition == 10)
         {
-          LedPWM(CYAN, LED_PWM_20);
-          LedPWM(GREEN, LED_PWM_60);
+          LedPWM(CYAN, LED_PWM_10);
+          LedPWM(GREEN, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 11)
         {
-          LedPWM(GREEN, LED_PWM_75);
+          LedPWM(GREEN, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 12)
         {
-          LedPWM(GREEN, LED_PWM_40);
-          LedPWM(YELLOW, LED_PWM_70);
+          LedPWM(GREEN, LED_PWM_25);
+          LedPWM(YELLOW, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 13)
         {
@@ -676,13 +682,12 @@ static void UserApp1SM_1PlyrStart(void)
         }
         else if(UserApp1_BallPosition == 14)
         {
-          LedPWM(YELLOW, LED_PWM_70);
-          LedPWM(ORANGE, LED_PWM_40);
+          LedPWM(YELLOW, LED_PWM_50);
+          LedPWM(ORANGE, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 15)
         {
-          LedPWM(YELLOW, LED_PWM_40);
-          LedPWM(ORANGE, LED_PWM_70);
+          LedPWM(ORANGE, LED_PWM_100);
         }
         else if(UserApp1_BallPosition == 16)
         {
@@ -696,6 +701,34 @@ static void UserApp1SM_1PlyrStart(void)
         AllLedsOff();
         //LoadGameScreen();
       } /* end Ball on LCD */
+      
+      
+      
+      /* Use red LED to indicate ball level */
+      if(UserApp1_BallLevel == 0)
+      {
+        LedPWM(RED, LED_PWM_100);
+      }
+      else if(UserApp1_BallLevel == 1)
+      {
+        LedPWM(RED, LED_PWM_80);
+      }
+      else if(UserApp1_BallLevel == 2)
+      {
+        LedPWM(RED, LED_PWM_50);
+      }
+      else if(UserApp1_BallLevel == 3)
+      {
+        LedPWM(RED, LED_PWM_25);
+      }
+      else if(UserApp1_BallLevel == 4)
+      {
+        LedPWM(RED, LED_PWM_5);
+      }
+      else if(UserApp1_BallLevel == 5)
+      {
+        LedPWM(RED, LED_PWM_0);
+      }
       
     } /* end if(!GameOver) */
     

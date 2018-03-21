@@ -37,7 +37,7 @@ Runs current task state.  Should only be called once in main loop.
 #include "configuration.h"
 #define M_GAME_TICK 500
 #define M_STARTING_BALL_LEV 4
-#define M_STARTING_PADD_POS 9
+#define M_STARTING_PADD_POS 8
 
 
 
@@ -68,6 +68,9 @@ static u8 UserApp1_BallLevel;
 static u8 UserApp1_BallPosition;
 static bool UserApp1_bBallRight;
 static bool UserApp1_bBallApproach;
+
+static u8 UserApp1_ScoreTENS[] = "0";
+static u8 UserApp1_ScoreONES[] = "0";
 
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
@@ -201,16 +204,50 @@ void AllLedsOff(void)
 } /* end AllLedsOff() */
 
 /*--------------------------------------------------------------------------------------------------------------------
-Function UpdateGameScreen()
+Function LoadGameScreen()
 */
-void UpdateGameScreen(void)
-{
-  LCDCommand(LCD_CLEAR_CMD);
-  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-  LCDMessage(LINE1_START_ADDR, "|                  |");
-  LCDMessage(LINE2_START_ADDR, "|                  |");
-  LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+void LoadGameScreen(void)
+{ 
+  //LCDCommand(LCD_CLEAR_CMD);
+  //LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+  LCDMessage(LINE1_START_ADDR, "|                |  ");
+  LCDMessage(LINE2_START_ADDR, "|                |");
+  LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
+  LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
+  //LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
   
+  /* Ball location on LCD */
+  /*
+  if(UserApp1_BallLevel == 1)
+  {
+    LCDMessage(LINE1_START_ADDR + UserApp1_BallPosition, "o");
+  }
+  else if(UserApp1_BallLevel == 0)
+  {
+    if(UserApp1_PaddlePosition == UserApp1_BallPosition)
+    {
+      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "x");
+    }
+    else
+    {
+      LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
+    }
+  } */ /* end Ball on LCD */
+} /* end LoadGameScreen() */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function UpdateLCDPaddle()
+*/
+void UpdateLCDPaddle(void)
+{ 
+  LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
+} /* end UpdateLCDPaddle() */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function UpdateLCDBall()
+*/
+void UpdateLCDBall(void)
+{ 
   /* Ball location on LCD */
   if(UserApp1_BallLevel == 1)
   {
@@ -227,7 +264,7 @@ void UpdateGameScreen(void)
       LCDMessage(LINE2_START_ADDR + UserApp1_BallPosition, "o");
     }
   } /* end Ball on LCD */
-} /* end UpdateGameScreen() */
+} /* end UpdateLCDBall() */
 
 /*--------------------------------------------------------------------------------------------------------------------
 Function MenuSound()
@@ -317,17 +354,21 @@ static void UserApp1SM_MainMenu(void)
     ButtonAcknowledge(BUTTON0);
     
     UserApp1_BallLevel = M_STARTING_BALL_LEV;
-    UserApp1_BallPosition = (G_u32SystemTime1ms % 14) + 2;
+    UserApp1_BallPosition = (G_u32SystemTime1ms % 8) + 3;
     UserApp1_bBallRight = TRUE;
     UserApp1_bBallApproach = TRUE;
     UserApp1_PaddlePosition = M_STARTING_PADD_POS;
+   
+    //UserApp1_ScoreTENS = "1";
+    //UserApp1_ScoreONES = "4";
     
     UserApp1_bBallHit = FALSE;
     UserApp1_bGameOver = FALSE;
     UserApp1_bPaddSound = FALSE;
     UserApp1_bGOSound = FALSE;
     
-    UpdateGameScreen();
+    LoadGameScreen();
+    UpdateLCDPaddle();
       
     UserApp1_Time = G_u32SystemTime1ms;
     
@@ -411,7 +452,6 @@ static void UserApp1SM_MainMenu(void)
 static void UserApp1SM_1PlyrStart(void)
 {
   GameSound();
-  //UpdateGameScreen();
   /* Check for ball contact */
   if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
   {
@@ -433,12 +473,13 @@ static void UserApp1SM_1PlyrStart(void)
     ButtonAcknowledge(BUTTON0);
 
     /* Handle the case where the paddle is all the way to the left */
-    if(UserApp1_PaddlePosition != 1)
+    if(UserApp1_PaddlePosition > 1)
     {
       UserApp1_PaddlePosition--;
       
       /* Update display with new paddle position */
-      UpdateGameScreen();
+      //LoadGameScreen();
+      UpdateLCDPaddle();
     }
   } /* end BUTTON0 */
   
@@ -449,12 +490,13 @@ static void UserApp1SM_1PlyrStart(void)
     ButtonAcknowledge(BUTTON3);
 
     /* Handle the case where the paddle is all the way to the right */
-    if(UserApp1_PaddlePosition != 18)
+    if(UserApp1_PaddlePosition < 16)
     {
       UserApp1_PaddlePosition++;
 
       /* Update display with new paddle position */
-      UpdateGameScreen();
+      LoadGameScreen();
+      UpdateLCDPaddle();
     }
   } /* end BUTTON3 */
   
@@ -513,7 +555,7 @@ static void UserApp1SM_1PlyrStart(void)
       /* Update ball position (left/right) */
       if(UserApp1_bBallRight)
       {
-        if(UserApp1_BallPosition == 18)
+        if(UserApp1_BallPosition == 16)
         {
           UserApp1_bBallRight = FALSE;
           UserApp1_BallPosition--;
@@ -582,7 +624,8 @@ static void UserApp1SM_1PlyrStart(void)
       if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 4)
       {
         AllLedsOff();
-        UpdateGameScreen();
+        //LoadGameScreen();
+        UpdateLCDBall();
         
         if(UserApp1_BallPosition == 1)
         {
@@ -590,17 +633,22 @@ static void UserApp1SM_1PlyrStart(void)
         }
         else if(UserApp1_BallPosition == 2)
         {
-          LedPWM(WHITE, LED_PWM_50);
-          LedPWM(PURPLE, LED_PWM_50);
+          LedPWM(WHITE, LED_PWM_25);
+          LedPWM(PURPLE, LED_PWM_25);
         }
         else if(UserApp1_BallPosition == 3)
         {
           LedPWM(PURPLE, LED_PWM_50);
         }
-        else if(UserApp1_BallPosition == 4 || UserApp1_BallPosition == 5)
+        else if(UserApp1_BallPosition == 4)
         {
-          LedPWM(PURPLE, LED_PWM_50);
-          LedPWM(BLUE, LED_PWM_75);
+          LedPWM(PURPLE, LED_PWM_25);
+          LedPWM(BLUE, LED_PWM_25);
+        }
+        else if(UserApp1_BallPosition == 5)
+        {
+          LedPWM(PURPLE, LED_PWM_10);
+          LedPWM(BLUE, LED_PWM_50);
         }
         else if(UserApp1_BallPosition == 6)
         {
@@ -608,17 +656,22 @@ static void UserApp1SM_1PlyrStart(void)
         }
         else if(UserApp1_BallPosition == 7)
         {
-          LedPWM(BLUE, LED_PWM_75);
+          LedPWM(BLUE, LED_PWM_35);
           LedPWM(CYAN, LED_PWM_35);
         }
-        else if(UserApp1_BallPosition == 8 || UserApp1_BallPosition == 9)
+        else if(UserApp1_BallPosition == 8)
         {
-          LedPWM(CYAN, LED_PWM_35);
+          LedPWM(CYAN, LED_PWM_60);
+        }
+         else if(UserApp1_BallPosition == 9)
+        {
+          LedPWM(CYAN, LED_PWM_40);
+          LedPWM(GREEN, LED_PWM_35);
         }
         else if(UserApp1_BallPosition == 10)
         {
-          LedPWM(CYAN, LED_PWM_35);
-          LedPWM(GREEN, LED_PWM_75);
+          LedPWM(CYAN, LED_PWM_20);
+          LedPWM(GREEN, LED_PWM_60);
         }
         else if(UserApp1_BallPosition == 11)
         {
@@ -626,30 +679,26 @@ static void UserApp1SM_1PlyrStart(void)
         }
         else if(UserApp1_BallPosition == 12)
         {
-          LedPWM(GREEN, LED_PWM_75);
-          LedPWM(YELLOW, LED_PWM_100);
+          LedPWM(GREEN, LED_PWM_40);
+          LedPWM(YELLOW, LED_PWM_70);
         }
         else if(UserApp1_BallPosition == 13)
         {
           LedPWM(YELLOW, LED_PWM_100);
         }
-        else if(UserApp1_BallPosition == 14 || UserApp1_BallPosition == 15)
+        else if(UserApp1_BallPosition == 14)
         {
-          LedPWM(YELLOW, LED_PWM_100);
-          LedPWM(ORANGE, LED_PWM_100);
+          LedPWM(YELLOW, LED_PWM_70);
+          LedPWM(ORANGE, LED_PWM_40);
+        }
+        else if(UserApp1_BallPosition == 15)
+        {
+          LedPWM(YELLOW, LED_PWM_40);
+          LedPWM(ORANGE, LED_PWM_70);
         }
         else if(UserApp1_BallPosition == 16)
         {
           LedPWM(ORANGE, LED_PWM_100);
-        }
-        else if(UserApp1_BallPosition == 17)
-        {
-          LedPWM(ORANGE, LED_PWM_100);
-          LedPWM(RED, LED_PWM_100);
-        }
-        else
-        {
-          LedPWM(RED, LED_PWM_100);
         }
       } /* end LEDs */
       
@@ -657,14 +706,13 @@ static void UserApp1SM_1PlyrStart(void)
       else if(UserApp1_BallLevel <= 1)
       {
         AllLedsOff();
-        UpdateGameScreen();
+        //LoadGameScreen();
+        UpdateLCDBall();
       } /* end Ball on LCD */
       
     } /* end if(!GameOver) */
     
   } /* end time dependent section */
-  
-  //UpdateGameScreen();
   
   /* ---------- Ball Movement End ---------- */
 

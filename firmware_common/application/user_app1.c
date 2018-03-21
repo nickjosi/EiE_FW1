@@ -36,7 +36,7 @@ Runs current task state.  Should only be called once in main loop.
 
 #include "configuration.h"
 #define M_GAME_TICK 500
-#define M_PADD_TICK 250
+#define M_PADD_TICK 100
 #define M_STARTING_BALL_LEV 4
 #define M_STARTING_PADD_POS 8
 
@@ -494,19 +494,6 @@ static void UserApp1SM_1PlyrStart(void)
     }
   } /* end BUTTON3 */
   
-  
-  /* BUTTON1 or BUTTON2 exits to the main menu */
-  if(WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2))
-  {
-    ButtonAcknowledge(BUTTON1);
-    ButtonAcknowledge(BUTTON2);
-
-    AllLedsOff();
-    LoadMainMenu();  
-    
-    UserApp1_StateMachine = UserApp1SM_MainMenu;
-  } /* end BUTTON 2 */
-  
   /* ---------- Paddle Movement End ---------- */
   
   
@@ -717,6 +704,19 @@ static void UserApp1SM_1PlyrStart(void)
     LoadGameScreen();
   }
   
+  
+  
+  /* BUTTON1 or BUTTON2 exits to the main menu */
+  if(WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON1);
+    ButtonAcknowledge(BUTTON2);
+
+    AllLedsOff();
+    LoadMainMenu();  
+    
+    UserApp1_StateMachine = UserApp1SM_MainMenu;
+  } /* end BUTTON 2 */
   
 } /* end UserApp1SM_1PlyrStart() */
 

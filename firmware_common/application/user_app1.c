@@ -37,8 +37,8 @@ Runs current task state.  Should only be called once in main loop.
 #include "configuration.h"
 #define M_GAME_TICK 500
 #define M_PADD_TICK 100
-#define M_STARTING_BALL_LEV 4
-#define M_STARTING_PADD_POS 8
+#define M_STARTING_BALL_LEV 5
+#define M_STARTING_PADD_POS 9
 
 
 
@@ -72,6 +72,7 @@ static bool UserApp1_bBallApproach;
 
 static u8 UserApp1_ScoreTENS[] = "0";
 static u8 UserApp1_ScoreONES[] = "0";
+static u8 UserApp1_Score1;
 
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
@@ -214,8 +215,14 @@ void LoadGameScreen(void)
   //LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
   LCDMessage(LINE1_START_ADDR, "|                |  ");
   LCDMessage(LINE2_START_ADDR, "|                |  ");
-  LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
-  LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
+  //LCDMessage(LINE2_START_ADDR + 18, UserApp1_ScoreTENS);
+  //LCDMessage(LINE2_START_ADDR + 19, UserApp1_ScoreONES);
+  u8 scoretempTENS = (UserApp1_Score1 / 10) + 48;
+  u8 scoretempONES = (UserApp1_Score1 % 10) + 48;
+  u8* au8ScoreTENS = &scoretempTENS;
+  u8* au8ScoreONES = &scoretempONES;
+  LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
+  LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
   LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
   
   /* Ball location on LCD */
@@ -353,6 +360,7 @@ static void UserApp1SM_MainMenu(void)
    
     //UserApp1_ScoreTENS = "1";
     //UserApp1_ScoreONES = "4";
+    UserApp1_Score1 = 0;
     
     UserApp1_bBallHit = FALSE;
     UserApp1_bGameOver = FALSE;
@@ -477,7 +485,6 @@ static void UserApp1SM_1PlyrStart(void)
     }
   } /* end BUTTON0 */
   
-  
   /* BUTTON3 moves the cursor right one position */
   if(WasButtonPressed(BUTTON3))
   {
@@ -528,6 +535,7 @@ static void UserApp1SM_1PlyrStart(void)
       else 
       {
         UserApp1_bBallHit = FALSE;
+        UserApp1_Score1++;
       }
     }
     
@@ -574,7 +582,7 @@ static void UserApp1SM_1PlyrStart(void)
       }
       else
       {
-        if(UserApp1_BallLevel == 4)
+        if(UserApp1_BallLevel == 5)
         {
           AllLedsOff();
           UserApp1_bBallApproach = TRUE;
@@ -602,7 +610,7 @@ static void UserApp1SM_1PlyrStart(void)
       } /* end Ball Level update */
     
       /* Ball location to be indicated by LEDs */
-      if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 4)
+      if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 5)
       {
         AllLedsOff();
         //LoadGameScreen();

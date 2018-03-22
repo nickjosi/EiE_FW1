@@ -71,7 +71,7 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
-static bool UserApp1_MASTER = TRUE;
+static bool UserApp1_MASTER = FALSE;
 
 static u32 UserApp1_PairingDelay;
 static bool UserApp1_bPairingComplete;
@@ -249,6 +249,7 @@ void LoadGameScreen(void)
   LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
   LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
   
+  /*
   if(UserApp1_GameMode == M_TWOPLAYER)
   {
     u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
@@ -258,6 +259,7 @@ void LoadGameScreen(void)
     LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
     LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
   }
+  */
   
   LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
   
@@ -454,13 +456,17 @@ void Gameplay(void)
             LCDMessage(LINE2_START_ADDR, "======= OVER =======");
             UserApp1_StateMachine = UserApp1SM_GameOver;
           }
+          /*
           else
           {
             UserApp1_bRoundOver = TRUE;
+            LCDCommand(LCD_CLEAR_CMD);
+            LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
             LCDMessage(LINE1_START_ADDR, "|    POINT TO    |");
             LCDMessage(LINE2_START_ADDR, "|    OPPONENT    |");
             UserApp1_Score2++;
           }
+          */
           
           if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
           {
@@ -478,7 +484,7 @@ void Gameplay(void)
         }
       }
       
-      if(!UserApp1_bGameOver && !UserApp1_bRoundOver)
+      if(!UserApp1_bGameOver)
       {
         /* Update ball position (left/right) */
         if(UserApp1_bBallRight)
@@ -884,7 +890,7 @@ static void UserApp1SM_1PlyrStart(void)
             AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
           }
         }
-        
+        /*
         if(UserApp1_bRoundOver)
         {
           GameSound();
@@ -908,6 +914,7 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bTurn = FALSE;
             }
           }
+          */
         }
       }
       
@@ -939,6 +946,7 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bBallRight = (bool)!UserApp1_IncomingData[2];
               UserApp1_bBallApproach = TRUE;
             }
+            /*
             if(UserApp1_IncomingData[3] != 0)
             {
               UserApp1_bRoundOver = TRUE;
@@ -960,11 +968,12 @@ static void UserApp1SM_1PlyrStart(void)
               LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
               LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
             }
+            */
           }
         }
       }
       
-    }
+    
   }
   
   else  if(!UserApp1_bPairingComplete)
@@ -991,7 +1000,7 @@ static void UserApp1SM_1PlyrStart(void)
         }
       }
     }
-    
+    /*
     if(WasButtonPressed(BUTTON3))
     {
       ButtonAcknowledge(BUTTON3);
@@ -1008,6 +1017,7 @@ static void UserApp1SM_1PlyrStart(void)
     ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
     ButtonAcknowledge(BUTTON3);
+    */
   }
   
 } /* end UserApp1SM_1PlyrStart() */

@@ -99,6 +99,7 @@ static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
 static bool UserApp1_bRoundOver;
 static bool UserApp1_bRoundOverDelay;
+static bool UserApp1_bNewRound;
 static u8 UserApp1_DoOnce;
 
 static bool UserApp1_bSoundOn;
@@ -346,10 +347,12 @@ void InitializeGame(void)
   UserApp1_bGameOver = FALSE;
   UserApp1_bRoundOver = FALSE;
   UserApp1_bRoundOverDelay = FALSE;
+  UserApp1_bNewRound = FALSE;
   UserApp1_bPaddSound = FALSE;
   UserApp1_bGOSound = FALSE;
   UserApp1_bTurnOver = FALSE;
   
+  /*
   if(UserApp1_GameMode == M_TWOPLAYER)
   {
     u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
@@ -359,6 +362,7 @@ void InitializeGame(void)
     LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
     LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
   }
+  */
   
   if(UserApp1_GameMode == M_ONEPLAYER)
   {
@@ -473,12 +477,14 @@ void Gameplay(void)
             LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
             LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
             
+            /*
             u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
             u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
             u8* au8ScoreTENS2 = &scoretempTENS2;
             u8* au8ScoreONES2 = &scoretempONES2;
             LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
             LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
+            */
           }
           
           if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
@@ -894,7 +900,7 @@ static void UserApp1SM_1PlyrStart(void)
         UserApp1_OutgoingData[1] = UserApp1_BallPosition;
         UserApp1_OutgoingData[2] = (u8)UserApp1_bBallRight;
         UserApp1_OutgoingData[3] = (u8)UserApp1_bRoundOver;
-        UserApp1_OutgoingData[4] = 0x00;
+        UserApp1_OutgoingData[4] = (u8)UserApp1_bRoundOverDelay;
         UserApp1_OutgoingData[5] = 0x00;
         UserApp1_OutgoingData[6] = 0x00;
         UserApp1_OutgoingData[7] = G_u32SystemTime1s - UserApp1_PairingDelay;
@@ -941,9 +947,7 @@ static void UserApp1SM_1PlyrStart(void)
           }
         }
         
-      }
-      
-      
+      }  
       
       else
       {
@@ -978,31 +982,53 @@ static void UserApp1SM_1PlyrStart(void)
             {
               UserApp1_bRoundOverDelay = FALSE;
               UserApp1_DoOnce = 1;
+              if(UserApp1_bNewRound)
+              {
+                UserApp1_bNewRound = FALSE;
+                InitializeGame();
+                LoadGameScreen();
+                if(UserApp1_MASTER)
+                {
+                  UserApp1_bTurn = TRUE;
+                }
+                else
+                {
+                  UserApp1_bTurn = FALSE;
+                }
+              }
             }
             else
             {
               UserApp1_bRoundOverDelay = TRUE;
+              UserApp1_bNewRound = TRUE;
               do
               {
-              LCDCommand(LCD_CLEAR_CMD);
-              LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-              LCDMessage(LINE1_START_ADDR, "|     POINT      |");
-              LCDMessage(LINE2_START_ADDR, "|      WON       |");
+              LCDMessage(LINE1_START_ADDR, "|     POINT      |  ");
+              //LCDMessage(LINE2_START_ADDR, "|      WON       |  ");
               UserApp1_Score1++;
               
               u8 scoretempTENS = (UserApp1_Score1 / 10) + 48;
               u8 scoretempONES = (UserApp1_Score1 % 10) + 48;
               u8* au8ScoreTENS = &scoretempTENS;
               u8* au8ScoreONES = &scoretempONES;
-              LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
-              LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
+              u8 line2message[] = {'|',' ',' ',' ',' ',' ',' ','W','O','N',' ',' ',' ',' ',' ',' ',' ','|',scoretempTENS,scoretempONES};
+              LCDMessage(LINE2_START_ADDR, line2message);
+              //u8 au8Score1[] = {scoretempTENS, scoretempONES};
+              //LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
+              //LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
+              //LCDMessage(LINE2_START_ADDR + 18, au8Score1);
               
+              /*
               u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
               u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
-              u8* au8ScoreTENS2 = &scoretempTENS2;
-              u8* au8ScoreONES2 = &scoretempONES2;
-              LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
-              LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
+              /*
+              //u8* au8ScoreTENS2 = &scoretempTENS2;
+              //u8* au8ScoreONES2 = &scoretempONES2;
+              u8 au8Score2[] = {scoretempTENS2, scoretempONES2};
+              //LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
+              //LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
+               LCDMessage(LINE2_START_ADDR + 18, au8Score2);
+               */
               } while (--UserApp1_DoOnce);
             }
             

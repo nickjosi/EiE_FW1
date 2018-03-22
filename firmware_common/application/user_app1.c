@@ -99,6 +99,7 @@ static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
 static bool UserApp1_bRoundOver;
 static bool UserApp1_bRoundOverDelay;
+static u8 UserApp1_DoOnce;
 
 static bool UserApp1_bSoundOn;
 static bool UserApp1_bPaddSound;
@@ -148,6 +149,8 @@ void UserApp1Initialize(void)
 {
   AllLedsOff();
   UserApp1_LCDColour = 0;
+  UserApp1_Score1 = 0;
+  UserApp1_Score2 = 0;
   UserApp1_HiScore = 0;
   UserApp1_bSoundOn = TRUE;
   
@@ -251,18 +254,6 @@ void LoadGameScreen(void)
   LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
   LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
   
-  /*
-  if(UserApp1_GameMode == M_TWOPLAYER)
-  {
-    u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
-    u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
-    u8* au8ScoreTENS2 = &scoretempTENS2;
-    u8* au8ScoreONES2 = &scoretempONES2;
-    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
-    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
-  }
-  */
-  
   LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
   
   /* Ball location on LCD */
@@ -350,9 +341,6 @@ void InitializeGame(void)
   UserApp1_bBallRight = TRUE;
   UserApp1_bBallApproach = TRUE;
   UserApp1_PaddlePosition = M_STARTING_PADD_POS;
-
-  UserApp1_Score1 = 0;
-  UserApp1_Score2 = 0;
   
   UserApp1_bBallHit = FALSE;
   UserApp1_bGameOver = FALSE;
@@ -362,14 +350,22 @@ void InitializeGame(void)
   UserApp1_bGOSound = FALSE;
   UserApp1_bTurnOver = FALSE;
   
-  if(UserApp1_GameMode == M_ONEPLAYER)
+  if(UserApp1_GameMode == M_TWOPLAYER)
   {
-    UserApp1_bTurn = TRUE;
-    LoadGameScreen();
+    u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
+    u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
+    u8* au8ScoreTENS2 = &scoretempTENS2;
+    u8* au8ScoreONES2 = &scoretempONES2;
+    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
+    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
   }
   
   if(UserApp1_GameMode == M_ONEPLAYER)
   {
+    UserApp1_bTurn = TRUE;
+    UserApp1_Score1 = 0;
+    LoadGameScreen();
+    
     /* Print hiscore to the LCD */
     u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
     u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
@@ -469,6 +465,20 @@ void Gameplay(void)
             LCDMessage(LINE1_START_ADDR, "|    POINT TO    |");
             LCDMessage(LINE2_START_ADDR, "|    OPPONENT    |");
             UserApp1_Score2++;
+            
+            u8 scoretempTENS = (UserApp1_Score1 / 10) + 48;
+            u8 scoretempONES = (UserApp1_Score1 % 10) + 48;
+            u8* au8ScoreTENS = &scoretempTENS;
+            u8* au8ScoreONES = &scoretempONES;
+            LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
+            LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
+            
+            u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
+            u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
+            u8* au8ScoreTENS2 = &scoretempTENS2;
+            u8* au8ScoreONES2 = &scoretempONES2;
+            LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
+            LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
           }
           
           if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
@@ -487,7 +497,7 @@ void Gameplay(void)
         }
       }
       
-      if(!UserApp1_bGameOver)
+      if(!UserApp1_bGameOver && !UserApp1_bRoundOver)
       {
         /* Update ball position (left/right) */
         if(UserApp1_bBallRight)
@@ -907,7 +917,7 @@ static void UserApp1SM_1PlyrStart(void)
         if(UserApp1_bRoundOverDelay)
         {
           GameSound();
-          UserApp1_bRoundOver = FALSE;
+          //UserApp1_bRoundOver = FALSE;
           
           if(G_u32SystemTime1ms >= UserApp1_Time + 3000)
           {
@@ -916,6 +926,7 @@ static void UserApp1SM_1PlyrStart(void)
             ButtonAcknowledge(BUTTON2);
             ButtonAcknowledge(BUTTON3);
             
+            UserApp1_bRoundOver = FALSE;
             UserApp1_bRoundOverDelay = FALSE;
             
             InitializeGame();
@@ -963,8 +974,18 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bBallApproach = TRUE;
             }
             
-            if(UserApp1_IncomingData[3] != 0)
+            if((bool)UserApp1_IncomingData[3] == FALSE)
             {
+              UserApp1_bRoundOverDelay = FALSE;
+              UserApp1_DoOnce = 1;
+            }
+            else
+            {
+              UserApp1_bRoundOverDelay = TRUE;
+              do
+              {
+              LCDCommand(LCD_CLEAR_CMD);
+              LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
               LCDMessage(LINE1_START_ADDR, "|     POINT      |");
               LCDMessage(LINE2_START_ADDR, "|      WON       |");
               UserApp1_Score1++;
@@ -982,6 +1003,7 @@ static void UserApp1SM_1PlyrStart(void)
               u8* au8ScoreONES2 = &scoretempONES2;
               LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
               LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
+              } while (--UserApp1_DoOnce);
             }
             
           }

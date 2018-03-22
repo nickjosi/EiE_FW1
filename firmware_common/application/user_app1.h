@@ -29,7 +29,7 @@ Type Definitions
 Constants / Definitions
 **********************************************************************************************************************/
 /* Required constants for ANT channel configuration */
-#define ANT_CHANNEL_TYPE_USERAPP        CHANNEL_TYPE_MASTER   // Device is a MASTER
+//#define ANT_CHANNEL_TYPE_USERAPP        CHANNEL_TYPE_MASTER   // Device is a MASTER
 #define ANT_CHANNEL_USERAPP             ANT_CHANNEL_0         // Channel 0 - 7
 #define ANT_DEVICEID_LO_USERAPP         (u8)0x19              // Low byte of two-byte Device #
 #define ANT_DEVICEID_HI_USERAPP         (u8)0x25              // High byte of two-byte Device #
@@ -67,6 +67,7 @@ void MenuSound(void);
 void GameSound(void);
 
 void InitializeGame(void);
+void AntInitialization(void);
 
 /***********************************************************************************************************************
 State Machine Declarations
@@ -83,7 +84,7 @@ static void UserApp1SM_GameOver(void);
 
 static void UserApp1SM_AntChannelAssign(void);
 
-static void UserApp1SM_AntIdle(void);
+static void UserApp1SM_2PlyrStart(void);
 
 
 #endif /* __USER_APP1_H */

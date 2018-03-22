@@ -71,12 +71,13 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
-static bool UserApp1_MASTER = FALSE;
+static bool UserApp1_MASTER = TRUE;
 
 static u32 UserApp1_PairingDelay;
 static bool UserApp1_bPairingComplete;
 
 static bool UserApp1_bTurn;
+static bool UserApp1_bTurnOver;
 
 static u8 UserApp1_LastLevel;
 static u8 UserApp1_CurrentLevel;
@@ -357,6 +358,7 @@ void InitializeGame(void)
   UserApp1_bRoundOver = FALSE;
   UserApp1_bPaddSound = FALSE;
   UserApp1_bGOSound = FALSE;
+  UserApp1_bTurnOver = FALSE;
   
   if(UserApp1_GameMode == M_ONEPLAYER)
   {
@@ -553,7 +555,7 @@ void Gameplay(void)
             
             else
             {
-              UserApp1_bTurn = FALSE;
+              UserApp1_bTurnOver = TRUE;
               AllLedsOff();
             }         
           }
@@ -760,8 +762,8 @@ static void UserApp1SM_MainMenu(void)
     
     UserApp1_GameMode = M_TWOPLAYER;
     InitializeGame();
-    LCDMessage(LINE1_START_ADDR, "PAIRING WITH    QUIT");
-    LCDMessage(LINE2_START_ADDR, "OPPONENT           ^");
+    LCDMessage(LINE1_START_ADDR, "PAIRING WITH        ");
+    LCDMessage(LINE2_START_ADDR, "OPPONENT            ");
     
     UserApp1_PairingDelay = G_u32SystemTime1s;
     UserApp1_bPairingComplete = FALSE;
@@ -883,12 +885,19 @@ static void UserApp1SM_1PlyrStart(void)
         UserApp1_OutgoingData[6] = 0x00;
         UserApp1_OutgoingData[7] = G_u32SystemTime1s - UserApp1_PairingDelay;
         
+        
         if( AntReadAppMessageBuffer() )
         { 
           if(G_eAntApiCurrentMessageClass == ANT_TICK)
           {          
             AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
           }
+        }
+        
+        if(UserApp1_bTurnOver)
+        {
+          UserApp1_bTurnOver = FALSE;
+          UserApp1_bTurn = FALSE;
         }
         /*
         if(UserApp1_bRoundOver)
@@ -916,7 +925,8 @@ static void UserApp1SM_1PlyrStart(void)
           }
           */
         }
-      }
+    }
+      
       
       else
       {
@@ -1066,23 +1076,23 @@ static void UserApp1SM_AntChannelAssign()
     
     if(UserApp1_MASTER)
     {
-      InitializeGame();
-      UserApp1_bTurn = TRUE;
-    }
+    InitializeGame();
+    UserApp1_bTurn = TRUE;
+  }
     else
     {
-      LCDMessage(LINE1_START_ADDR, "                    ");
-      LCDMessage(LINE2_START_ADDR, "                    ");
-      UserApp1_bTurn = FALSE;
-    }
+    LCDMessage(LINE1_START_ADDR, "                    ");
+    LCDMessage(LINE2_START_ADDR, "                    ");
+    UserApp1_bTurn = FALSE;
+  }
     */
     
     
     /*
     if(UserApp1_MASTER)
     {
-      UserApp1_OutgoingData[0] = 0x00;
-    }
+    UserApp1_OutgoingData[0] = 0x00;
+  }
     LCDMessage(LINE1_START_ADDR, "PAIRING WITH OPPONEN");
     LCDMessage(LINE2_START_ADDR, "                    ");
     
@@ -1090,15 +1100,16 @@ static void UserApp1SM_AntChannelAssign()
     //UserApp1_StateMachine = UserApp1SM_AntIdle;
   }
     */
-
     
-  /* Watch for time out */
-  if(IsTimeUp(&UserApp1_u32Timeout, 3000))
-  {
-    DebugPrintf(UserApp1_au8MessageFail);
-    UserApp1_StateMachine = UserApp1SM_Error;
   }
-
+    /* Watch for time out */
+    if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+    {
+      DebugPrintf(UserApp1_au8MessageFail);
+      UserApp1_StateMachine = UserApp1SM_Error;
+    }
+  
+  
 } /* end UserApp1SM_AntChannelAssign */
 
 
@@ -1146,8 +1157,8 @@ static void UserApp1SM_2PlyrStart(void)
     }
   }
   
-  */
-} /* end UserApp1SM_Idle() */
+  
+} */ /* end UserApp1SM_Idle() */
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/

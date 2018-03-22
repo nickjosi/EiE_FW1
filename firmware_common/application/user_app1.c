@@ -939,7 +939,7 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bBallRight = (bool)!UserApp1_IncomingData[2];
               UserApp1_bBallApproach = TRUE;
             }
-            if(UserApp1_IncomingData[3] == 1)
+            if(UserApp1_IncomingData[3] != 0)
             {
               UserApp1_bRoundOver = TRUE;
               LCDMessage(LINE1_START_ADDR, "|     POINT      |");

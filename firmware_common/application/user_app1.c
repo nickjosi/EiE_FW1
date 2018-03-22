@@ -38,7 +38,7 @@ Runs current task state.  Should only be called once in main loop.
 
 #define M_GAME_TICK 500
 #define M_PADD_TICK 100
-#define M_STARTING_BALL_LEV 4
+#define M_STARTING_BALL_LEV 5
 #define M_STARTING_PADD_POS 9
 #define M_ONEPLAYER 0
 #define M_TWOPLAYER 1
@@ -74,6 +74,8 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static bool UserApp1_MASTER = FALSE;
 
 static u8 UserApp1_PairCounter = 0;
+
+static bool UserApp1_bTurn;
 
 static u8 UserApp1_PaddlePosition;
 
@@ -334,7 +336,10 @@ void InitializeGame(void)
   UserApp1_bBallApproach = TRUE;
   UserApp1_PaddlePosition = M_STARTING_PADD_POS;
   
-  UserApp1_GameMode = M_ONEPLAYER;
+  if(UserApp1_GameMode == M_ONEPLAYER)
+  {
+    UserApp1_bTurn = TRUE;
+  }
 
   UserApp1_Score1 = 0;
   
@@ -388,141 +393,13 @@ void AntInitialization(void)
   }
 } /* end AntInitialization() */
 
-
-/**********************************************************************************************************************
-State Machine Function Definitions
-**********************************************************************************************************************/
-
-/*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
-static void UserApp1SM_Idle(void)
+/*--------------------------------------------------------------------------------------------------------------------
+Function Gameplay()
+*/
+void Gameplay(void)
 {
-
-} /* end UserApp1SM_Idle() */
-    
-
-/*-------------------------------------------------------------------------------------------------------------------*/
-/* Handle an error */
-static void UserApp1SM_Error(void)          
-{
-  AllLedsOff();
-  LedPWM(RED, LED_PWM_100);
-  LedPWM(YELLOW, LED_PWM_100);
-} /* end UserApp1SM_Error() */
-
-
-/*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
-static void UserApp1SM_MainMenu(void)
-{
-  MenuSound();
-  /* ----- BUTTON0 -----  */
-  if(WasButtonPressed(BUTTON0))
+  if(UserApp1_bTurn)
   {
-    ButtonAcknowledge(BUTTON0);
-    
-    InitializeGame();
-    
-    UserApp1_StateMachine = UserApp1SM_1PlyrStart;
-  } /* end BUTTON0 */
-  
-  
-  /* ----- BUTTON1 ----- */
-  if(WasButtonPressed(BUTTON1))
-  {
-    ButtonAcknowledge(BUTTON1);
-    
-    AntInitialization();
-    
-    if( AntAssignChannel(&UserApp1_sChannelInfo) )
-    {
-      UserApp1_u32Timeout = G_u32SystemTime1ms;
-      UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
-    }
-    else
-    {
-      /* The task isn't properly initialized, so shut it down and don't run */
-      DebugPrintf(UserApp1_au8MessageFail);
-      UserApp1_StateMachine = UserApp1SM_Error;
-    }
-  } /* end BUTTON1 */
-  
-  
-  /* ----- BUTTON2 ----- */
-  if(WasButtonPressed(BUTTON2))
-  {
-    ButtonAcknowledge(BUTTON2);
-    
-    if(!UserApp1_bSoundOn)
-    {
-      UserApp1_bSoundOn = TRUE;
-      UserApp1_SoundTimer = G_u32SystemTime1ms;
-    }
-    else
-    {
-      UserApp1_bSoundOn = FALSE;
-    }
-    
-    LoadMainMenu();
-  } /* end BUTTON2 */
-  
-  
-  /* ----- BUTTON3 ----- */
-  if(WasButtonPressed(BUTTON3))
-  {
-    ButtonAcknowledge(BUTTON3);
-    
-    UserApp1_LCDColour++;
-    if(UserApp1_LCDColour == 6)
-    {
-      UserApp1_LCDColour = 0;
-    }
-  }
-    
-  if(UserApp1_LCDColour == 0) //WHITE
-  {
-    LedOn(LCD_RED);
-    LedOn(LCD_GREEN);
-    LedOn(LCD_BLUE);
-  }
-  else if(UserApp1_LCDColour == 1) //GREEN
-  {
-    LedOff(LCD_RED);
-    LedOn(LCD_GREEN);
-    LedOff(LCD_BLUE);
-  }
-  else if(UserApp1_LCDColour == 2) //MAGENTA
-  {
-    LedOn(LCD_RED);
-    LedOff(LCD_GREEN);
-    LedOn(LCD_BLUE);
-  }
-  else if(UserApp1_LCDColour == 3) //CYAN
-  {
-    LedOff(LCD_RED);
-    LedOn(LCD_GREEN);
-    LedOn(LCD_BLUE);
-  }
-  else if(UserApp1_LCDColour == 4) //YELLOW
-  {
-    LedOn(LCD_RED);
-    LedOn(LCD_GREEN);
-    LedOff(LCD_BLUE);
-  }
-  else if(UserApp1_LCDColour == 5) //OFF
-  {
-    LedOff(LCD_RED);
-    LedOff(LCD_GREEN);
-    LedOff(LCD_BLUE);
-  } /* end BUTTON3 */
-  
-} /* end UserApp1SM_MainMenu() */
-  
-
-/*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
-static void UserApp1SM_1PlyrStart(void)
-{
   GameSound();
   /* Check for ball contact */
   if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
@@ -786,53 +663,202 @@ static void UserApp1SM_1PlyrStart(void)
     
     UserApp1_StateMachine = UserApp1SM_MainMenu;
   } /* end BUTTON 2 */
+  }
+} /* end Gameplay() */
+
+
+/**********************************************************************************************************************
+State Machine Function Definitions
+**********************************************************************************************************************/
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_Idle(void)
+{
+
+} /* end UserApp1SM_Idle() */
+    
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Handle an error */
+static void UserApp1SM_Error(void)          
+{
+  AllLedsOff();
+  LedPWM(RED, LED_PWM_100);
+  LedPWM(YELLOW, LED_PWM_100);
+} /* end UserApp1SM_Error() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_MainMenu(void)
+{
+  MenuSound();
+  /* ----- BUTTON0 -----  */
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    
+    UserApp1_GameMode = M_ONEPLAYER;
+    InitializeGame();
+    
+    UserApp1_StateMachine = UserApp1SM_1PlyrStart;
+  } /* end BUTTON0 */
   
   
+  /* ----- BUTTON1 ----- */
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    UserApp1_GameMode = M_TWOPLAYER;
+    
+    if(UserApp1_MASTER)
+    {
+      InitializeGame();
+      UserApp1_bTurn = TRUE;
+    }
+    else
+    {
+      LCDMessage(LINE1_START_ADDR, "                    ");
+      LCDMessage(LINE2_START_ADDR, "                    ");
+      UserApp1_bTurn = FALSE;
+    }
+    
+    AntInitialization();
+    if( AntAssignChannel(&UserApp1_sChannelInfo) )
+    {
+      UserApp1_u32Timeout = G_u32SystemTime1ms;
+      UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
+    }
+    else
+    {
+      /* The task isn't properly initialized, so shut it down and don't run */
+      DebugPrintf(UserApp1_au8MessageFail);
+      UserApp1_StateMachine = UserApp1SM_Error;
+    }
+  } /* end BUTTON1 */
   
+  
+  /* ----- BUTTON2 ----- */
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    
+    if(!UserApp1_bSoundOn)
+    {
+      UserApp1_bSoundOn = TRUE;
+      UserApp1_SoundTimer = G_u32SystemTime1ms;
+    }
+    else
+    {
+      UserApp1_bSoundOn = FALSE;
+    }
+    
+    LoadMainMenu();
+  } /* end BUTTON2 */
+  
+  
+  /* ----- BUTTON3 ----- */
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    
+    UserApp1_LCDColour++;
+    if(UserApp1_LCDColour == 6)
+    {
+      UserApp1_LCDColour = 0;
+    }
+  }
+    
+  if(UserApp1_LCDColour == 0) //WHITE
+  {
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOn(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 1) //GREEN
+  {
+    LedOff(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 2) //MAGENTA
+  {
+    LedOn(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOn(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 3) //CYAN
+  {
+    LedOff(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOn(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 4) //YELLOW
+  {
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
+  }
+  else if(UserApp1_LCDColour == 5) //OFF
+  {
+    LedOff(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOff(LCD_BLUE);
+  } /* end BUTTON3 */
+  
+} /* end UserApp1SM_MainMenu() */
+  
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_1PlyrStart(void)
+{
+  Gameplay();
   if(UserApp1_GameMode == M_TWOPLAYER)
   {
-    static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
-    u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
-
-    /* Check all the buttons and update au8TestMessage according to the button state */
-    au8TestMessage[0] = UserApp1_BallLevel;
-
-    au8TestMessage[1] = UserApp1_BallPosition;
-
-    au8TestMessage[2] = 0x00;
-
-    au8TestMessage[3] = 0x00;
-
-    if( AntReadAppMessageBuffer() )
+    if(UserApp1_bTurn)
     {
-       /* New message from ANT task: check what it is */
-      if(G_eAntApiCurrentMessageClass == ANT_DATA)
-      {
-        /* We got some data: parse it into au8DataContent[] */
-        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
-        {
-          au8DataContent[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
-          au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+      UserApp1_OutgoingData[0] = UserApp1_BallLevel;
+      UserApp1_OutgoingData[1] = UserApp1_BallPosition;
+      UserApp1_OutgoingData[2] = 0x00;
+      UserApp1_OutgoingData[3] = 0x00;
+      UserApp1_OutgoingData[4] = 0x00;
+      UserApp1_OutgoingData[5] = 0x00;
+      UserApp1_OutgoingData[6] = 0x00;
+      UserApp1_OutgoingData[7] = 0x00;
+      
+      if( AntReadAppMessageBuffer() )
+      { 
+        if(G_eAntApiCurrentMessageClass == ANT_TICK)
+        {          
+          AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
         }
-
-        LCDMessage(LINE2_START_ADDR, au8DataContent);
-
       }
-      else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    }
+    
+    else
+    {
+      LedOn(CYAN);
+      if( AntReadAppMessageBuffer() )
       {
-       /* Update and queue the new message data */
-        au8TestMessage[7]++;
-        if(au8TestMessage[7] == 0)
+        if(G_eAntApiCurrentMessageClass == ANT_DATA)
         {
-          au8TestMessage[6]++;
-          if(au8TestMessage[6] == 0)
+          for(u8 i = 0; i < ANT_DATA_BYTES; i++)
           {
-            au8TestMessage[5]++;
+            //UserApp1_IncomingData[i] = G_au8AntApiCurrentMessageBytes[i];
+            UserApp1_IncomingData[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
+            UserApp1_IncomingData[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
           }
+          UserApp1_PairCounter++;
+          u8* counter = &UserApp1_PairCounter;
+          LCDMessage(LINE2_START_ADDR, UserApp1_IncomingData);
+          LCDMessage(LINE2_START_ADDR + 18, counter);
         }
-        AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
       }
-    } /* end AntReadData() */
+    }
+    
   }
   
 } /* end UserApp1SM_1PlyrStart() */
@@ -873,7 +899,26 @@ static void UserApp1SM_AntChannelAssign()
     /* Channel assignment is successful, so open channel and
     proceed to Idle state */
     AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
+    UserApp1_StateMachine = UserApp1SM_1PlyrStart;
+    
+    /*
     UserApp1_GameMode = M_TWOPLAYER;
+    
+    if(UserApp1_MASTER)
+    {
+      InitializeGame();
+      UserApp1_bTurn = TRUE;
+    }
+    else
+    {
+      LCDMessage(LINE1_START_ADDR, "                    ");
+      LCDMessage(LINE2_START_ADDR, "                    ");
+      UserApp1_bTurn = FALSE;
+    }
+    */
+    
+    
+    /*
     if(UserApp1_MASTER)
     {
       UserApp1_OutgoingData[0] = 0x00;
@@ -884,7 +929,9 @@ static void UserApp1SM_AntChannelAssign()
     UserApp1_StateMachine = UserApp1SM_2PlyrStart;
     //UserApp1_StateMachine = UserApp1SM_AntIdle;
   }
+    */
 
+    
   /* Watch for time out */
   if(IsTimeUp(&UserApp1_u32Timeout, 3000))
   {
@@ -897,6 +944,7 @@ static void UserApp1SM_AntChannelAssign()
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
+/*
 static void UserApp1SM_2PlyrStart(void)
 {
   //InitializeGame();
@@ -908,7 +956,9 @@ static void UserApp1SM_2PlyrStart(void)
     { 
       if(G_eAntApiCurrentMessageClass == ANT_TICK)
       {
+        */
         /* Update and queue the new message data */
+        /*
         UserApp1_OutgoingData[0]++;
         
         AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
@@ -936,8 +986,9 @@ static void UserApp1SM_2PlyrStart(void)
     }
   }
   
-  
+  */
 } /* end UserApp1SM_Idle() */
+
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/

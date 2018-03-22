@@ -71,7 +71,7 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
-static bool UserApp1_MASTER = TRUE;
+static bool UserApp1_MASTER = FALSE;
 
 static u32 UserApp1_PairingDelay;
 static bool UserApp1_bPairingComplete;
@@ -925,7 +925,7 @@ static void UserApp1SM_1PlyrStart(void)
           }
           */
         }
-    }
+  
       
       
       else
@@ -983,7 +983,7 @@ static void UserApp1SM_1PlyrStart(void)
         }
       }
       
-    
+    }
   }
   
   else  if(!UserApp1_bPairingComplete)

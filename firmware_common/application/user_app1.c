@@ -71,7 +71,7 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
-static bool UserApp1_MASTER = FALSE;
+static bool UserApp1_MASTER = TRUE;
 
 static u32 UserApp1_PairingDelay;
 static bool UserApp1_bPairingComplete;
@@ -99,6 +99,7 @@ static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
 static bool UserApp1_bRoundOver;
 static bool UserApp1_bRoundOverDelay;
+static bool UserApp1_bWonScreen;
 static bool UserApp1_bNewRound;
 static u8 UserApp1_DoOnce;
 
@@ -885,7 +886,7 @@ static void UserApp1SM_MainMenu(void)
 static void UserApp1SM_1PlyrStart(void)
 {
   if(UserApp1_GameMode == M_ONEPLAYER 
-     || (UserApp1_GameMode == M_TWOPLAYER && UserApp1_bPairingComplete))
+     || (UserApp1_GameMode == M_TWOPLAYER && UserApp1_bPairingComplete && !UserApp1_bWonScreen))
   {
     if(!UserApp1_bRoundOverDelay)
     {
@@ -978,31 +979,10 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bBallApproach = TRUE;
             }
             
-            if((bool)UserApp1_IncomingData[3] == FALSE)
+            if((bool)UserApp1_IncomingData[3] == TRUE)
             {
-              UserApp1_bRoundOverDelay = FALSE;
-              UserApp1_DoOnce = 1;
-              if(UserApp1_bNewRound)
-              {
-                UserApp1_bNewRound = FALSE;
-                InitializeGame();
-                LoadGameScreen();
-                if(UserApp1_MASTER)
-                {
-                  UserApp1_bTurn = TRUE;
-                }
-                else
-                {
-                  UserApp1_bTurn = FALSE;
-                }
-              }
-            }
-            else
-            {
-              UserApp1_bRoundOverDelay = TRUE;
-              UserApp1_bNewRound = TRUE;
-              do
-              {
+              UserApp1_bWonScreen = TRUE;
+              
               LCDMessage(LINE1_START_ADDR, "|     POINT      |  ");
               //LCDMessage(LINE2_START_ADDR, "|      WON       |  ");
               UserApp1_Score1++;
@@ -1013,23 +993,6 @@ static void UserApp1SM_1PlyrStart(void)
               u8* au8ScoreONES = &scoretempONES;
               u8 line2message[] = {'|',' ',' ',' ',' ',' ',' ','W','O','N',' ',' ',' ',' ',' ',' ',' ','|',scoretempTENS,scoretempONES};
               LCDMessage(LINE2_START_ADDR, line2message);
-              //u8 au8Score1[] = {scoretempTENS, scoretempONES};
-              //LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
-              //LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
-              //LCDMessage(LINE2_START_ADDR + 18, au8Score1);
-              
-              /*
-              u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
-              u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
-              /*
-              //u8* au8ScoreTENS2 = &scoretempTENS2;
-              //u8* au8ScoreONES2 = &scoretempONES2;
-              u8 au8Score2[] = {scoretempTENS2, scoretempONES2};
-              //LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
-              //LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
-               LCDMessage(LINE2_START_ADDR + 18, au8Score2);
-               */
-              } while (--UserApp1_DoOnce);
             }
             
           }
@@ -1039,7 +1002,30 @@ static void UserApp1SM_1PlyrStart(void)
     }
   }
   
-  else  if(!UserApp1_bPairingComplete)
+  else if(UserApp1_bWonScreen)
+  {
+    if(G_u32SystemTime1ms >= UserApp1_Time + 3000)
+    {
+      ButtonAcknowledge(BUTTON0);
+      ButtonAcknowledge(BUTTON1);
+      ButtonAcknowledge(BUTTON2);
+      ButtonAcknowledge(BUTTON3);
+      
+      UserApp1_bWonScreen = FALSE;
+      
+      InitializeGame();
+      if(UserApp1_MASTER)
+      {
+        UserApp1_bTurn = TRUE;
+      }
+      else
+      {
+        UserApp1_bTurn = FALSE;
+      }
+    }
+  }
+  
+  else if(!UserApp1_bPairingComplete)
   {
     UserApp1_OutgoingData[7] = G_u32SystemTime1s - UserApp1_PairingDelay;
     

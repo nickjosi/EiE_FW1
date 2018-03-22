@@ -98,6 +98,7 @@ static u8 UserApp1_GameMode;
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
 static bool UserApp1_bRoundOver;
+static bool UserApp1_bRoundOverDelay;
 
 static bool UserApp1_bSoundOn;
 static bool UserApp1_bPaddSound;
@@ -356,6 +357,7 @@ void InitializeGame(void)
   UserApp1_bBallHit = FALSE;
   UserApp1_bGameOver = FALSE;
   UserApp1_bRoundOver = FALSE;
+  UserApp1_bRoundOverDelay = FALSE;
   UserApp1_bPaddSound = FALSE;
   UserApp1_bGOSound = FALSE;
   UserApp1_bTurnOver = FALSE;
@@ -458,17 +460,16 @@ void Gameplay(void)
             LCDMessage(LINE2_START_ADDR, "======= OVER =======");
             UserApp1_StateMachine = UserApp1SM_GameOver;
           }
-          /*
           else
           {
             UserApp1_bRoundOver = TRUE;
+            UserApp1_bRoundOverDelay = TRUE;
             LCDCommand(LCD_CLEAR_CMD);
             LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
             LCDMessage(LINE1_START_ADDR, "|    POINT TO    |");
             LCDMessage(LINE2_START_ADDR, "|    OPPONENT    |");
             UserApp1_Score2++;
           }
-          */
           
           if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
           {
@@ -861,7 +862,7 @@ static void UserApp1SM_MainMenu(void)
   } /* end BUTTON3 */
   
 } /* end UserApp1SM_MainMenu() */
-  
+
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
@@ -870,7 +871,10 @@ static void UserApp1SM_1PlyrStart(void)
   if(UserApp1_GameMode == M_ONEPLAYER 
      || (UserApp1_GameMode == M_TWOPLAYER && UserApp1_bPairingComplete))
   {
-    Gameplay();
+    if(!UserApp1_bRoundOverDelay)
+    {
+      Gameplay();
+    }
     
     if(UserApp1_GameMode == M_TWOPLAYER)
     {
@@ -899,10 +903,11 @@ static void UserApp1SM_1PlyrStart(void)
           UserApp1_bTurnOver = FALSE;
           UserApp1_bTurn = FALSE;
         }
-        /*
-        if(UserApp1_bRoundOver)
+        
+        if(UserApp1_bRoundOverDelay)
         {
           GameSound();
+          UserApp1_bRoundOver = FALSE;
           
           if(G_u32SystemTime1ms >= UserApp1_Time + 3000)
           {
@@ -911,7 +916,7 @@ static void UserApp1SM_1PlyrStart(void)
             ButtonAcknowledge(BUTTON2);
             ButtonAcknowledge(BUTTON3);
             
-            UserApp1_bRoundOver = FALSE;
+            UserApp1_bRoundOverDelay = FALSE;
             
             InitializeGame();
             if(UserApp1_MASTER)
@@ -923,9 +928,10 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bTurn = FALSE;
             }
           }
-          */
         }
-  
+        
+      }
+      
       
       
       else
@@ -956,10 +962,9 @@ static void UserApp1SM_1PlyrStart(void)
               UserApp1_bBallRight = (bool)!UserApp1_IncomingData[2];
               UserApp1_bBallApproach = TRUE;
             }
-            /*
+            
             if(UserApp1_IncomingData[3] != 0)
             {
-              UserApp1_bRoundOver = TRUE;
               LCDMessage(LINE1_START_ADDR, "|     POINT      |");
               LCDMessage(LINE2_START_ADDR, "|      WON       |");
               UserApp1_Score1++;
@@ -978,7 +983,7 @@ static void UserApp1SM_1PlyrStart(void)
               LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
               LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
             }
-            */
+            
           }
         }
       }

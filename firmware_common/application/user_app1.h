@@ -88,6 +88,8 @@ static void UserApp1SM_AntChannelAssign(void);
 
 static void UserApp1SM_2PlyrStart(void);
 
+static void UserApp1SM_CloseAntChannel(void);
+
 
 #endif /* __USER_APP1_H */
 

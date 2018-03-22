@@ -71,11 +71,15 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
-static bool UserApp1_MASTER = FALSE;
+static bool UserApp1_MASTER = TRUE;
 
-static u8 UserApp1_PairCounter = 0;
+static u32 UserApp1_PairingDelay;
+static bool UserApp1_bPairingComplete;
 
 static bool UserApp1_bTurn;
+
+static u8 UserApp1_LastLevel;
+static u8 UserApp1_CurrentLevel;
 
 static u8 UserApp1_PaddlePosition;
 
@@ -92,6 +96,7 @@ static u8 UserApp1_GameMode;
 
 static bool UserApp1_bBallHit;
 static bool UserApp1_bGameOver;
+static bool UserApp1_bRoundOver;
 
 static bool UserApp1_bSoundOn;
 static bool UserApp1_bPaddSound;
@@ -235,7 +240,7 @@ Function LoadGameScreen()
 void LoadGameScreen(void)
 {
   LCDMessage(LINE1_START_ADDR, "|                |");
-  LCDMessage(LINE2_START_ADDR, "|                |  ");
+  LCDMessage(LINE2_START_ADDR, "|                |");
   
   u8 scoretempTENS = (UserApp1_Score1 / 10) + 48;
   u8 scoretempONES = (UserApp1_Score1 % 10) + 48;
@@ -243,6 +248,16 @@ void LoadGameScreen(void)
   u8* au8ScoreONES = &scoretempONES;
   LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
   LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
+  
+  if(UserApp1_GameMode == M_TWOPLAYER)
+  {
+    u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
+    u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
+    u8* au8ScoreTENS2 = &scoretempTENS2;
+    u8* au8ScoreONES2 = &scoretempONES2;
+    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
+    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
+  }
   
   LCDMessage(LINE2_START_ADDR + UserApp1_PaddlePosition, "_");
   
@@ -327,36 +342,36 @@ Function InitializeGame()
 void InitializeGame(void)
 {
   UserApp1_BallLevel = M_STARTING_BALL_LEV;
-  if(UserApp1_MASTER)
-  {
-    UserApp1_BallLevel--;
-  }
   UserApp1_BallPosition = (G_u32SystemTime1ms % 8) + 3;
   UserApp1_bBallRight = TRUE;
   UserApp1_bBallApproach = TRUE;
   UserApp1_PaddlePosition = M_STARTING_PADD_POS;
+
+  UserApp1_Score1 = 0;
+  UserApp1_Score2 = 0;
+  
+  UserApp1_bBallHit = FALSE;
+  UserApp1_bGameOver = FALSE;
+  UserApp1_bRoundOver = FALSE;
+  UserApp1_bPaddSound = FALSE;
+  UserApp1_bGOSound = FALSE;
   
   if(UserApp1_GameMode == M_ONEPLAYER)
   {
     UserApp1_bTurn = TRUE;
+    LoadGameScreen();
   }
-
-  UserApp1_Score1 = 0;
   
-  UserApp1_bBallHit = FALSE;
-  UserApp1_bGameOver = FALSE;
-  UserApp1_bPaddSound = FALSE;
-  UserApp1_bGOSound = FALSE;
-  
-  LoadGameScreen();
-  
-  /* Print hiscore to the LCD */
-  u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
-  u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
-  u8* au8ScoreTENS = &scoretempTENS;
-  u8* au8ScoreONES = &scoretempONES;
-  LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS);
-  LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES);
+  if(UserApp1_GameMode == M_ONEPLAYER)
+  {
+    /* Print hiscore to the LCD */
+    u8 scoretempTENS = (UserApp1_HiScore / 10) + 48;
+    u8 scoretempONES = (UserApp1_HiScore % 10) + 48;
+    u8* au8ScoreTENS = &scoretempTENS;
+    u8* au8ScoreONES = &scoretempONES;
+    LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS);
+    LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES);
+  }
     
   UserApp1_Time = G_u32SystemTime1ms;
   UserApp1_Time2 = G_u32SystemTime1ms;
@@ -400,19 +415,239 @@ void Gameplay(void)
 {
   if(UserApp1_bTurn)
   {
-  GameSound();
-  /* Check for ball contact */
-  if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
-  {
-    UserApp1_bBallHit = TRUE;
-    
-    if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+    GameSound();
+    /* Check for ball contact */
+    if(UserApp1_BallLevel == 0 && UserApp1_BallPosition == UserApp1_PaddlePosition)
     {
-      UserApp1_SoundTimer = G_u32SystemTime1ms;
-      UserApp1_bPaddSound = TRUE;
-    }
-  } /* end Check Ball Contact */
-  
+      UserApp1_bBallHit = TRUE;
+      
+      if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+      {
+        UserApp1_SoundTimer = G_u32SystemTime1ms;
+        UserApp1_bPaddSound = TRUE;
+      }
+    } /* end Check Ball Contact */
+    
+    
+    /* ---------- Ball Movement ----------*/
+    
+    if(G_u32SystemTime1ms >= UserApp1_Time + M_GAME_TICK)
+    {
+      UserApp1_Time = G_u32SystemTime1ms;
+      
+      /* Check for missed ball */
+      if(UserApp1_BallLevel == 0)
+      {
+        if(UserApp1_bBallHit == FALSE)
+        {
+          AllLedsOff();
+          
+          if(UserApp1_GameMode == M_ONEPLAYER)
+          {
+            UserApp1_bGameOver = TRUE;
+            LedOn(LCD_RED);
+            LedOff(LCD_GREEN);
+            LedOff(LCD_BLUE);
+            LCDCommand(LCD_CLEAR_CMD);
+            LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+            LCDMessage(LINE1_START_ADDR, "======= GAME =======");
+            LCDMessage(LINE2_START_ADDR, "======= OVER =======");
+            UserApp1_StateMachine = UserApp1SM_GameOver;
+          }
+          else
+          {
+            UserApp1_bRoundOver = TRUE;
+            LCDMessage(LINE1_START_ADDR, "|    POINT TO    |");
+            LCDMessage(LINE2_START_ADDR, "|    OPPONENT    |");
+            UserApp1_Score2++;
+          }
+          
+          if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+          {
+            UserApp1_SoundTimer = G_u32SystemTime1ms;
+            UserApp1_bGOSound = TRUE;
+          }
+        }
+        else 
+        {
+          UserApp1_bBallHit = FALSE;
+          if(UserApp1_GameMode == M_ONEPLAYER)
+          {
+            UserApp1_Score1++;
+          }
+        }
+      }
+      
+      if(!UserApp1_bGameOver && !UserApp1_bRoundOver)
+      {
+        /* Update ball position (left/right) */
+        if(UserApp1_bBallRight)
+        {
+          if(UserApp1_BallPosition == 16)
+          {
+            UserApp1_bBallRight = FALSE;
+            UserApp1_BallPosition--;
+          }
+          else
+          {
+            UserApp1_BallPosition++;
+          }
+        }
+        else
+        {
+          if(UserApp1_BallPosition == 1)
+          {
+            UserApp1_bBallRight = TRUE;
+            UserApp1_BallPosition++;
+          }
+          else
+          {
+            UserApp1_BallPosition--;
+          }
+        } /* end Ball Left/Right update */
+        
+        /* Update ball level (up/down) */
+        if(UserApp1_bBallApproach)
+        {
+          if(UserApp1_BallLevel == 0)
+          {
+            UserApp1_bBallApproach = FALSE;
+            UserApp1_BallLevel++;
+          }
+          else
+          {
+            UserApp1_BallLevel--;
+          }
+        }
+        else
+        {
+          if(UserApp1_BallLevel == 5)
+          {
+            AllLedsOff();
+            UserApp1_bBallApproach = TRUE;
+            
+            if(UserApp1_GameMode == M_ONEPLAYER)
+            {
+              if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
+              {
+                UserApp1_SoundTimer = G_u32SystemTime1ms;
+                UserApp1_bPaddSound = TRUE;
+              }
+              
+              u8 temp_rand = G_u32SystemTime1ms % 3;
+              if(temp_rand % 2 == 0)
+              {
+                UserApp1_bBallRight = TRUE;
+              }
+              else
+              {
+                UserApp1_bBallRight = FALSE;
+              }
+            }
+            
+            else
+            {
+              UserApp1_bTurn = FALSE;
+              AllLedsOff();
+            }         
+          }
+          
+          else
+          {
+            UserApp1_BallLevel++;
+          }
+        } /* end Ball Level update */
+        
+        /* Ball location to be indicated by LEDs */
+        if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 5)
+        {
+          AllLedsOff();
+          
+          if(UserApp1_BallPosition == 1)
+          {
+            LedPWM(WHITE, LED_PWM_25);
+          }
+          else if(UserApp1_BallPosition == 2)
+          {
+            LedPWM(WHITE, LED_PWM_10);
+            LedPWM(PURPLE, LED_PWM_10);
+          }
+          else if(UserApp1_BallPosition == 3)
+          {
+            LedPWM(PURPLE, LED_PWM_25);
+          }
+          else if(UserApp1_BallPosition == 4)
+          {
+            LedPWM(PURPLE, LED_PWM_10);
+            LedPWM(BLUE, LED_PWM_25);
+          }
+          else if(UserApp1_BallPosition == 5)
+          {
+            LedPWM(BLUE, LED_PWM_50);
+          }
+          else if(UserApp1_BallPosition == 6)
+          {
+            LedPWM(BLUE, LED_PWM_50);
+          }
+          else if(UserApp1_BallPosition == 7)
+          {
+            LedPWM(BLUE, LED_PWM_25);
+            LedPWM(CYAN, LED_PWM_10);
+          }
+          else if(UserApp1_BallPosition == 8)
+          {
+            LedPWM(CYAN, LED_PWM_25);
+          }
+          else if(UserApp1_BallPosition == 9)
+          {
+            LedPWM(CYAN, LED_PWM_25);
+            LedPWM(GREEN, LED_PWM_25);
+          }
+          else if(UserApp1_BallPosition == 10)
+          {
+            LedPWM(CYAN, LED_PWM_10);
+            LedPWM(GREEN, LED_PWM_50);
+          }
+          else if(UserApp1_BallPosition == 11)
+          {
+            LedPWM(GREEN, LED_PWM_50);
+          }
+          else if(UserApp1_BallPosition == 12)
+          {
+            LedPWM(GREEN, LED_PWM_25);
+            LedPWM(YELLOW, LED_PWM_50);
+          }
+          else if(UserApp1_BallPosition == 13)
+          {
+            LedPWM(YELLOW, LED_PWM_100);
+          }
+          else if(UserApp1_BallPosition == 14)
+          {
+            LedPWM(YELLOW, LED_PWM_50);
+            LedPWM(ORANGE, LED_PWM_50);
+          }
+          else if(UserApp1_BallPosition == 15)
+          {
+            LedPWM(ORANGE, LED_PWM_100);
+          }
+          else if(UserApp1_BallPosition == 16)
+          {
+            LedPWM(ORANGE, LED_PWM_100);
+          }
+        } /* end LEDs */
+        
+        /* Ball location on LCD */
+        else if(UserApp1_BallLevel <= 1)
+        {
+          AllLedsOff();
+        } /* end Ball on LCD */
+        
+      } /* end if(!GameOver || !RoundOver) */
+      
+    } /* end game tick section */  
+    /* ---------- Ball Movement End ---------- */
+    
+  }
   
   /* ---------- Paddle Movement ---------- */
   
@@ -420,7 +655,7 @@ void Gameplay(void)
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
-
+    
     /* Handle the case where the paddle is all the way to the left */
     if(UserApp1_PaddlePosition > 1)
     {
@@ -432,7 +667,7 @@ void Gameplay(void)
   if(WasButtonPressed(BUTTON3))
   {
     ButtonAcknowledge(BUTTON3);
-
+    
     /* Handle the case where the paddle is all the way to the right */
     if(UserApp1_PaddlePosition < 16)
     {
@@ -443,216 +678,22 @@ void Gameplay(void)
   /* ---------- Paddle Movement End ---------- */
   
   
-  
-  /* ---------- Ball Movement ----------*/
-  
-  if(G_u32SystemTime1ms >= UserApp1_Time + M_GAME_TICK)
-  {
-    UserApp1_Time = G_u32SystemTime1ms;
-    
-    /* Check for missed ball */
-    if(UserApp1_BallLevel == 0)
-    {
-      if(UserApp1_bBallHit == FALSE)
-      {
-        AllLedsOff();
-        LedOn(LCD_RED);
-        LedOff(LCD_GREEN);
-        LedOff(LCD_BLUE);
-        LCDCommand(LCD_CLEAR_CMD);
-        LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-        LCDMessage(LINE1_START_ADDR, "======= GAME =======");
-        LCDMessage(LINE2_START_ADDR, "======= OVER =======");
-        
-        UserApp1_bGameOver = TRUE;
-        if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
-        {
-          UserApp1_SoundTimer = G_u32SystemTime1ms;
-          UserApp1_bGOSound = TRUE;
-        }
-        UserApp1_StateMachine = UserApp1SM_GameOver;
-      }
-      else 
-      {
-        UserApp1_bBallHit = FALSE;
-        UserApp1_Score1++;
-      }
-    }
-    
-    if(!UserApp1_bGameOver)
-    {
-      /* Update ball position (left/right) */
-      if(UserApp1_bBallRight)
-      {
-        if(UserApp1_BallPosition == 16)
-        {
-          UserApp1_bBallRight = FALSE;
-          UserApp1_BallPosition--;
-        }
-        else
-        {
-          UserApp1_BallPosition++;
-        }
-      }
-      else
-      {
-        if(UserApp1_BallPosition == 1)
-        {
-          UserApp1_bBallRight = TRUE;
-          UserApp1_BallPosition++;
-        }
-        else
-        {
-          UserApp1_BallPosition--;
-        }
-      } /* end Ball Left/Right update */
-      
-      /* Update ball level (up/down) */
-      if(UserApp1_bBallApproach)
-      {
-        if(UserApp1_BallLevel == 0)
-        {
-          UserApp1_bBallApproach = FALSE;
-          UserApp1_BallLevel++;
-        }
-        else
-        {
-          UserApp1_BallLevel--;
-        }
-      }
-      else
-      {
-        if(UserApp1_BallLevel == 5)
-        {
-          AllLedsOff();
-          UserApp1_bBallApproach = TRUE;
-          
-          if(G_u32SystemTime1ms > UserApp1_SoundTimer + (2 * M_GAME_TICK))
-          {
-            UserApp1_SoundTimer = G_u32SystemTime1ms;
-            UserApp1_bPaddSound = TRUE;
-          }
-          
-          u8 temp_rand = G_u32SystemTime1ms % 3;
-          if(temp_rand % 2 == 0)
-          {
-            UserApp1_bBallRight = TRUE;
-          }
-          else
-          {
-            UserApp1_bBallRight = FALSE;
-          }
-        }
-        else
-        {
-          UserApp1_BallLevel++;
-        }
-      } /* end Ball Level update */
-    
-      /* Ball location to be indicated by LEDs */
-      if(UserApp1_BallLevel > 1 && UserApp1_BallLevel != 5)
-      {
-        AllLedsOff();
-        
-        if(UserApp1_BallPosition == 1)
-        {
-          LedPWM(WHITE, LED_PWM_25);
-        }
-        else if(UserApp1_BallPosition == 2)
-        {
-          LedPWM(WHITE, LED_PWM_10);
-          LedPWM(PURPLE, LED_PWM_10);
-        }
-        else if(UserApp1_BallPosition == 3)
-        {
-          LedPWM(PURPLE, LED_PWM_25);
-        }
-        else if(UserApp1_BallPosition == 4)
-        {
-          LedPWM(PURPLE, LED_PWM_10);
-          LedPWM(BLUE, LED_PWM_25);
-        }
-        else if(UserApp1_BallPosition == 5)
-        {
-          LedPWM(BLUE, LED_PWM_50);
-        }
-        else if(UserApp1_BallPosition == 6)
-        {
-          LedPWM(BLUE, LED_PWM_50);
-        }
-        else if(UserApp1_BallPosition == 7)
-        {
-          LedPWM(BLUE, LED_PWM_25);
-          LedPWM(CYAN, LED_PWM_10);
-        }
-        else if(UserApp1_BallPosition == 8)
-        {
-          LedPWM(CYAN, LED_PWM_25);
-        }
-         else if(UserApp1_BallPosition == 9)
-        {
-          LedPWM(CYAN, LED_PWM_25);
-          LedPWM(GREEN, LED_PWM_25);
-        }
-        else if(UserApp1_BallPosition == 10)
-        {
-          LedPWM(CYAN, LED_PWM_10);
-          LedPWM(GREEN, LED_PWM_50);
-        }
-        else if(UserApp1_BallPosition == 11)
-        {
-          LedPWM(GREEN, LED_PWM_50);
-        }
-        else if(UserApp1_BallPosition == 12)
-        {
-          LedPWM(GREEN, LED_PWM_25);
-          LedPWM(YELLOW, LED_PWM_50);
-        }
-        else if(UserApp1_BallPosition == 13)
-        {
-          LedPWM(YELLOW, LED_PWM_100);
-        }
-        else if(UserApp1_BallPosition == 14)
-        {
-          LedPWM(YELLOW, LED_PWM_50);
-          LedPWM(ORANGE, LED_PWM_50);
-        }
-        else if(UserApp1_BallPosition == 15)
-        {
-          LedPWM(ORANGE, LED_PWM_100);
-        }
-        else if(UserApp1_BallPosition == 16)
-        {
-          LedPWM(ORANGE, LED_PWM_100);
-        }
-      } /* end LEDs */
-      
-      /* Ball location on LCD */
-      else if(UserApp1_BallLevel <= 1)
-      {
-        AllLedsOff();
-      } /* end Ball on LCD */
-           
-    } /* end if(!GameOver) */
-    
-  } /* end game tick section */  
-  /* ---------- Ball Movement End ---------- */
-
   /* Do LCD updates every paddle tick */
-  if(G_u32SystemTime1ms >= UserApp1_Time2 + M_PADD_TICK && !UserApp1_bGameOver)
+  if(G_u32SystemTime1ms >= UserApp1_Time2 + M_PADD_TICK && !UserApp1_bGameOver && !UserApp1_bRoundOver)
   {
     UserApp1_Time2 = G_u32SystemTime1ms;
     
     LoadGameScreen();
   }
-  /* end paddle tick section */
+  /* end Paddle Update */
+  
   
   /* BUTTON1 or BUTTON2 exits to the main menu */
   if(WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2))
   {
     ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
-
+    
     if(UserApp1_Score1 > UserApp1_HiScore)
     {
       UserApp1_HiScore = UserApp1_Score1;
@@ -663,7 +704,7 @@ void Gameplay(void)
     
     UserApp1_StateMachine = UserApp1SM_MainMenu;
   } /* end BUTTON 2 */
-  }
+  
 } /* end Gameplay() */
 
 
@@ -712,16 +753,19 @@ static void UserApp1SM_MainMenu(void)
     ButtonAcknowledge(BUTTON1);
     
     UserApp1_GameMode = M_TWOPLAYER;
+    InitializeGame();
+    LCDMessage(LINE1_START_ADDR, "PAIRING WITH    QUIT");
+    LCDMessage(LINE2_START_ADDR, "OPPONENT           ^");
+    
+    UserApp1_PairingDelay = G_u32SystemTime1s;
+    UserApp1_bPairingComplete = FALSE;
     
     if(UserApp1_MASTER)
     {
-      InitializeGame();
       UserApp1_bTurn = TRUE;
     }
     else
     {
-      LCDMessage(LINE1_START_ADDR, "                    ");
-      LCDMessage(LINE2_START_ADDR, "                    ");
       UserApp1_bTurn = FALSE;
     }
     
@@ -815,50 +859,155 @@ static void UserApp1SM_MainMenu(void)
 /* Wait for ??? */
 static void UserApp1SM_1PlyrStart(void)
 {
-  Gameplay();
-  if(UserApp1_GameMode == M_TWOPLAYER)
+  if(UserApp1_GameMode == M_ONEPLAYER 
+     || (UserApp1_GameMode == M_TWOPLAYER && UserApp1_bPairingComplete))
   {
-    if(UserApp1_bTurn)
-    {
-      UserApp1_OutgoingData[0] = UserApp1_BallLevel;
-      UserApp1_OutgoingData[1] = UserApp1_BallPosition;
-      UserApp1_OutgoingData[2] = 0x00;
-      UserApp1_OutgoingData[3] = 0x00;
-      UserApp1_OutgoingData[4] = 0x00;
-      UserApp1_OutgoingData[5] = 0x00;
-      UserApp1_OutgoingData[6] = 0x00;
-      UserApp1_OutgoingData[7] = 0x00;
-      
-      if( AntReadAppMessageBuffer() )
-      { 
-        if(G_eAntApiCurrentMessageClass == ANT_TICK)
-        {          
-          AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
-        }
-      }
-    }
+    Gameplay();
     
-    else
+    if(UserApp1_GameMode == M_TWOPLAYER)
     {
-      LedOn(CYAN);
-      if( AntReadAppMessageBuffer() )
+      if(UserApp1_bTurn)
       {
-        if(G_eAntApiCurrentMessageClass == ANT_DATA)
-        {
-          for(u8 i = 0; i < ANT_DATA_BYTES; i++)
-          {
-            //UserApp1_IncomingData[i] = G_au8AntApiCurrentMessageBytes[i];
-            UserApp1_IncomingData[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
-            UserApp1_IncomingData[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+        UserApp1_OutgoingData[0] = UserApp1_BallLevel;
+        UserApp1_OutgoingData[1] = UserApp1_BallPosition;
+        UserApp1_OutgoingData[2] = (u8)UserApp1_bBallRight;
+        UserApp1_OutgoingData[3] = (u8)UserApp1_bRoundOver;
+        UserApp1_OutgoingData[4] = 0x00;
+        UserApp1_OutgoingData[5] = 0x00;
+        UserApp1_OutgoingData[6] = 0x00;
+        UserApp1_OutgoingData[7] = G_u32SystemTime1s - UserApp1_PairingDelay;
+        
+        if( AntReadAppMessageBuffer() )
+        { 
+          if(G_eAntApiCurrentMessageClass == ANT_TICK)
+          {          
+            AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
           }
-          UserApp1_PairCounter++;
-          u8* counter = &UserApp1_PairCounter;
-          LCDMessage(LINE2_START_ADDR, UserApp1_IncomingData);
-          LCDMessage(LINE2_START_ADDR + 18, counter);
+        }
+        
+        if(UserApp1_bRoundOver)
+        {
+          GameSound();
+          
+          if(G_u32SystemTime1ms >= UserApp1_Time + 3000)
+          {
+            ButtonAcknowledge(BUTTON0);
+            ButtonAcknowledge(BUTTON1);
+            ButtonAcknowledge(BUTTON2);
+            ButtonAcknowledge(BUTTON3);
+            
+            UserApp1_bRoundOver = FALSE;
+            
+            InitializeGame();
+            if(UserApp1_MASTER)
+            {
+              UserApp1_bTurn = TRUE;
+            }
+            else
+            {
+              UserApp1_bTurn = FALSE;
+            }
+          }
+        }
+      }
+      
+      else
+      {
+        if( AntReadAppMessageBuffer() )
+        {
+          UserApp1_OutgoingData[7] = G_u32SystemTime1s - UserApp1_PairingDelay;
+          
+          if(G_eAntApiCurrentMessageClass == ANT_TICK)
+          {          
+            AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
+          }
+          
+          if(G_eAntApiCurrentMessageClass == ANT_DATA)
+          {
+            for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+            {
+              UserApp1_IncomingData[i] = G_au8AntApiCurrentMessageBytes[i];
+              //UserApp1_IncomingData[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
+              //UserApp1_IncomingData[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+            }
+            UserApp1_LastLevel = UserApp1_CurrentLevel;
+            UserApp1_CurrentLevel = UserApp1_IncomingData[0];
+            if(UserApp1_CurrentLevel == 5 && UserApp1_LastLevel == 4)
+            {
+              UserApp1_bTurn = TRUE;
+              UserApp1_BallPosition = 17 - UserApp1_IncomingData[1];
+              UserApp1_bBallRight = (bool)!UserApp1_IncomingData[2];
+              UserApp1_bBallApproach = TRUE;
+            }
+            if(UserApp1_IncomingData[3] == 1)
+            {
+              UserApp1_bRoundOver = TRUE;
+              LCDMessage(LINE1_START_ADDR, "|     POINT      |");
+              LCDMessage(LINE2_START_ADDR, "|      WON       |");
+              UserApp1_Score1++;
+              
+              u8 scoretempTENS = (UserApp1_Score1 / 10) + 48;
+              u8 scoretempONES = (UserApp1_Score1 % 10) + 48;
+              u8* au8ScoreTENS = &scoretempTENS;
+              u8* au8ScoreONES = &scoretempONES;
+              LCDMessage(LINE2_START_ADDR + 18, au8ScoreTENS);
+              LCDMessage(LINE2_START_ADDR + 19, au8ScoreONES);
+              
+              u8 scoretempTENS2 = (UserApp1_Score2 / 10) + 48;
+              u8 scoretempONES2 = (UserApp1_Score2 % 10) + 48;
+              u8* au8ScoreTENS2 = &scoretempTENS2;
+              u8* au8ScoreONES2 = &scoretempONES2;
+              LCDMessage(LINE1_START_ADDR + 18, au8ScoreTENS2);
+              LCDMessage(LINE1_START_ADDR + 19, au8ScoreONES2);
+            }
+          }
+        }
+      }
+      
+    }
+  }
+  
+  else  if(!UserApp1_bPairingComplete)
+  {
+    UserApp1_OutgoingData[7] = G_u32SystemTime1s - UserApp1_PairingDelay;
+    
+    if( AntReadAppMessageBuffer() )
+    { 
+      if(G_eAntApiCurrentMessageClass == ANT_TICK)
+      {          
+        AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, UserApp1_OutgoingData);
+      }
+      if(G_eAntApiCurrentMessageClass == ANT_DATA)
+      {
+        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+        {
+          UserApp1_IncomingData[i] = G_au8AntApiCurrentMessageBytes[i];
+          //UserApp1_IncomingData[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
+          //UserApp1_IncomingData[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+        }
+        if(UserApp1_OutgoingData[7] >= 3 && UserApp1_IncomingData[7] >= 3)
+        {
+          UserApp1_bPairingComplete = TRUE;
         }
       }
     }
     
+    if(WasButtonPressed(BUTTON3))
+    {
+      ButtonAcknowledge(BUTTON3);
+      
+      AllLedsOff();
+      LCDMessage(LINE1_START_ADDR, "     CLOSING        ");
+      LCDMessage(LINE2_START_ADDR, "     CHANNEL        ");
+      AntCloseChannelNumber(ANT_CHANNEL_USERAPP);
+      UserApp1_u32Timeout = G_u32SystemTime1ms;
+      UserApp1_StateMachine = UserApp1SM_CloseAntChannel;
+    }
+    
+    ButtonAcknowledge(BUTTON0);
+    ButtonAcknowledge(BUTTON1);
+    ButtonAcknowledge(BUTTON2);
+    ButtonAcknowledge(BUTTON3);
   }
   
 } /* end UserApp1SM_1PlyrStart() */
@@ -888,6 +1037,7 @@ static void UserApp1SM_GameOver(void)
     UserApp1_StateMachine = UserApp1SM_MainMenu;
   }
 } /* end UserApp1SM_GameOver() */
+
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
@@ -988,6 +1138,26 @@ static void UserApp1SM_2PlyrStart(void)
   
   */
 } /* end UserApp1SM_Idle() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_CloseAntChannel(void)
+{
+  if(AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CLOSED)
+  {
+    AllLedsOff();
+    LoadMainMenu();
+    UserApp1_StateMachine = UserApp1SM_MainMenu;
+  }
+
+  /* Check for timeout */
+  if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+  {
+    DebugPrintf(UserApp1_au8MessageFail);
+    UserApp1_StateMachine = UserApp1SM_Error;
+  }
+} /* end UserApp1SM_CloseAntChannel() */
 
 
 

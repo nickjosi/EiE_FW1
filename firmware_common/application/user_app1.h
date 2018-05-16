@@ -49,12 +49,17 @@ void UserApp1RunActiveState(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
-
+void AllLedsOff(void);
+void UpdateLCD(void);
 
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_Idle(void);    
+static void UserApp1SM_Config(void);
+
+static void UserApp1SM_Unactivated(void);
+
+static void UserApp1SM_Activated(void);
 
 static void UserApp1SM_Error(void);         
 

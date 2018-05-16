@@ -60,6 +60,13 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+static bool UserApp1_bInstrTBE;
+static bool UserApp1_bAB;
+static bool UserApp1_bCD;
+static bool UserApp1_bEF;
+
+static u8 UserApp1_au8Sequence[6];
+
 
 /**********************************************************************************************************************
 Function Definitions
@@ -86,12 +93,26 @@ Promises:
   - 
 */
 void UserApp1Initialize(void)
-{
+{ 
+  UserApp1_bInstrTBE = FALSE;
+  UserApp1_bAB = FALSE;
+  UserApp1_bCD = FALSE;
+  UserApp1_bEF = FALSE;
+  for(int i = 0; i < 6; i++)
+  {
+    UserApp1_au8Sequence[i] = 'x';
+  }
+  
+  AllLedsOff();
+  
+  LCDCommand(LCD_CLEAR_CMD);
+  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+  UpdateLCD();
  
   /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_StateMachine = UserApp1SM_Config;
   }
   else
   {
@@ -127,6 +148,43 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/* --- Function AllLedsOff() --- */
+void AllLedsOff(void)
+{
+  LedPWM(WHITE, LED_PWM_0);
+  LedPWM(PURPLE, LED_PWM_0);
+  LedPWM(BLUE, LED_PWM_0);
+  LedPWM(CYAN, LED_PWM_0);
+  LedPWM(GREEN, LED_PWM_0);
+  LedPWM(YELLOW, LED_PWM_0);
+  LedPWM(ORANGE,LED_PWM_0);
+  LedPWM(RED, LED_PWM_0);
+}
+/* --- end AllLedsOff() --- */
+
+/* ---Function UpdateLCD() --- */
+void UpdateLCD(void)
+{
+  u8 au8MainMenu1[] = "Unscramble          ";
+  u8 au8MainMenu2[] = "A,B   C,D   E,F    0";
+  u8 au8AB[] =        "A     B             ";
+  
+  LCDMessage(LINE1_START_ADDR, au8MainMenu1);
+  LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
+  
+  if(!UserApp1_bInstrTBE)
+  {
+    LCDMessage(LINE2_START_ADDR, au8MainMenu2);
+  }
+  else
+  {
+    if(UserApp1_bAB)
+    {
+      LCDMessage(LINE2_START_ADDR, au8AB);
+    }
+  }
+}
+/* --- end UpdateLCD() --- */
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -134,17 +192,112 @@ State Machine Function Definitions
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
-static void UserApp1SM_Idle(void)
+static void UserApp1SM_Config(void)
 {
+  UserApp1_StateMachine = UserApp1SM_Unactivated;
+} /* end UserApp1SM_Config() */
+ 
 
-} /* end UserApp1SM_Idle() */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_Unactivated(void)
+{
+  UserApp1_StateMachine = UserApp1SM_Activated;
+} /* end UserApp1SM_Unactivated() */
+  
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_Activated(void)
+{
+  /* Button 0 */
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
     
+    if(!UserApp1_bInstrTBE)
+    {
+      UserApp1_bInstrTBE = TRUE;
+      UserApp1_bAB = TRUE;
+      
+      UpdateLCD();
+    }
+    
+    else
+    {
+      if(UserApp1_bAB)
+      {
+        UserApp1_bAB = FALSE;
+      }
+      if(UserApp1_bCD)
+      {
+        UserApp1_bCD = FALSE;
+      }
+      if(UserApp1_bEF)
+      {
+        UserApp1_bEF = FALSE;
+      }
+      
+      UserApp1_bInstrTBE = FALSE;
+      UpdateLCD();
+    }
+  } /* end Button 0 */
+  
+  /* Button 1 */
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    if(!UserApp1_bCD)
+    {
+      UserApp1_bCD = TRUE;
+      LedOn(WHITE);
+    }
+    else
+    {
+      UserApp1_bCD = FALSE;
+      LedOff(WHITE);
+    }
+  } /* end Button 1 */
+  
+  /* Button 2 */
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    
+    if(!UserApp1_bEF)
+    {
+      UserApp1_bEF = TRUE;
+      LedOn(PURPLE);
+    }
+    else
+    {
+      UserApp1_bEF = FALSE;
+      LedOff(PURPLE);
+    }
+  } /* end Button 2 */
+  
+  /* Button 3 */
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    
+    LedOn(BLUE);
+  } /* end Button 3 */
+  
+} /* end UserApp1SM_Activated() */
+  
+
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
 static void UserApp1SM_Error(void)          
 {
-  
+  LedOn(GREEN);
+  LedOn(YELLOW);
+  LedOn(RED);
 } /* end UserApp1SM_Error() */
 
 

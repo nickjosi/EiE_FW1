@@ -60,6 +60,7 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+static u8 UserApp1_au8CorrectSequence[6];
 static u8 UserApp1_au8Sequence[6];
 static u8 UserApp1_u8SequenceIndex;
 static u8 UserApp1_u8CursorPosition;
@@ -69,6 +70,11 @@ static bool UserApp1_bAB;
 static bool UserApp1_bCD;
 static bool UserApp1_bEF;
 static bool UserApp1_bOp;
+
+static u8 UserApp1_u8AttemptCounter;
+static u8 UserApp1_u8LockTimer;
+static u32 UserApp1_u32SystemTimeStamp;
+
 
 
 /**********************************************************************************************************************
@@ -104,9 +110,11 @@ void UserApp1Initialize(void)
   UserApp1_bOp = FALSE;
   for(int i = 0; i < 6; i++)
   {
+    UserApp1_au8CorrectSequence[i] = ' ';
     UserApp1_au8Sequence[i] = ' ';
   }
   UserApp1_u8SequenceIndex = 0;
+  UserApp1_u8AttemptCounter = 0;
   
   AllLedsOff();
   
@@ -172,13 +180,13 @@ void AllLedsOff(void)
 /* ---Function UpdateLCD() --- */
 void UpdateLCD(void)
 {
-  u8 au8MainMenu1[] = "UNSCRAMBLE ||       ";
-  u8 au8MainMenu2[] = ">A,B  >C,D  >E,F  Op";
-  u8 au8AB[] =        "A     B         BACK";
-  u8 au8CD[] =        "C     D         BACK";
-  u8 au8EF[] =        "E     F         BACK";
-  u8 au8Op[] =        "ENTR  DEL  CLR  BACK";
-  u8 au8Full[] =      "ENTR  DEL  CLR      ";
+  static u8 au8MainMenu1[] = "UNSCRAMBLE ||       ";
+  static u8 au8MainMenu2[] = ">A,B  >C,D  >E,F  Op";
+  static u8 au8AB[] =        ">A    >B        Back";
+  static u8 au8CD[] =        ">C    >D        Back";
+  static u8 au8EF[] =        ">E    >F        Back";
+  static u8 au8Op[] =        "Entr  Del  Clr  Back";
+  static u8 au8Full[] =      "ENTR  DEL  CLR      ";
   
   LCDMessage(LINE1_START_ADDR, au8MainMenu1);
   LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
@@ -227,6 +235,13 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Config(void)
 {
+  UserApp1_au8CorrectSequence[0] = 'A';
+  UserApp1_au8CorrectSequence[1] = 'B';
+  UserApp1_au8CorrectSequence[2] = 'C';
+  UserApp1_au8CorrectSequence[3] = 'D';
+  UserApp1_au8CorrectSequence[4] = 'E';
+  UserApp1_au8CorrectSequence[5] = 'F';
+  
   UserApp1_StateMachine = UserApp1SM_Unactivated;
 } /* end UserApp1SM_Config() */
  
@@ -284,6 +299,7 @@ static void UserApp1SM_Activated(void)
         if(UserApp1_bOp)
         {
           //add code for ENTER here
+          UserApp1_StateMachine = UserApp1SM_CompareSequence;
         }
         UserApp1_bSequenceTBE = FALSE;
       }
@@ -382,6 +398,9 @@ static void UserApp1SM_Activated(void)
       else
       {
         UserApp1_bSequenceTBE = FALSE;
+        UserApp1_bAB = FALSE;
+        UserApp1_bCD = FALSE;
+        UserApp1_bEF = FALSE;
         UserApp1_bOp = FALSE;
       }
       
@@ -400,8 +419,9 @@ static void UserApp1SM_Activated(void)
       ButtonAcknowledge(BUTTON0);
       
       //add code for ENTER here
+      UserApp1_StateMachine = UserApp1SM_CompareSequence;
       
-      UpdateLCD();
+      //UpdateLCD();
     }
     
     if(WasButtonPressed(BUTTON1))
@@ -431,13 +451,129 @@ static void UserApp1SM_Activated(void)
   } /* --- end Full Sequence Entered Mode --- */
   
 } /* end UserApp1SM_Activated() */
+
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_CompareSequence(void)
+{
+  static bool bCorrect = TRUE;
   
+  for(int i = 0; i < 6; i++)
+  {
+    if(UserApp1_au8Sequence[i] != UserApp1_au8CorrectSequence[i])
+    {
+      bCorrect = FALSE;
+    }
+  }
+  
+  if(bCorrect)
+  {
+    LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+    LCDMessage(LINE1_START_ADDR, "Correct!            ");
+    LCDMessage(LINE2_START_ADDR, "Next board activated");
+    
+    AllLedsOff();
+    LedOn(GREEN);
+    
+    UserApp1_StateMachine = UserApp1SM_Correct;
+  }
+  else
+  {
+    LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+    LCDMessage(LINE1_START_ADDR, "Incorrect!          ");
+    LCDMessage(LINE2_START_ADDR, "Locked out for:     ");
+    
+    AllLedsOff();
+    LedOn(RED);
+    
+    UserApp1_u8AttemptCounter++;
+    UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 10;
+    
+    u8 u8TimerTensTEMP = (UserApp1_u8LockTimer / 10) + 48;
+    u8 u8TimerOnesTEMP = (UserApp1_u8LockTimer % 10) + 48;
+    u8* au8TimerTens = &u8TimerTensTEMP;
+    u8* au8TimerOnes = &u8TimerOnesTEMP;
+    LCDMessage(LINE2_START_ADDR + 18, au8TimerTens);
+    LCDMessage(LINE2_START_ADDR + 19, au8TimerOnes);
+    
+    UserApp1_u32SystemTimeStamp = G_u32SystemTime1ms;
+    
+    UserApp1_StateMachine = UserApp1SM_Locked;
+  }
+  
+} /* end UserApp1SM_CompareSequence() */
+  
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_Correct(void)
+{
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    
+    UserApp1Initialize();
+    UserApp1_StateMachine = UserApp1SM_Config;
+  }
+} /* end UserApp1SM_Correct() */
+
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_Locked(void)
+{
+  if((G_u32SystemTime1ms - UserApp1_u32SystemTimeStamp) >= 1000)
+  {
+    UserApp1_u32SystemTimeStamp = G_u32SystemTime1ms;
+    UserApp1_u8LockTimer--;
+    
+    u8 u8TimerTensTEMP = (UserApp1_u8LockTimer / 10) + 48;
+    u8 u8TimerOnesTEMP = (UserApp1_u8LockTimer % 10) + 48;
+    u8* au8TimerTens = &u8TimerTensTEMP;
+    u8* au8TimerOnes = &u8TimerOnesTEMP;
+    LCDMessage(LINE2_START_ADDR + 18, au8TimerTens);
+    LCDMessage(LINE2_START_ADDR + 19, au8TimerOnes);
+  }
+  
+  if(UserApp1_u8LockTimer <= 0)
+  {
+    UserApp1_bSequenceTBE = FALSE;
+    UserApp1_bAB = FALSE;
+    UserApp1_bCD = FALSE;
+    UserApp1_bEF = FALSE;
+    UserApp1_bOp = FALSE;
+    for(int i = 0; i < 6; i++)
+    {
+      UserApp1_au8Sequence[i] = ' ';
+    }
+    UserApp1_u8SequenceIndex = 0;
+    
+    AllLedsOff();
+    
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDCommand(LCD_HOME_CMD);
+    UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+    LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON | LCD_DISPLAY_CURSOR | LCD_DISPLAY_BLINK);
+    
+    UpdateLCD();
+    
+    UserApp1_StateMachine = UserApp1SM_Activated;
+  }
+  
+} /* end UserApp1SM_Locked() */
+
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
 static void UserApp1SM_Error(void)          
 {
+  AllLedsOff();
+  LedOn(BLUE);
   LedOn(GREEN);
   LedOn(YELLOW);
   LedOn(RED);

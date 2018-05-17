@@ -61,6 +61,12 @@ static void UserApp1SM_Unactivated(void);
 
 static void UserApp1SM_Activated(void);
 
+static void UserApp1SM_CompareSequence(void);
+
+static void UserApp1SM_Correct(void);
+
+static void UserApp1SM_Locked(void);
+
 static void UserApp1SM_Error(void);         
 
 

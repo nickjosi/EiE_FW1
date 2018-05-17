@@ -61,9 +61,13 @@ static fnCode_type UserApp1_StateMachine;            /* The state machine functi
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
 static u8 UserApp1_au8CorrectSequence[6];
+static u8 UserApp1_u8CorrectSequenceIndex;
 static u8 UserApp1_au8Sequence[6];
 static u8 UserApp1_u8SequenceIndex;
 static u8 UserApp1_u8CursorPosition;
+
+static bool UserApp1_bConfig;
+static bool UserApp1_bFull;
 
 static bool UserApp1_bSequenceTBE;
 static bool UserApp1_bAB;
@@ -103,16 +107,20 @@ Promises:
 */
 void UserApp1Initialize(void)
 { 
-  UserApp1_bSequenceTBE = FALSE;
-  UserApp1_bAB = FALSE;
-  UserApp1_bCD = FALSE;
-  UserApp1_bEF = FALSE;
-  UserApp1_bOp = FALSE;
+  UserApp1_bConfig =        TRUE;
+  UserApp1_bSequenceTBE =   FALSE;
+  UserApp1_bAB =            FALSE;
+  UserApp1_bCD =            FALSE;
+  UserApp1_bEF =            FALSE;
+  UserApp1_bOp =            FALSE;
+  
   for(int i = 0; i < 6; i++)
   {
     UserApp1_au8CorrectSequence[i] = ' ';
     UserApp1_au8Sequence[i] = ' ';
   }
+  
+  UserApp1_u8CorrectSequenceIndex = 0;
   UserApp1_u8SequenceIndex = 0;
   UserApp1_u8AttemptCounter = 0;
   
@@ -180,18 +188,28 @@ void AllLedsOff(void)
 /* ---Function UpdateLCD() --- */
 void UpdateLCD(void)
 {
-  static u8 au8MainMenu1[] = "UNSCRAMBLE ||       ";
-  static u8 au8MainMenu2[] = ">A,B  >C,D  >E,F  Op";
-  static u8 au8AB[] =        ">A    >B        Back";
-  static u8 au8CD[] =        ">C    >D        Back";
-  static u8 au8EF[] =        ">E    >F        Back";
-  static u8 au8Op[] =        "Entr  Del  Clr  Back";
-  static u8 au8Full[] =      "ENTR  DEL  CLR      ";
+  static u8 au8MainMenu1_Config[] = "Set sequence:       ";
+  static u8 au8MainMenu1[] =        "UNSCRAMBLE ||       ";
+  static u8 au8MainMenu2[] =        ">A,B  >C,D  >E,F  Op";
+  static u8 au8AB[] =               ">A    >B        Back";
+  static u8 au8CD[] =               ">C    >D        Back";
+  static u8 au8EF[] =               ">E    >F        Back";
+  static u8 au8Op[] =               "Entr  Del  Clr  Back";
+  static u8 au8Full[] =             "ENTR  DEL  CLR      ";
   
-  LCDMessage(LINE1_START_ADDR, au8MainMenu1);
+  if(!UserApp1_bConfig)
+  {
+    LCDMessage(LINE1_START_ADDR, au8MainMenu1_Config);
+  }
+  else
+  {
+    LCDMessage(LINE1_START_ADDR, au8MainMenu1);
+  }
+  
+  
   LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
   
-  if(UserApp1_u8SequenceIndex < 6)
+  if(!UserApp1_bFull)
   {
     if(!UserApp1_bSequenceTBE)
     {
@@ -218,7 +236,7 @@ void UpdateLCD(void)
     }
   }
   
-  if(UserApp1_u8SequenceIndex >= 6)
+  if(UserApp1_bFull)
   {
     LCDMessage(LINE2_START_ADDR, au8Full);
   }
@@ -262,7 +280,7 @@ static void UserApp1SM_Activated(void)
 {
   /* --- Enter Sequence Mode --- */
   
-  if(UserApp1_u8SequenceIndex < 6)
+  if(!UserApp1_bFull)
   {
     /* Button 0 */
     if(WasButtonPressed(BUTTON0))
@@ -407,12 +425,19 @@ static void UserApp1SM_Activated(void)
       UpdateLCD();
       
     } /* end Button 3 */
+    
+    if(UserApp1_u8SequenceIndex >= 6)
+    {
+      UserApp1_bFull = TRUE;
+      UpdateLCD();
+    }
+    
   } /* --- end Enter Sequence Mode --- */
   
   
   /* --- Full Sequence Entered Mode --- */
   
-  if(UserApp1_u8SequenceIndex >= 6)
+  if(UserApp1_bFull)
   {
     if(WasButtonPressed(BUTTON0))
     {
@@ -448,6 +473,13 @@ static void UserApp1SM_Activated(void)
       
       UpdateLCD();
     }
+    
+    if(UserApp1_u8SequenceIndex < 6)
+    {
+      UserApp1_bFull = FALSE;
+      UpdateLCD();
+    }
+    
   } /* --- end Full Sequence Entered Mode --- */
   
 } /* end UserApp1SM_Activated() */

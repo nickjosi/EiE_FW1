@@ -60,12 +60,15 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
-static bool UserApp1_bInstrTBE;
+static u8 UserApp1_au8Sequence[6];
+static u8 UserApp1_u8SequenceIndex;
+static u8 UserApp1_u8CursorPosition;
+
+static bool UserApp1_bSequenceTBE;
 static bool UserApp1_bAB;
 static bool UserApp1_bCD;
 static bool UserApp1_bEF;
-
-static u8 UserApp1_au8Sequence[6];
+static bool UserApp1_bOp;
 
 
 /**********************************************************************************************************************
@@ -94,22 +97,26 @@ Promises:
 */
 void UserApp1Initialize(void)
 { 
-  UserApp1_bInstrTBE = FALSE;
+  UserApp1_bSequenceTBE = FALSE;
   UserApp1_bAB = FALSE;
   UserApp1_bCD = FALSE;
   UserApp1_bEF = FALSE;
+  UserApp1_bOp = FALSE;
   for(int i = 0; i < 6; i++)
   {
-    UserApp1_au8Sequence[i] = 'x';
+    UserApp1_au8Sequence[i] = ' ';
   }
+  UserApp1_u8SequenceIndex = 0;
   
   AllLedsOff();
   
   LCDCommand(LCD_CLEAR_CMD);
-  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
+  LCDCommand(LCD_HOME_CMD);
+  UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+  LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON | LCD_DISPLAY_CURSOR | LCD_DISPLAY_BLINK);
   UpdateLCD();
  
-  /* If good initialization, set state to Idle */
+  /* If good initialization, set state to Config */
   if( 1 )
   {
     UserApp1_StateMachine = UserApp1SM_Config;
@@ -165,24 +172,50 @@ void AllLedsOff(void)
 /* ---Function UpdateLCD() --- */
 void UpdateLCD(void)
 {
-  u8 au8MainMenu1[] = "Unscramble          ";
-  u8 au8MainMenu2[] = "A,B   C,D   E,F    0";
-  u8 au8AB[] =        "A     B             ";
+  u8 au8MainMenu1[] = "UNSCRAMBLE ||       ";
+  u8 au8MainMenu2[] = ">A,B  >C,D  >E,F  Op";
+  u8 au8AB[] =        "A     B         BACK";
+  u8 au8CD[] =        "C     D         BACK";
+  u8 au8EF[] =        "E     F         BACK";
+  u8 au8Op[] =        "ENTR  DEL  CLR  BACK";
+  u8 au8Full[] =      "ENTR  DEL  CLR      ";
   
   LCDMessage(LINE1_START_ADDR, au8MainMenu1);
   LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
   
-  if(!UserApp1_bInstrTBE)
+  if(UserApp1_u8SequenceIndex < 6)
   {
-    LCDMessage(LINE2_START_ADDR, au8MainMenu2);
-  }
-  else
-  {
-    if(UserApp1_bAB)
+    if(!UserApp1_bSequenceTBE)
     {
-      LCDMessage(LINE2_START_ADDR, au8AB);
+      LCDMessage(LINE2_START_ADDR, au8MainMenu2);
+    }
+    else
+    {
+      if(UserApp1_bAB)
+      {
+        LCDMessage(LINE2_START_ADDR, au8AB);
+      }
+      if(UserApp1_bCD)
+      {
+        LCDMessage(LINE2_START_ADDR, au8CD);
+      }
+      if(UserApp1_bEF)
+      {
+        LCDMessage(LINE2_START_ADDR, au8EF);
+      }
+      if(UserApp1_bOp)
+      {
+        LCDMessage(LINE2_START_ADDR, au8Op);
+      }
     }
   }
+  
+  if(UserApp1_u8SequenceIndex >= 6)
+  {
+    LCDMessage(LINE2_START_ADDR, au8Full);
+  }
+  
+  LCDCommand(LCD_ADDRESS_CMD | UserApp1_u8CursorPosition);
 }
 /* --- end UpdateLCD() --- */
 
@@ -212,80 +245,190 @@ static void UserApp1SM_Unactivated(void)
 /* Wait for ??? */
 static void UserApp1SM_Activated(void)
 {
-  /* Button 0 */
-  if(WasButtonPressed(BUTTON0))
+  /* --- Enter Sequence Mode --- */
+  
+  if(UserApp1_u8SequenceIndex < 6)
   {
-    ButtonAcknowledge(BUTTON0);
-    
-    if(!UserApp1_bInstrTBE)
+    /* Button 0 */
+    if(WasButtonPressed(BUTTON0))
     {
-      UserApp1_bInstrTBE = TRUE;
-      UserApp1_bAB = TRUE;
+      ButtonAcknowledge(BUTTON0);
+      
+      if(!UserApp1_bSequenceTBE)
+      {
+        UserApp1_bSequenceTBE = TRUE;
+        UserApp1_bAB = TRUE;
+      }
+      
+      else
+      {
+        if(UserApp1_bAB)
+        {
+          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'A';
+          UserApp1_bAB = FALSE;
+        }
+        if(UserApp1_bCD)
+        {
+          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'C';
+          UserApp1_bCD = FALSE;
+        }
+        if(UserApp1_bEF)
+        {
+          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'E';
+          UserApp1_bEF = FALSE;
+        }
+        
+        UserApp1_u8SequenceIndex++;
+        UserApp1_u8CursorPosition++;
+        
+        if(UserApp1_bOp)
+        {
+          //add code for ENTER here
+        }
+        UserApp1_bSequenceTBE = FALSE;
+      }
+      
+      UpdateLCD();
+      
+    } /* end Button 0 */
+    
+    /* Button 1 */
+    if(WasButtonPressed(BUTTON1))
+    {
+      ButtonAcknowledge(BUTTON1);
+      
+      if(!UserApp1_bSequenceTBE)
+      {
+        UserApp1_bSequenceTBE = TRUE;
+        UserApp1_bCD = TRUE;
+      }
+      else if(UserApp1_bSequenceTBE && !UserApp1_bOp)
+      {
+        if(UserApp1_bAB)
+        {
+          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'B';
+          UserApp1_bAB = FALSE;
+        }
+        if(UserApp1_bCD)
+        {
+          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'D';
+          UserApp1_bCD = FALSE;
+        }
+        if(UserApp1_bEF)
+        {
+          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'F';
+          UserApp1_bEF = FALSE;
+        }
+        
+        UserApp1_u8SequenceIndex++;
+        UserApp1_u8CursorPosition++;
+        UserApp1_bSequenceTBE = FALSE;
+      }
+      else if(UserApp1_bSequenceTBE && UserApp1_bOp)
+      {
+        if(UserApp1_u8SequenceIndex > 0)
+        {
+          UserApp1_u8SequenceIndex--;
+          UserApp1_u8CursorPosition--;
+        }
+        UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = ' ';
+        UserApp1_bOp = FALSE;
+        UserApp1_bSequenceTBE = FALSE;
+      }
+      
+      UpdateLCD();
+      
+    } /* end Button 1 */
+    
+    /* Button 2 */
+    if(WasButtonPressed(BUTTON2))
+    {
+      ButtonAcknowledge(BUTTON2);
+      
+      if(!UserApp1_bSequenceTBE)
+      {
+        UserApp1_bSequenceTBE = TRUE;
+        UserApp1_bEF = TRUE;
+      }
+      else
+      {
+        if(UserApp1_bOp)
+        {
+          for(int i = 0; i < 6; i++)
+          {
+            UserApp1_au8Sequence[i] = ' ';
+          }
+          UserApp1_u8SequenceIndex = 0;
+          UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+          UserApp1_bOp = FALSE;
+        }
+        UserApp1_bSequenceTBE = FALSE;
+      }
+      
+      UpdateLCD();
+      
+    } /* end Button 2 */
+    
+    /* Button 3 */
+    if(WasButtonPressed(BUTTON3))
+    {
+      ButtonAcknowledge(BUTTON3);
+      
+      if(!UserApp1_bSequenceTBE)
+      {
+        UserApp1_bSequenceTBE = TRUE;
+        UserApp1_bOp = TRUE;
+      }
+      else
+      {
+        UserApp1_bSequenceTBE = FALSE;
+        UserApp1_bOp = FALSE;
+      }
+      
+      UpdateLCD();
+      
+    } /* end Button 3 */
+  } /* --- end Enter Sequence Mode --- */
+  
+  
+  /* --- Full Sequence Entered Mode --- */
+  
+  if(UserApp1_u8SequenceIndex >= 6)
+  {
+    if(WasButtonPressed(BUTTON0))
+    {
+      ButtonAcknowledge(BUTTON0);
+      
+      //add code for ENTER here
       
       UpdateLCD();
     }
     
-    else
+    if(WasButtonPressed(BUTTON1))
     {
-      if(UserApp1_bAB)
-      {
-        UserApp1_bAB = FALSE;
-      }
-      if(UserApp1_bCD)
-      {
-        UserApp1_bCD = FALSE;
-      }
-      if(UserApp1_bEF)
-      {
-        UserApp1_bEF = FALSE;
-      }
+      ButtonAcknowledge(BUTTON1);
       
-      UserApp1_bInstrTBE = FALSE;
+      UserApp1_u8SequenceIndex--;
+      UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = ' ';
+      UserApp1_u8CursorPosition--;
+      
       UpdateLCD();
     }
-  } /* end Button 0 */
-  
-  /* Button 1 */
-  if(WasButtonPressed(BUTTON1))
-  {
-    ButtonAcknowledge(BUTTON1);
     
-    if(!UserApp1_bCD)
+    if(WasButtonPressed(BUTTON2))
     {
-      UserApp1_bCD = TRUE;
-      LedOn(WHITE);
+      ButtonAcknowledge(BUTTON2);
+      
+      for(int i = 0; i < 6; i++)
+      {
+        UserApp1_au8Sequence[i] = ' ';
+      }
+      UserApp1_u8SequenceIndex = 0;
+      UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+      
+      UpdateLCD();
     }
-    else
-    {
-      UserApp1_bCD = FALSE;
-      LedOff(WHITE);
-    }
-  } /* end Button 1 */
-  
-  /* Button 2 */
-  if(WasButtonPressed(BUTTON2))
-  {
-    ButtonAcknowledge(BUTTON2);
-    
-    if(!UserApp1_bEF)
-    {
-      UserApp1_bEF = TRUE;
-      LedOn(PURPLE);
-    }
-    else
-    {
-      UserApp1_bEF = FALSE;
-      LedOff(PURPLE);
-    }
-  } /* end Button 2 */
-  
-  /* Button 3 */
-  if(WasButtonPressed(BUTTON3))
-  {
-    ButtonAcknowledge(BUTTON3);
-    
-    LedOn(BLUE);
-  } /* end Button 3 */
+  } /* --- end Full Sequence Entered Mode --- */
   
 } /* end UserApp1SM_Activated() */
   

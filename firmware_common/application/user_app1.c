@@ -60,24 +60,24 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
-static u8 UserApp1_au8CorrectSequence[6];
-static u8 UserApp1_u8CorrectSequenceIndex;
-static u8 UserApp1_au8Sequence[6];
-static u8 UserApp1_u8SequenceIndex;
-static u8 UserApp1_u8CursorPosition;
+static u8 UserApp1_au8CorrectSequence[6];            /* Key sequence array */
+static u8 UserApp1_u8CorrectSequenceIndex;           /* Tracks cursor within the key sequence array */
+static u8 UserApp1_au8Sequence[6];                   /* Entered sequence array */
+static u8 UserApp1_u8SequenceIndex;                  /* Tracks cursor within the entered sequence array */
+static u8 UserApp1_u8CursorPosition;                 /* Cursor position on LCD */
 
-static bool UserApp1_bConfig;
-static bool UserApp1_bFull;
+static bool UserApp1_bConfig;                        /* Key sequence configured? */
+static bool UserApp1_bFull;                          /* Full 6-char sequence entered? */
 
-static bool UserApp1_bSequenceTBE;
-static bool UserApp1_bAB;
-static bool UserApp1_bCD;
-static bool UserApp1_bEF;
-static bool UserApp1_bOp;
+static bool UserApp1_bSequenceTBE;                   /* Sequence to be edited? */
+static bool UserApp1_bAB;                            /* A or B to added? */
+static bool UserApp1_bCD;                            /* C or D to added? */
+static bool UserApp1_bEF;                            /* E or F to added? */
+static bool UserApp1_bOp;                            /* Show options menu? */
 
-static u8 UserApp1_u8AttemptCounter;
-static u8 UserApp1_u8LockTimer;
-static u32 UserApp1_u32SystemTimeStamp;
+static u8 UserApp1_u8AttemptCounter;                 /* Stores number of attempts */
+static u8 UserApp1_u8LockTimer;                      /* Timer used for duration of lockout */
+static u32 UserApp1_u32SystemTimeStamp;              /* Timestamp used for creating timer */
 
 
 
@@ -164,14 +164,25 @@ void UserApp1RunActiveState(void)
 {
   UserApp1_StateMachine();
 
-} /* end UserApp1RunActiveState */
+} /* end UserApp1RunActiveState() */
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-/* --- Function AllLedsOff() --- */
+/*--------------------------------------------------------------------------------------------------------------------
+Function: AllLedsOff()
+
+Description:
+Turns all LEDs off.
+
+Requires:
+  -
+
+Promises:
+  - All LEDs will be turned off.
+*/
 void AllLedsOff(void)
 {
   LedPWM(WHITE, LED_PWM_0);
@@ -182,12 +193,23 @@ void AllLedsOff(void)
   LedPWM(YELLOW, LED_PWM_0);
   LedPWM(ORANGE,LED_PWM_0);
   LedPWM(RED, LED_PWM_0);
-}
-/* --- end AllLedsOff() --- */
+  
+} /* end AllLedsOff() */
 
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UpdateLCD()
 
-/* ---Function UpdateLCD() --- */
+Description:
+Updates LCD with messages that correspond to the current state and status of the
+game.
+
+Requires:
+  - All booleans are correctly set according to the current state and status of the game
+
+Promises:
+  - The correct messages/menus will be displayed on the LCD
+*/
 void UpdateLCD(void)
 {
   static u8 au8MainMenu1_Config[] = "Set sequence:       ";
@@ -197,19 +219,22 @@ void UpdateLCD(void)
   static u8 au8CD[] =               ">C    >D        Back";
   static u8 au8EF[] =               ">E    >F        Back";
   static u8 au8Op[] =               "Entr  Del  Clr  Back";
-  static u8 au8Full[] =             "ENTR  DEL  CLR      ";
+  static u8 au8Full[] =             "Entr  Del  Clr      ";
   
+  /* Line 1 of config main menu */
   if(!UserApp1_bConfig)
   {
     LCDMessage(LINE1_START_ADDR, au8MainMenu1_Config);
     LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
   }
+  /* Line 1 of standard main menu */
   else
   {
     LCDMessage(LINE1_START_ADDR, au8MainMenu1);
     LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
   }
   
+  /* Line 2 for Enter Sequence Mode menus */
   if(!UserApp1_bFull)
   {
     if(!UserApp1_bSequenceTBE)
@@ -237,18 +262,37 @@ void UpdateLCD(void)
     }
   }
   
+  /* Line 2 for Full Sequence Entered Mode menu */
   if(UserApp1_bFull)
   {
     LCDMessage(LINE2_START_ADDR, au8Full);
   }
   
+  /* (draw cursor) */
   LCDCommand(LCD_ADDRESS_CMD | UserApp1_u8CursorPosition);
-}
-/* --- end UpdateLCD() --- */
+  
+} /* end UpdateLCD() */
 
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: EnterSequence(u8* au8Sequence, u8* u8Index)
 
-/* --- Function EnterSequence() --- */
+Description:
+Interfaces button presses on the board and manipulation of the sequence arrays to
+allow for the sequence arrays to be edited. Correctly changes booleans based on the
+button presses so that menus can be properly navigated and respective LCD updates 
+will occur.
+
+Requires:
+  - au8Sequence pointer points to UserApp1_au8CorrectSequence if in Config state
+  - au8Sequence pointer points to UserApp1_au8Sequence if in Activated state
+  - u8Index pointer points to UserApp1_u8CorrectSequenceIndex if in Config state
+  - u8Index pointer points to UserApp1_u8SequenceIndex if in Activatee state
+
+Promises:
+  - Button presses will result in the correct changes of booleans so that the action
+    indicated on the LCD can be executed by the rest of the program.
+*/
 void EnterSequence(u8* au8Sequence, u8* u8Index)
 {
   
@@ -261,36 +305,43 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
     {
       ButtonAcknowledge(BUTTON0);
       
+      /* Handle button 0 press from main menu by going to A/B menu. */
       if(!UserApp1_bSequenceTBE)
       {
         UserApp1_bSequenceTBE = TRUE;
         UserApp1_bAB = TRUE;
       }
-      
+      /* Handle button 0 press from:
+      */
       else
       {
+        /* A/B menu by inserting 'A' into the sequence. */
         if(UserApp1_bAB)
         {
           au8Sequence[*u8Index] = 'A';
           UserApp1_bAB = FALSE;
         }
+        /* C/D menu by inserting 'C' into the sequence. */
         if(UserApp1_bCD)
         {
           au8Sequence[*u8Index] = 'C';
           UserApp1_bCD = FALSE;
         }
+        /* E/F menu by inserting 'E' into the sequence. */
         if(UserApp1_bEF)
         {
           au8Sequence[*u8Index] = 'E';
           UserApp1_bEF = FALSE;
         }
         
+        /* (increment index and cursor regardless of specific menu) */
         (*u8Index)++;
         UserApp1_u8CursorPosition++;
         
+        /* Options menu by setting the sequence and going to next state. */
         if(UserApp1_bOp)
         {
-          //add code for ENTER here
+          /* If in Config state, go to Unactivated */
           if(!UserApp1_bConfig)
           {
             UserApp1_StateMachine = UserApp1SM_Unactivated;
@@ -298,12 +349,15 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
             UserApp1_bOp = FALSE;
             UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
           }
+          /* If in Activated state, go to Compare */
           else
           {
             UserApp1_StateMachine = UserApp1SM_CompareSequence;
-            (*u8Index)--;
+            (*u8Index)--; // Resolves issue when 5-char sequence is entered.
           }
         }
+        
+        /* (reset boolean to ensure eventual return to main menu) */
         UserApp1_bSequenceTBE = FALSE;
       }
       
@@ -316,35 +370,43 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
     {
       ButtonAcknowledge(BUTTON1);
       
+      /* Handle button 1 press from main menu by going to C/D menu. */
       if(!UserApp1_bSequenceTBE)
       {
         UserApp1_bSequenceTBE = TRUE;
         UserApp1_bCD = TRUE;
       }
+      /* Handle button 1 press from:
+      */
       else if(UserApp1_bSequenceTBE && !UserApp1_bOp)
       {
+        /* A/B menu by inserting 'B' into the sequence. */
         if(UserApp1_bAB)
         {
           au8Sequence[*u8Index] = 'B';
           UserApp1_bAB = FALSE;
         }
+        /* C/D menu by inserting 'D' into the sequence. */
         if(UserApp1_bCD)
         {
           au8Sequence[*u8Index] = 'D';
           UserApp1_bCD = FALSE;
         }
+        /* E/F menu by inserting 'F' into the sequence. */
         if(UserApp1_bEF)
         {
           au8Sequence[*u8Index] = 'F';
           UserApp1_bEF = FALSE;
         }
         
+        /* (increment index and cursor only for these menus) */
         (*u8Index)++;
         UserApp1_u8CursorPosition++;
         UserApp1_bSequenceTBE = FALSE;
       }
       else if(UserApp1_bSequenceTBE && UserApp1_bOp)
       {
+        /* Options menu by deleting the previous instruction added to the sequence. */
         if(*u8Index > 0)
         {
           (*u8Index)--;
@@ -364,13 +426,17 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
     {
       ButtonAcknowledge(BUTTON2);
       
+      /* Handle button 2 press from main menu by going to E/F menu. */
       if(!UserApp1_bSequenceTBE)
       {
         UserApp1_bSequenceTBE = TRUE;
         UserApp1_bEF = TRUE;
       }
+      /* Handle button 2 press from:
+      */
       else
       {
+        /* Options menu by clearing all instructions added to the sequence. */
         if(UserApp1_bOp)
         {
           for(int i = 0; i < 6; i++)
@@ -381,6 +447,7 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
           UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
           UserApp1_bOp = FALSE;
         }
+        /* All other menus by going back to the main menu. */
         else
         {
           UserApp1_bAB = FALSE;
@@ -399,11 +466,13 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
     {
       ButtonAcknowledge(BUTTON3);
       
+      /* Handle button 3 press from main menu by going to Options menu. */
       if(!UserApp1_bSequenceTBE)
       {
         UserApp1_bSequenceTBE = TRUE;
         UserApp1_bOp = TRUE;
       }
+      /* Handle button 3 press from all other menus by going back to main menu. */
       else
       {
         UserApp1_bSequenceTBE = FALSE;
@@ -417,6 +486,7 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
       
     } /* end Button 3 */
     
+    /* If sequence has reached 6-chars, go to Full Sequence Entered Mode. */
     if(*u8Index >= 6)
     {
       UserApp1_bFull = TRUE;
@@ -430,16 +500,15 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
   
   if(UserApp1_bFull)
   {
+    /* Button 0: ENTER (changes state) */
     if(WasButtonPressed(BUTTON0))
     {
       ButtonAcknowledge(BUTTON0);
       
-      //add code for ENTER here
       if(!UserApp1_bConfig)
       {
         UserApp1_StateMachine = UserApp1SM_Unactivated;
         UserApp1_bConfig = TRUE;
-        UserApp1_bFull = FALSE;
         UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
       }
       else
@@ -447,9 +516,11 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
         UserApp1_StateMachine = UserApp1SM_CompareSequence;
       }
       
+      UserApp1_bFull = FALSE;
       UpdateLCD();
-    }
+    } /* end Button 0 */
     
+    /* Button 1: DELETE */
     if(WasButtonPressed(BUTTON1))
     {
       ButtonAcknowledge(BUTTON1);
@@ -459,8 +530,9 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
       UserApp1_u8CursorPosition--;
       
       UpdateLCD();
-    }
+    } /* end Button 1 */
     
+    /* Button 2: CLEAR */
     if(WasButtonPressed(BUTTON2))
     {
       ButtonAcknowledge(BUTTON2);
@@ -473,17 +545,18 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
       UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
       
       UpdateLCD();
-    }
+    } /* end Button 2 */
     
+    /* If sequence has become less than 6-chars, go back to Enter Sequence Mode. */
     if(*u8Index < 6)
     {
       UserApp1_bFull = FALSE;
       UpdateLCD();
     }
     
-  } /* --- end Full Sequence Entered Mode --- */  
-}
-/* --- end EnterSequence() --- */
+  } /* --- end Full Sequence Entered Mode --- */
+  
+} /* end EnterSequence() */
 
 
 
@@ -492,46 +565,57 @@ State Machine Function Definitions
 **********************************************************************************************************************/
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
+/* Wait for good initialization / return from Correct state */
 static void UserApp1SM_Config(void)
 {
-  EnterSequence(UserApp1_au8CorrectSequence, &UserApp1_u8CorrectSequenceIndex); 
+  /* Interfaces game facilitator to set UserApp1_au8CorrectSequence */
+  EnterSequence(UserApp1_au8CorrectSequence, &UserApp1_u8CorrectSequenceIndex);
+  
 } /* end UserApp1SM_Config() */
  
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
+/* Wait for configuration */
 static void UserApp1SM_Unactivated(void)
 {
+  
+  /* ADD CODE HERE for how this state should be handled */
   UserApp1_StateMachine = UserApp1SM_Activated;
+  
 } /* end UserApp1SM_Unactivated() */
   
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
+/* Wait for activation / return from Locked state */
 static void UserApp1SM_Activated(void)
 {
+  /* Interfaces players to enter UserApp1_au8Sequence */
   EnterSequence(UserApp1_au8Sequence, &UserApp1_u8SequenceIndex);
+  
 } /* end UserApp1SM_Activated() */
 
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
+/* Wait for sequence to be entered from Activated state */
 static void UserApp1SM_CompareSequence(void)
 {
   static bool bCorrect = TRUE;
   
+  /* Compare key sequence with entered sequence.
+        - set bCorrect to false if two unlike chars are found
+  */
   for(int i = 0; i < 6; i++)
   {
     if(UserApp1_au8Sequence[i] != UserApp1_au8CorrectSequence[i])
     {
       bCorrect = FALSE;
     }
-  }
+  } /* end comparison */
   
+  /* If correct, display message and transition to Correct state. */ 
   if(bCorrect)
   {
     LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
@@ -543,6 +627,7 @@ static void UserApp1SM_CompareSequence(void)
     
     UserApp1_StateMachine = UserApp1SM_Correct;
   }
+  /* If incorrect, display message, start timer and transition to Locked state. */
   else
   {
     LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
@@ -553,7 +638,7 @@ static void UserApp1SM_CompareSequence(void)
     LedOn(RED);
     
     UserApp1_u8AttemptCounter++;
-    UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 10;
+    UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 3;
     
     u8 u8TimerTensTEMP = (UserApp1_u8LockTimer / 10) + 48;
     u8 u8TimerOnesTEMP = (UserApp1_u8LockTimer % 10) + 48;
@@ -573,9 +658,10 @@ static void UserApp1SM_CompareSequence(void)
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
+/* Wait for correct sequence to be found by Compare state */
 static void UserApp1SM_Correct(void)
 {
+  /* TEMPORARY: Press button 2 to re-initialize and restart game */
   if(WasButtonPressed(BUTTON2))
   {
     ButtonAcknowledge(BUTTON2);
@@ -588,7 +674,7 @@ static void UserApp1SM_Correct(void)
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
+/* Wait for incorrect sequence to be found by Compare state */
 static void UserApp1SM_Locked(void)
 {
   if((G_u32SystemTime1ms - UserApp1_u32SystemTimeStamp) >= 1000)

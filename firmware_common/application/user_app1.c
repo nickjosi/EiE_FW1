@@ -185,6 +185,8 @@ void AllLedsOff(void)
 }
 /* --- end AllLedsOff() --- */
 
+
+
 /* ---Function UpdateLCD() --- */
 void UpdateLCD(void)
 {
@@ -244,22 +246,11 @@ void UpdateLCD(void)
 }
 /* --- end UpdateLCD() --- */
 
-/**********************************************************************************************************************
-State Machine Function Definitions
-**********************************************************************************************************************/
 
-/*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
-static void UserApp1SM_Config(void)
+
+/* --- Function EnterSequence() --- */
+void EnterSequence(u8* au8Sequence, u8* u8Index)
 {
-  /*
-  UserApp1_au8CorrectSequence[0] = 'A';
-  UserApp1_au8CorrectSequence[1] = 'B';
-  UserApp1_au8CorrectSequence[2] = 'C';
-  UserApp1_au8CorrectSequence[3] = 'D';
-  UserApp1_au8CorrectSequence[4] = 'E';
-  UserApp1_au8CorrectSequence[5] = 'F';
-  */
   
   /* --- Enter Sequence Mode --- */
   
@@ -280,30 +271,38 @@ static void UserApp1SM_Config(void)
       {
         if(UserApp1_bAB)
         {
-          UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = 'A';
+          au8Sequence[*u8Index] = 'A';
           UserApp1_bAB = FALSE;
         }
         if(UserApp1_bCD)
         {
-          UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = 'C';
+          au8Sequence[*u8Index] = 'C';
           UserApp1_bCD = FALSE;
         }
         if(UserApp1_bEF)
         {
-          UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = 'E';
+          au8Sequence[*u8Index] = 'E';
           UserApp1_bEF = FALSE;
         }
         
-        UserApp1_u8CorrectSequenceIndex++;
+        (*u8Index)++;
         UserApp1_u8CursorPosition++;
         
         if(UserApp1_bOp)
         {
           //add code for ENTER here
-          UserApp1_StateMachine = UserApp1SM_Unactivated;
-          UserApp1_bConfig = TRUE;
-          UserApp1_bOp = FALSE;
-          UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+          if(!UserApp1_bConfig)
+          {
+            UserApp1_StateMachine = UserApp1SM_Unactivated;
+            UserApp1_bConfig = TRUE;
+            UserApp1_bOp = FALSE;
+            UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+          }
+          else
+          {
+            UserApp1_StateMachine = UserApp1SM_CompareSequence;
+            (*u8Index)--;
+          }
         }
         UserApp1_bSequenceTBE = FALSE;
       }
@@ -326,32 +325,32 @@ static void UserApp1SM_Config(void)
       {
         if(UserApp1_bAB)
         {
-          UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = 'B';
+          au8Sequence[*u8Index] = 'B';
           UserApp1_bAB = FALSE;
         }
         if(UserApp1_bCD)
         {
-          UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = 'D';
+          au8Sequence[*u8Index] = 'D';
           UserApp1_bCD = FALSE;
         }
         if(UserApp1_bEF)
         {
-          UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = 'F';
+          au8Sequence[*u8Index] = 'F';
           UserApp1_bEF = FALSE;
         }
         
-        UserApp1_u8CorrectSequenceIndex++;
+        (*u8Index)++;
         UserApp1_u8CursorPosition++;
         UserApp1_bSequenceTBE = FALSE;
       }
       else if(UserApp1_bSequenceTBE && UserApp1_bOp)
       {
-        if(UserApp1_u8CorrectSequenceIndex > 0)
+        if(*u8Index > 0)
         {
-          UserApp1_u8CorrectSequenceIndex--;
+          (*u8Index)--;
           UserApp1_u8CursorPosition--;
         }
-        UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = ' ';
+        au8Sequence[*u8Index] = ' ';
         UserApp1_bOp = FALSE;
         UserApp1_bSequenceTBE = FALSE;
       }
@@ -376,11 +375,17 @@ static void UserApp1SM_Config(void)
         {
           for(int i = 0; i < 6; i++)
           {
-            UserApp1_au8CorrectSequence[i] = ' ';
+            au8Sequence[i] = ' ';
           }
-          UserApp1_u8CorrectSequenceIndex = 0;
+          *u8Index = 0;
           UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
           UserApp1_bOp = FALSE;
+        }
+        else
+        {
+          UserApp1_bAB = FALSE;
+          UserApp1_bCD = FALSE;
+          UserApp1_bEF = FALSE;
         }
         UserApp1_bSequenceTBE = FALSE;
       }
@@ -412,7 +417,7 @@ static void UserApp1SM_Config(void)
       
     } /* end Button 3 */
     
-    if(UserApp1_u8CorrectSequenceIndex >= 6)
+    if(*u8Index >= 6)
     {
       UserApp1_bFull = TRUE;
       UpdateLCD();
@@ -430,10 +435,17 @@ static void UserApp1SM_Config(void)
       ButtonAcknowledge(BUTTON0);
       
       //add code for ENTER here
-      UserApp1_StateMachine = UserApp1SM_Unactivated;
-      UserApp1_bConfig = TRUE;
-      UserApp1_bFull = FALSE;
-      UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+      if(!UserApp1_bConfig)
+      {
+        UserApp1_StateMachine = UserApp1SM_Unactivated;
+        UserApp1_bConfig = TRUE;
+        UserApp1_bFull = FALSE;
+        UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+      }
+      else
+      {
+        UserApp1_StateMachine = UserApp1SM_CompareSequence;
+      }
       
       UpdateLCD();
     }
@@ -442,8 +454,8 @@ static void UserApp1SM_Config(void)
     {
       ButtonAcknowledge(BUTTON1);
       
-      UserApp1_u8CorrectSequenceIndex--;
-      UserApp1_au8CorrectSequence[UserApp1_u8CorrectSequenceIndex] = ' ';
+      (*u8Index)--;
+      au8Sequence[*u8Index] = ' ';
       UserApp1_u8CursorPosition--;
       
       UpdateLCD();
@@ -455,22 +467,35 @@ static void UserApp1SM_Config(void)
       
       for(int i = 0; i < 6; i++)
       {
-        UserApp1_au8CorrectSequence[i] = ' ';
+        au8Sequence[i] = ' ';
       }
-      UserApp1_u8CorrectSequenceIndex = 0;
+      *u8Index = 0;
       UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
       
       UpdateLCD();
     }
     
-    if(UserApp1_u8CorrectSequenceIndex < 6)
+    if(*u8Index < 6)
     {
       UserApp1_bFull = FALSE;
       UpdateLCD();
     }
     
-  } /* --- end Full Sequence Entered Mode --- */
-  
+  } /* --- end Full Sequence Entered Mode --- */  
+}
+/* --- end EnterSequence() --- */
+
+
+
+/**********************************************************************************************************************
+State Machine Function Definitions
+**********************************************************************************************************************/
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_Config(void)
+{
+  EnterSequence(UserApp1_au8CorrectSequence, &UserApp1_u8CorrectSequenceIndex); 
 } /* end UserApp1SM_Config() */
  
 
@@ -488,210 +513,7 @@ static void UserApp1SM_Unactivated(void)
 /* Wait for ??? */
 static void UserApp1SM_Activated(void)
 {
-  /* --- Enter Sequence Mode --- */
-  
-  if(!UserApp1_bFull)
-  {
-    /* Button 0 */
-    if(WasButtonPressed(BUTTON0))
-    {
-      ButtonAcknowledge(BUTTON0);
-      
-      if(!UserApp1_bSequenceTBE)
-      {
-        UserApp1_bSequenceTBE = TRUE;
-        UserApp1_bAB = TRUE;
-      }
-      
-      else
-      {
-        if(UserApp1_bAB)
-        {
-          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'A';
-          UserApp1_bAB = FALSE;
-        }
-        if(UserApp1_bCD)
-        {
-          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'C';
-          UserApp1_bCD = FALSE;
-        }
-        if(UserApp1_bEF)
-        {
-          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'E';
-          UserApp1_bEF = FALSE;
-        }
-        
-        UserApp1_u8SequenceIndex++;
-        UserApp1_u8CursorPosition++;
-        
-        if(UserApp1_bOp)
-        {
-          //add code for ENTER here
-          UserApp1_StateMachine = UserApp1SM_CompareSequence;
-        }
-        UserApp1_bSequenceTBE = FALSE;
-      }
-      
-      UpdateLCD();
-      
-    } /* end Button 0 */
-    
-    /* Button 1 */
-    if(WasButtonPressed(BUTTON1))
-    {
-      ButtonAcknowledge(BUTTON1);
-      
-      if(!UserApp1_bSequenceTBE)
-      {
-        UserApp1_bSequenceTBE = TRUE;
-        UserApp1_bCD = TRUE;
-      }
-      else if(UserApp1_bSequenceTBE && !UserApp1_bOp)
-      {
-        if(UserApp1_bAB)
-        {
-          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'B';
-          UserApp1_bAB = FALSE;
-        }
-        if(UserApp1_bCD)
-        {
-          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'D';
-          UserApp1_bCD = FALSE;
-        }
-        if(UserApp1_bEF)
-        {
-          UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = 'F';
-          UserApp1_bEF = FALSE;
-        }
-        
-        UserApp1_u8SequenceIndex++;
-        UserApp1_u8CursorPosition++;
-        UserApp1_bSequenceTBE = FALSE;
-      }
-      else if(UserApp1_bSequenceTBE && UserApp1_bOp)
-      {
-        if(UserApp1_u8SequenceIndex > 0)
-        {
-          UserApp1_u8SequenceIndex--;
-          UserApp1_u8CursorPosition--;
-        }
-        UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = ' ';
-        UserApp1_bOp = FALSE;
-        UserApp1_bSequenceTBE = FALSE;
-      }
-      
-      UpdateLCD();
-      
-    } /* end Button 1 */
-    
-    /* Button 2 */
-    if(WasButtonPressed(BUTTON2))
-    {
-      ButtonAcknowledge(BUTTON2);
-      
-      if(!UserApp1_bSequenceTBE)
-      {
-        UserApp1_bSequenceTBE = TRUE;
-        UserApp1_bEF = TRUE;
-      }
-      else
-      {
-        if(UserApp1_bOp)
-        {
-          for(int i = 0; i < 6; i++)
-          {
-            UserApp1_au8Sequence[i] = ' ';
-          }
-          UserApp1_u8SequenceIndex = 0;
-          UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
-          UserApp1_bOp = FALSE;
-        }
-        UserApp1_bSequenceTBE = FALSE;
-      }
-      
-      UpdateLCD();
-      
-    } /* end Button 2 */
-    
-    /* Button 3 */
-    if(WasButtonPressed(BUTTON3))
-    {
-      ButtonAcknowledge(BUTTON3);
-      
-      if(!UserApp1_bSequenceTBE)
-      {
-        UserApp1_bSequenceTBE = TRUE;
-        UserApp1_bOp = TRUE;
-      }
-      else
-      {
-        UserApp1_bSequenceTBE = FALSE;
-        UserApp1_bAB = FALSE;
-        UserApp1_bCD = FALSE;
-        UserApp1_bEF = FALSE;
-        UserApp1_bOp = FALSE;
-      }
-      
-      UpdateLCD();
-      
-    } /* end Button 3 */
-    
-    if(UserApp1_u8SequenceIndex >= 6)
-    {
-      UserApp1_bFull = TRUE;
-      UpdateLCD();
-    }
-    
-  } /* --- end Enter Sequence Mode --- */
-  
-  
-  /* --- Full Sequence Entered Mode --- */
-  
-  if(UserApp1_bFull)
-  {
-    if(WasButtonPressed(BUTTON0))
-    {
-      ButtonAcknowledge(BUTTON0);
-      
-      //add code for ENTER here
-      UserApp1_StateMachine = UserApp1SM_CompareSequence;
-      
-      //UpdateLCD();
-    }
-    
-    if(WasButtonPressed(BUTTON1))
-    {
-      ButtonAcknowledge(BUTTON1);
-      
-      UserApp1_u8SequenceIndex--;
-      UserApp1_au8Sequence[UserApp1_u8SequenceIndex] = ' ';
-      UserApp1_u8CursorPosition--;
-      
-      UpdateLCD();
-    }
-    
-    if(WasButtonPressed(BUTTON2))
-    {
-      ButtonAcknowledge(BUTTON2);
-      
-      for(int i = 0; i < 6; i++)
-      {
-        UserApp1_au8Sequence[i] = ' ';
-      }
-      UserApp1_u8SequenceIndex = 0;
-      UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
-      
-      UpdateLCD();
-    }
-    
-    if(UserApp1_u8SequenceIndex < 6)
-    {
-      UserApp1_bFull = FALSE;
-      UpdateLCD();
-    }
-    
-  } /* --- end Full Sequence Entered Mode --- */
-  
+  EnterSequence(UserApp1_au8Sequence, &UserApp1_u8SequenceIndex);
 } /* end UserApp1SM_Activated() */
 
 

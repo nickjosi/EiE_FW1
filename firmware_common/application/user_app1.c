@@ -619,7 +619,7 @@ static void UserApp1SM_CompareSequence(void)
   if(bCorrect)
   {
     LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-    LCDMessage(LINE1_START_ADDR, "Correct!            ");
+    LCDMessage(LINE1_START_ADDR, "Unscrambled!        ");
     LCDMessage(LINE2_START_ADDR, "Next board activated");
     
     AllLedsOff();
@@ -661,10 +661,13 @@ static void UserApp1SM_CompareSequence(void)
 /* Wait for correct sequence to be found by Compare state */
 static void UserApp1SM_Correct(void)
 {
-  /* TEMPORARY: Press button 2 to re-initialize and restart game */
-  if(WasButtonPressed(BUTTON2))
+  /* TEMPORARY: Press any button to re-initialize and restart game */
+  if(WasButtonPressed(BUTTON0) || WasButtonPressed(BUTTON1) || WasButtonPressed(BUTTON2) || WasButtonPressed(BUTTON3))
   {
+    ButtonAcknowledge(BUTTON0);
+    ButtonAcknowledge(BUTTON1);
     ButtonAcknowledge(BUTTON2);
+    ButtonAcknowledge(BUTTON3);
     
     UserApp1Initialize();
     UserApp1_StateMachine = UserApp1SM_Config;
@@ -677,6 +680,12 @@ static void UserApp1SM_Correct(void)
 /* Wait for incorrect sequence to be found by Compare state */
 static void UserApp1SM_Locked(void)
 {
+  /* Ensure that any button presses in this state have no effect*/
+  ButtonAcknowledge(BUTTON0);
+  ButtonAcknowledge(BUTTON1);
+  ButtonAcknowledge(BUTTON2);
+  ButtonAcknowledge(BUTTON3);
+  
   if((G_u32SystemTime1ms - UserApp1_u32SystemTimeStamp) >= 1000)
   {
     UserApp1_u32SystemTimeStamp = G_u32SystemTime1ms;

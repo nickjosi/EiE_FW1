@@ -133,6 +133,10 @@ void UserApp1Initialize(void)
   UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
   LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON | LCD_DISPLAY_CURSOR | LCD_DISPLAY_BLINK);
   UpdateLCD();
+  
+  LedPWM(LCD_RED, LED_PWM_100);
+  LedPWM(LCD_GREEN, LED_PWM_100);
+  LedPWM(LCD_BLUE, LED_PWM_100);
  
   /* If good initialization, set state to Config */
   if( 1 )
@@ -358,6 +362,10 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
             UserApp1_bSequenceTBE = FALSE;
             UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
             
+            LedPWM(LCD_RED, LED_PWM_0);
+            LedPWM(LCD_GREEN, LED_PWM_50);
+            LedPWM(LCD_BLUE, LED_PWM_100);
+            
             LCDMessage(LINE1_START_ADDR, "Final board?        ");
             LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
             LCDMessage(LINE2_START_ADDR, "Yes   No            ");
@@ -370,11 +378,8 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
             UserApp1_bSequenceTBE = FALSE;
             UpdateLCD();
           }
-        }
-        
+        } 
       }
-      
-      //UpdateLCD();
       
     } /* end Button 0 */
     
@@ -524,6 +529,10 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
         UserApp1_bConfig = TRUE;
         UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
         
+        LedPWM(LCD_RED, LED_PWM_0);
+        LedPWM(LCD_GREEN, LED_PWM_50);
+        LedPWM(LCD_BLUE, LED_PWM_100);
+        
         LCDMessage(LINE1_START_ADDR, "Final board?        ");
         LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
         LCDMessage(LINE2_START_ADDR, "Yes   No            ");
@@ -600,6 +609,10 @@ static void UserApp1SM_Config2(void)
   {
     ButtonAcknowledge(BUTTON0);
     
+    LedPWM(LCD_RED, LED_PWM_75);
+    LedPWM(LCD_GREEN, LED_PWM_100);
+    LedPWM(LCD_BLUE, LED_PWM_0);
+    
     UserApp1_bFinalBoard = TRUE;
     UserApp1_StateMachine = UserApp1SM_Unactivated;
     UpdateLCD();
@@ -607,6 +620,10 @@ static void UserApp1SM_Config2(void)
   if(WasButtonPressed(BUTTON1))
   {
     ButtonAcknowledge(BUTTON1);
+    
+    LedPWM(LCD_RED, LED_PWM_75);
+    LedPWM(LCD_GREEN, LED_PWM_100);
+    LedPWM(LCD_BLUE, LED_PWM_0);
     
     UserApp1_StateMachine = UserApp1SM_Unactivated;
     UpdateLCD();
@@ -680,6 +697,10 @@ static void UserApp1SM_CompareSequence(void)
     AllLedsOff();
     LedOn(GREEN);
     
+    LedPWM(LCD_RED, LED_PWM_100);
+    LedPWM(LCD_GREEN, LED_PWM_0);
+    LedPWM(LCD_BLUE, LED_PWM_25);
+    
     UserApp1_StateMachine = UserApp1SM_Correct;
   }
   /* If incorrect, display message, start timer and transition to Locked state. */
@@ -691,6 +712,10 @@ static void UserApp1SM_CompareSequence(void)
     
     AllLedsOff();
     LedOn(RED);
+    
+    LedPWM(LCD_RED, LED_PWM_100);
+    LedPWM(LCD_GREEN, LED_PWM_0);
+    LedPWM(LCD_BLUE, LED_PWM_0);
     
     UserApp1_u8AttemptCounter++;
     UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 3;
@@ -768,6 +793,10 @@ static void UserApp1SM_Locked(void)
     UserApp1_u8SequenceIndex = 0;
     
     AllLedsOff();
+    
+    LedPWM(LCD_RED, LED_PWM_75);
+    LedPWM(LCD_GREEN, LED_PWM_100);
+    LedPWM(LCD_BLUE, LED_PWM_0);
     
     LCDCommand(LCD_CLEAR_CMD);
     LCDCommand(LCD_HOME_CMD);

@@ -68,6 +68,7 @@ static u8 UserApp1_u8CursorPosition;                 /* Cursor position on LCD *
 
 static bool UserApp1_bConfig;                        /* Key sequence configured? */
 static bool UserApp1_bFull;                          /* Full 6-char sequence entered? */
+static bool UserApp1_bFinalBoard;                    /* Last board in the current round? */
 
 static bool UserApp1_bSequenceTBE;                   /* Sequence to be edited? */
 static bool UserApp1_bAB;                            /* A or B to added? */
@@ -108,6 +109,7 @@ Promises:
 void UserApp1Initialize(void)
 { 
   UserApp1_bConfig =        FALSE;
+  UserApp1_bFinalBoard =     FALSE;
   UserApp1_bSequenceTBE =   FALSE;
   UserApp1_bAB =            FALSE;
   UserApp1_bCD =            FALSE;
@@ -310,6 +312,7 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
       {
         UserApp1_bSequenceTBE = TRUE;
         UserApp1_bAB = TRUE;
+        UpdateLCD();
       }
       /* Handle button 0 press from:
       */
@@ -333,35 +336,45 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
           au8Sequence[*u8Index] = 'E';
           UserApp1_bEF = FALSE;
         }
-        
-        /* (increment index and cursor regardless of specific menu) */
-        (*u8Index)++;
-        UserApp1_u8CursorPosition++;
+        /* (increment index and cursor, reset bSequenceTBE and update LCD
+            regardless of A/B, C/D, or E/F menu) */
+        if(!UserApp1_bOp)
+        {
+          UserApp1_bSequenceTBE = FALSE;
+          (*u8Index)++;
+          UserApp1_u8CursorPosition++;
+          UpdateLCD();
+        }
         
         /* Options menu by setting the sequence and going to next state. */
         if(UserApp1_bOp)
         {
-          /* If in Config state, go to Unactivated */
+          /* If in Config state, go to Config2 */
           if(!UserApp1_bConfig)
           {
-            UserApp1_StateMachine = UserApp1SM_Unactivated;
+            UserApp1_StateMachine = UserApp1SM_Config2;
             UserApp1_bConfig = TRUE;
             UserApp1_bOp = FALSE;
+            UserApp1_bSequenceTBE = FALSE;
             UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+            
+            LCDMessage(LINE1_START_ADDR, "Final board?        ");
+            LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
+            LCDMessage(LINE2_START_ADDR, "Yes   No            ");
           }
           /* If in Activated state, go to Compare */
           else
           {
             UserApp1_StateMachine = UserApp1SM_CompareSequence;
             (*u8Index)--; // Resolves issue when 5-char sequence is entered.
+            UserApp1_bSequenceTBE = FALSE;
+            UpdateLCD();
           }
         }
         
-        /* (reset boolean to ensure eventual return to main menu) */
-        UserApp1_bSequenceTBE = FALSE;
       }
       
-      UpdateLCD();
+      //UpdateLCD();
       
     } /* end Button 0 */
     
@@ -507,17 +520,21 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
       
       if(!UserApp1_bConfig)
       {
-        UserApp1_StateMachine = UserApp1SM_Unactivated;
+        UserApp1_StateMachine = UserApp1SM_Config2;
         UserApp1_bConfig = TRUE;
         UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+        
+        LCDMessage(LINE1_START_ADDR, "Final board?        ");
+        LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
+        LCDMessage(LINE2_START_ADDR, "Yes   No            ");
       }
       else
       {
         UserApp1_StateMachine = UserApp1SM_CompareSequence;
+        UpdateLCD();
       }
       
       UserApp1_bFull = FALSE;
-      UpdateLCD();
     } /* end Button 0 */
     
     /* Button 1: DELETE */
@@ -576,7 +593,37 @@ static void UserApp1SM_Config(void)
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for configuration */
+/* Wait for configuration 1 */
+static void UserApp1SM_Config2(void)
+{
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    
+    UserApp1_bFinalBoard = TRUE;
+    UserApp1_StateMachine = UserApp1SM_Unactivated;
+    UpdateLCD();
+  }
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    UserApp1_StateMachine = UserApp1SM_Unactivated;
+    UpdateLCD();
+  }
+  if(WasButtonPressed(BUTTON2) || WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON2);
+    ButtonAcknowledge(BUTTON3);
+  }
+  
+  
+} /* end UserApp1SM_Config2() */
+
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for configuration 2 */
 static void UserApp1SM_Unactivated(void)
 {
   
@@ -619,8 +666,16 @@ static void UserApp1SM_CompareSequence(void)
   if(bCorrect)
   {
     LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON);
-    LCDMessage(LINE1_START_ADDR, "Unscrambled!        ");
-    LCDMessage(LINE2_START_ADDR, "Next board activated");
+    if(UserApp1_bFinalBoard)
+    {
+      LCDMessage(LINE1_START_ADDR, "Unscrambled! You've ");
+      LCDMessage(LINE2_START_ADDR, "completed the round!");
+    }
+    else
+    {
+      LCDMessage(LINE1_START_ADDR, "Unscrambled!        ");
+      LCDMessage(LINE2_START_ADDR, "Next board activated");
+    }
     
     AllLedsOff();
     LedOn(GREEN);

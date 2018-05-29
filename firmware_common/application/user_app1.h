@@ -58,6 +58,8 @@ State Machine Declarations
 ***********************************************************************************************************************/
 static void UserApp1SM_Config(void);
 
+static void UserApp1SM_Config2(void);
+
 static void UserApp1SM_Unactivated(void);
 
 static void UserApp1SM_Activated(void);

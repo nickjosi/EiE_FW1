@@ -66,7 +66,7 @@ static u8 UserApp1_u8Contents;
 static bool UserApp1_bLabelChosen;
 static bool UserApp1_bContentsChosen;
 
-static u16 UserApp1_u16PickCounter;
+static u8 UserApp1_u8PickCounter;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -94,8 +94,9 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  UserApp1_bLabelChosen =     FALSE;
-  UserApp1_bContentsChosen =  FALSE;
+  UserApp1_bLabelChosen =    FALSE;
+  UserApp1_bContentsChosen = FALSE;
+  UserApp1_u8PickCounter =   0;
   
   AllLedsOff();
   DisplayConfigMenu();
@@ -219,7 +220,7 @@ Promises:
 void DisplayAttemptMenu(void)
 {
                          /*0123456789abcdef1234*/
-  static u8 au8Line1[] =  "             (     )";
+  static u8 au8Line1[] =  "            0(     )";
   static u8 au8Line2[] =  ">Pick >Reveal       ";
   
   LCDMessage(LINE1_START_ADDR, au8Line1);
@@ -338,18 +339,51 @@ static void UserApp1SM_Selection(void)
 /* Wait for selection */
 static void UserApp1SM_Attempt(void)          
 {
-  if(WasButtonPressed(BUTTON0))
+  if(WasButtonPressed(BUTTON0)) // Pick candy
   {
     ButtonAcknowledge(BUTTON0);
     
-    // Code for picking a candy
+    UserApp1_u8PickCounter++;    
+    u8 u8PickCounterTENS = (UserApp1_u8PickCounter / 10) + 48;
+    u8 u8PickCounterONES = (UserApp1_u8PickCounter % 10) + 48;
+    if(UserApp1_u8PickCounter > 9)
+      LCDMessage(LINE1_START_ADDR + 11, &u8PickCounterTENS);
+    LCDMessage(LINE1_START_ADDR + 12, &u8PickCounterONES);
+    
+    if(UserApp1_u8Contents == MINT)
+    {
+      LCDMessage(LINE1_START_ADDR + 13, "(Mint )");
+    }
+    if(UserApp1_u8Contents == LEMON)
+    {
+      LCDMessage(LINE1_START_ADDR + 13, "(Lemon)");
+    }
+    if(UserApp1_u8Contents == MIXED)
+    {
+      if(G_u32SystemTime1ms % 2 == 0)
+        LCDMessage(LINE1_START_ADDR + 13, "(Mint )");
+      else
+        LCDMessage(LINE1_START_ADDR + 13, "(Lemon)");
+    }
+    
   }
   
-  if(WasButtonPressed(BUTTON1))
+  if(WasButtonPressed(BUTTON1)) // Reveal correct contents
   {
     ButtonAcknowledge(BUTTON1);
     
-    //Code for revealing correct contents
+    if(UserApp1_u8Contents == MINT)
+    {
+      LCDMessage(LINE2_START_ADDR, "Correct label: MINT ");
+    }
+    else if(UserApp1_u8Contents == LEMON)
+    {
+      LCDMessage(LINE2_START_ADDR, "Correct label: LEMON");
+    }
+    else if(UserApp1_u8Contents == MIXED)
+    {
+      LCDMessage(LINE2_START_ADDR, "Correct label: MIXED");
+    }
   }
   
   if(WasButtonPressed(BUTTON2))

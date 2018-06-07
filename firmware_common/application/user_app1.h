@@ -55,6 +55,7 @@ void UserApp1RunActiveState(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 void AllLedsOff(void);
 void DisplayConfigMenu(void);
+void DisplayConfirmationMenu(void);
 void DisplayAttemptMenu(void);
 
 /***********************************************************************************************************************
@@ -63,6 +64,8 @@ State Machine Declarations
 static void UserApp1SM_Selection(void);    
 
 static void UserApp1SM_Attempt(void);
+
+static void UserApp1SM_Revealed(void);
 
 static void UserApp1SM_Error(void);         
 

@@ -207,6 +207,54 @@ void DisplayConfigMenu(void)
 
 
 /*--------------------------------------------------------------------------------------------------------------------
+Function: DisplayConfirmationMenu()
+
+Description:
+
+
+Requires:
+  -
+Promises:
+  -
+*/
+void DisplayConfirmationMenu(void)
+{
+                         /*0123456789abcdef1234*/
+  static u8 au8Line1[] =  "Label:              ";
+  static u8 au8Line2[] =  "Contents:           ";
+  LCDMessage(LINE1_START_ADDR, au8Line1);
+  LCDMessage(LINE2_START_ADDR, au8Line2);
+
+  if(UserApp1_u8Label == MINT)
+  {
+    LCDMessage(LINE1_START_ADDR + 7, "MINT");
+  }
+  else if(UserApp1_u8Label == LEMON)
+  {
+    LCDMessage(LINE1_START_ADDR + 7, "LEMON");
+  }
+  else if(UserApp1_u8Label == MIXED)
+  {
+    LCDMessage(LINE1_START_ADDR + 7, "MIXED");
+  }
+  
+  if(UserApp1_u8Contents == MINT)
+  {
+    LCDMessage(LINE2_START_ADDR + 10, "MINT");
+  }
+  else if(UserApp1_u8Contents == LEMON)
+  {
+    LCDMessage(LINE2_START_ADDR + 10, "LEMON");
+  }
+  else if(UserApp1_u8Contents == MIXED)
+  {
+    LCDMessage(LINE2_START_ADDR + 10, "MIXED");
+  }
+  
+} /* end DisplayConfirmationMenu() */
+
+
+/*--------------------------------------------------------------------------------------------------------------------
 Function: DisplayAttemptMenu()
 
 Description:
@@ -220,39 +268,21 @@ Promises:
 void DisplayAttemptMenu(void)
 {
                          /*0123456789abcdef1234*/
-  static u8 au8Line1[] =  "            0(     )";
   static u8 au8Line2[] =  ">Pick >Reveal       ";
-  
-  LCDMessage(LINE1_START_ADDR, au8Line1);
   LCDMessage(LINE2_START_ADDR, au8Line2);
 
   if(UserApp1_u8Label == MINT)
   {
-    LCDMessage(LINE1_START_ADDR, "|| MINT ||");
+    LCDMessage(LINE1_START_ADDR, "|| MINT ||  0(     )");
   }
   else if(UserApp1_u8Label == LEMON)
   {
-    LCDMessage(LINE1_START_ADDR, "|| LEMON ||");
+    LCDMessage(LINE1_START_ADDR, "|| LEMON || 0(     )");
   }
   else if(UserApp1_u8Label == MIXED)
   {
-    LCDMessage(LINE1_START_ADDR, "|| MIXED ||");
+    LCDMessage(LINE1_START_ADDR, "|| MIXED || 0(     )");
   }
-  
-  /*
-  if(UserApp1_u8Contents == MINT)
-  {
-    LCDMessage(LINE1_START_ADDR + 12, "Mint");
-  }
-  else if(UserApp1_u8Contents == LEMON)
-  {
-    LCDMessage(LINE1_START_ADDR + 12, "Lemon");
-  }
-  else if(UserApp1_u8Contents == MIXED)
-  {
-    LCDMessage(LINE1_START_ADDR + 12, "Mixed");
-  }
-  */
   
 } /* end DisplayAttemptMenu() */
 
@@ -277,14 +307,18 @@ static void UserApp1SM_Selection(void)
       UserApp1_u8Label = MINT; // Mint label
       DisplayConfigMenu();
     }
-    else if(UserApp1_u8Label == 1 || UserApp1_u8Label == 2)
+    else if(!UserApp1_bContentsChosen && (UserApp1_u8Label == 1 || UserApp1_u8Label == 2))
     {
       UserApp1_bContentsChosen = TRUE;
       UserApp1_u8Contents = MINT;  // Mint contents
+      DisplayConfirmationMenu();
+    }
+    else if(UserApp1_bContentsChosen)
+    {
       UserApp1_StateMachine = UserApp1SM_Attempt;
       DisplayAttemptMenu();
     }
-    
+
   }
   
   if(WasButtonPressed(BUTTON1))
@@ -298,10 +332,14 @@ static void UserApp1SM_Selection(void)
       UserApp1_u8Label = LEMON; // Lemon label
       DisplayConfigMenu();
     }
-    else if(UserApp1_u8Label == 0 || UserApp1_u8Label == 2)
+    else if(!UserApp1_bContentsChosen && (UserApp1_u8Label == 0 || UserApp1_u8Label == 2))
     {
       UserApp1_bContentsChosen = TRUE;
       UserApp1_u8Contents = LEMON;  // Lemon contents
+      DisplayConfirmationMenu();
+    }
+    else if(UserApp1_bContentsChosen)
+    {
       UserApp1_StateMachine = UserApp1SM_Attempt;
       DisplayAttemptMenu();
     }
@@ -319,10 +357,14 @@ static void UserApp1SM_Selection(void)
       UserApp1_u8Label = MIXED; // Mixed label
       DisplayConfigMenu();
     }
-    else if(UserApp1_u8Label == 0 || UserApp1_u8Label == 1)
+    else if(!UserApp1_bContentsChosen && (UserApp1_u8Label == 0 || UserApp1_u8Label == 1))
     {
       UserApp1_bContentsChosen = TRUE;
       UserApp1_u8Contents = MIXED;  // Mixed contents
+      DisplayConfirmationMenu();
+    }
+    else if(UserApp1_bContentsChosen)
+    {
       UserApp1_StateMachine = UserApp1SM_Attempt;
       DisplayAttemptMenu();
     }
@@ -331,6 +373,7 @@ static void UserApp1SM_Selection(void)
   if(WasButtonPressed(BUTTON3))
   {
     ButtonAcknowledge(BUTTON3);
+    UserApp1Initialize(); //Restart
   }
 } /* end UserApp1SM_Selection() */
 
@@ -384,6 +427,8 @@ static void UserApp1SM_Attempt(void)
     {
       LCDMessage(LINE2_START_ADDR, "Correct label: MIXED");
     }
+    
+    UserApp1_StateMachine = UserApp1SM_Revealed;
   }
   
   if(WasButtonPressed(BUTTON2))
@@ -397,6 +442,33 @@ static void UserApp1SM_Attempt(void)
   }
   
 } /* end UserApp1SM_Error() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for reveal */
+static void UserApp1SM_Revealed(void)          
+{
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+  }
+  
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+  }
+  
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+  }
+  
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    UserApp1Initialize(); //Restart
+  }
+} /* end UserApp1SM_Revealed() */
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/

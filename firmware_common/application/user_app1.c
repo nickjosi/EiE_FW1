@@ -697,9 +697,9 @@ static void UserApp1SM_CompareSequence(void)
     AllLedsOff();
     LedOn(GREEN);
     
-    LedPWM(LCD_RED, LED_PWM_100);
-    LedPWM(LCD_GREEN, LED_PWM_0);
-    LedPWM(LCD_BLUE, LED_PWM_25);
+    LedPWM(LCD_RED, LED_PWM_0);
+    LedPWM(LCD_GREEN, LED_PWM_100);
+    LedPWM(LCD_BLUE, LED_PWM_0);
     
     UserApp1_StateMachine = UserApp1SM_Correct;
   }

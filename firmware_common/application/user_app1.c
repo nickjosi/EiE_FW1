@@ -60,6 +60,13 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+static u8 UserApp1_u8Label;
+static u8 UserApp1_u8Contents;
+
+static bool UserApp1_bLabelChosen;
+static bool UserApp1_bContentsChosen;
+
+static u16 UserApp1_u16PickCounter;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -87,11 +94,16 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  UserApp1_bLabelChosen =     FALSE;
+  UserApp1_bContentsChosen =  FALSE;
+  
+  AllLedsOff();
+  DisplayConfigMenu();
  
-  /* If good initialization, set state to Idle */
+  /* If good initialization, set state to Selection */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_StateMachine = UserApp1SM_Selection;
   }
   else
   {
@@ -127,24 +139,238 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: AllLedsOff()
+
+Description:
+Turns all LEDs off.
+
+Requires:
+  -
+Promises:
+  - All LEDs will be turned off.
+*/
+void AllLedsOff(void)
+{
+  LedPWM(WHITE, LED_PWM_0);
+  LedPWM(PURPLE, LED_PWM_0);
+  LedPWM(BLUE, LED_PWM_0);
+  LedPWM(CYAN, LED_PWM_0);
+  LedPWM(GREEN, LED_PWM_0);
+  LedPWM(YELLOW, LED_PWM_0);
+  LedPWM(ORANGE,LED_PWM_0);
+  LedPWM(RED, LED_PWM_0);
+  
+} /* end AllLedsOff() */
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: DisplayConfigMenu()
+
+Description:
+
+
+Requires:
+  -
+Promises:
+  -
+*/
+void DisplayConfigMenu(void)
+{
+                           /*0123456789abcdef1234*/
+  static u8 au8Line1_1[] =  "Select label:       ";
+  static u8 au8Line2_1[] =  ">Mint >Lemon >Mixed ";
+  
+  static u8 au8Line1_2[] =  " Select contents:   ";
+  static u8 au8Line2_2a[] = "      >Lemon >Mixed ";
+  static u8 au8Line2_2b[] = ">Mint        >Mixed ";
+  static u8 au8Line2_2c[] = ">Mint >Lemon        ";
+  
+  if(!UserApp1_bLabelChosen)
+  {
+    LCDMessage(LINE1_START_ADDR, au8Line1_1);
+    LCDMessage(LINE2_START_ADDR, au8Line2_1);
+  }
+  else
+  {
+    LCDMessage(LINE1_START_ADDR, au8Line1_2);
+    if(UserApp1_u8Label == MINT)
+      LCDMessage(LINE2_START_ADDR, au8Line2_2a);
+    else if(UserApp1_u8Label == LEMON)
+      LCDMessage(LINE2_START_ADDR, au8Line2_2b);
+    else if(UserApp1_u8Label == MIXED)
+      LCDMessage(LINE2_START_ADDR, au8Line2_2c);
+  }
+  
+} /* end DisplayConfigMenu() */
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: DisplayAttemptMenu()
+
+Description:
+
+
+Requires:
+  -
+Promises:
+  -
+*/
+void DisplayAttemptMenu(void)
+{
+                         /*0123456789abcdef1234*/
+  static u8 au8Line1[] =  "             (     )";
+  static u8 au8Line2[] =  ">Pick >Reveal       ";
+  
+  LCDMessage(LINE1_START_ADDR, au8Line1);
+  LCDMessage(LINE2_START_ADDR, au8Line2);
+
+  if(UserApp1_u8Label == MINT)
+  {
+    LCDMessage(LINE1_START_ADDR, "|| MINT ||");
+  }
+  else if(UserApp1_u8Label == LEMON)
+  {
+    LCDMessage(LINE1_START_ADDR, "|| LEMON ||");
+  }
+  else if(UserApp1_u8Label == MIXED)
+  {
+    LCDMessage(LINE1_START_ADDR, "|| MIXED ||");
+  }
+  
+  /*
+  if(UserApp1_u8Contents == MINT)
+  {
+    LCDMessage(LINE1_START_ADDR + 12, "Mint");
+  }
+  else if(UserApp1_u8Contents == LEMON)
+  {
+    LCDMessage(LINE1_START_ADDR + 12, "Lemon");
+  }
+  else if(UserApp1_u8Contents == MIXED)
+  {
+    LCDMessage(LINE1_START_ADDR + 12, "Mixed");
+  }
+  */
+  
+} /* end DisplayAttemptMenu() */
+
+
 
 /**********************************************************************************************************************
 State Machine Function Definitions
 **********************************************************************************************************************/
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
-static void UserApp1SM_Idle(void)
+/* Wait for good initialization */
+static void UserApp1SM_Selection(void)
 {
-
-} /* end UserApp1SM_Idle() */
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
     
+    if(!UserApp1_bLabelChosen)
+    {
+      UserApp1_bLabelChosen = TRUE;
+      
+      UserApp1_u8Label = MINT; // Mint label
+      DisplayConfigMenu();
+    }
+    else if(UserApp1_u8Label == 1 || UserApp1_u8Label == 2)
+    {
+      UserApp1_bContentsChosen = TRUE;
+      UserApp1_u8Contents = MINT;  // Mint contents
+      UserApp1_StateMachine = UserApp1SM_Attempt;
+      DisplayAttemptMenu();
+    }
+    
+  }
+  
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    if(!UserApp1_bLabelChosen)
+    {
+      UserApp1_bLabelChosen = TRUE;
+      
+      UserApp1_u8Label = LEMON; // Lemon label
+      DisplayConfigMenu();
+    }
+    else if(UserApp1_u8Label == 0 || UserApp1_u8Label == 2)
+    {
+      UserApp1_bContentsChosen = TRUE;
+      UserApp1_u8Contents = LEMON;  // Lemon contents
+      UserApp1_StateMachine = UserApp1SM_Attempt;
+      DisplayAttemptMenu();
+    }
+    
+  }
+  
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    
+    if(!UserApp1_bLabelChosen)
+    {
+      UserApp1_bLabelChosen = TRUE;
+      
+      UserApp1_u8Label = MIXED; // Mixed label
+      DisplayConfigMenu();
+    }
+    else if(UserApp1_u8Label == 0 || UserApp1_u8Label == 1)
+    {
+      UserApp1_bContentsChosen = TRUE;
+      UserApp1_u8Contents = MIXED;  // Mixed contents
+      UserApp1_StateMachine = UserApp1SM_Attempt;
+      DisplayAttemptMenu();
+    }
+  }
+  
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+  }
+} /* end UserApp1SM_Selection() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for selection */
+static void UserApp1SM_Attempt(void)          
+{
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    
+    // Code for picking a candy
+  }
+  
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    //Code for revealing correct contents
+  }
+  
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+  }
+  
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+  }
+  
+} /* end UserApp1SM_Error() */
+
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
 static void UserApp1SM_Error(void)          
 {
-  
+  LedOn(RED);
+  LedOn(WHITE);
 } /* end UserApp1SM_Error() */
 
 

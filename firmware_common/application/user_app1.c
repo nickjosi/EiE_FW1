@@ -101,15 +101,15 @@ Description:
 Initializes the State Machine and its variables.
 
 Requires:
-  -
+  - NONE
 
 Promises:
-  - 
+  - NONE
 */
 void UserApp1Initialize(void)
 { 
   UserApp1_bConfig =        FALSE;
-  UserApp1_bFinalBoard =     FALSE;
+  UserApp1_bFinalBoard =    FALSE;
   UserApp1_bSequenceTBE =   FALSE;
   UserApp1_bAB =            FALSE;
   UserApp1_bCD =            FALSE;
@@ -134,9 +134,9 @@ void UserApp1Initialize(void)
   LCDCommand(LCD_DISPLAY_CMD | LCD_DISPLAY_ON | LCD_DISPLAY_CURSOR | LCD_DISPLAY_BLINK);
   UpdateLCD();
   
-  LedPWM(LCD_RED, LED_PWM_100);
-  LedPWM(LCD_GREEN, LED_PWM_100);
-  LedPWM(LCD_BLUE, LED_PWM_100);
+  LedOn(LCD_RED);
+  LedOn(LCD_GREEN);
+  LedOn(LCD_BLUE);
  
   /* If good initialization, set state to Config */
   if( 1 )
@@ -184,7 +184,7 @@ Description:
 Turns all LEDs off.
 
 Requires:
-  -
+  - NONE
 
 Promises:
   - All LEDs will be turned off.
@@ -362,9 +362,9 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
             UserApp1_bSequenceTBE = FALSE;
             UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
             
-            LedPWM(LCD_RED, LED_PWM_0);
-            LedPWM(LCD_GREEN, LED_PWM_50);
-            LedPWM(LCD_BLUE, LED_PWM_100);
+            LedOff(LCD_RED);
+            LedOff(LCD_GREEN);
+            LedOn(LCD_BLUE);
             
             LCDMessage(LINE1_START_ADDR, "Final board?        ");
             LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
@@ -529,9 +529,9 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
         UserApp1_bConfig = TRUE;
         UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
         
-        LedPWM(LCD_RED, LED_PWM_0);
-        LedPWM(LCD_GREEN, LED_PWM_50);
-        LedPWM(LCD_BLUE, LED_PWM_100);
+        LedOff(LCD_RED);
+        LedOff(LCD_GREEN);
+        LedOn(LCD_BLUE);
         
         LCDMessage(LINE1_START_ADDR, "Final board?        ");
         LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
@@ -609,9 +609,9 @@ static void UserApp1SM_Config2(void)
   {
     ButtonAcknowledge(BUTTON0);
     
-    LedPWM(LCD_RED, LED_PWM_75);
-    LedPWM(LCD_GREEN, LED_PWM_100);
-    LedPWM(LCD_BLUE, LED_PWM_0);
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
     
     UserApp1_bFinalBoard = TRUE;
     UserApp1_StateMachine = UserApp1SM_Unactivated;
@@ -621,9 +621,9 @@ static void UserApp1SM_Config2(void)
   {
     ButtonAcknowledge(BUTTON1);
     
-    LedPWM(LCD_RED, LED_PWM_75);
-    LedPWM(LCD_GREEN, LED_PWM_100);
-    LedPWM(LCD_BLUE, LED_PWM_0);
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
     
     UserApp1_StateMachine = UserApp1SM_Unactivated;
     UpdateLCD();
@@ -697,9 +697,9 @@ static void UserApp1SM_CompareSequence(void)
     AllLedsOff();
     LedOn(GREEN);
     
-    LedPWM(LCD_RED, LED_PWM_0);
-    LedPWM(LCD_GREEN, LED_PWM_100);
-    LedPWM(LCD_BLUE, LED_PWM_0);
+    LedOff(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
     
     UserApp1_StateMachine = UserApp1SM_Correct;
   }
@@ -713,9 +713,9 @@ static void UserApp1SM_CompareSequence(void)
     AllLedsOff();
     LedOn(RED);
     
-    LedPWM(LCD_RED, LED_PWM_100);
-    LedPWM(LCD_GREEN, LED_PWM_0);
-    LedPWM(LCD_BLUE, LED_PWM_0);
+    LedOn(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOff(LCD_BLUE);
     
     UserApp1_u8AttemptCounter++;
     UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 3;
@@ -794,9 +794,9 @@ static void UserApp1SM_Locked(void)
     
     AllLedsOff();
     
-    LedPWM(LCD_RED, LED_PWM_75);
-    LedPWM(LCD_GREEN, LED_PWM_100);
-    LedPWM(LCD_BLUE, LED_PWM_0);
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
     
     LCDCommand(LCD_CLEAR_CMD);
     LCDCommand(LCD_HOME_CMD);

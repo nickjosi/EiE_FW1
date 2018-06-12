@@ -51,6 +51,8 @@ static void UserApp1SM_AntConfigureMaster(void);
 static void UserApp1SM_AntConfigureSlave(void);
 static void UserApp1SM_AntConfigureMaster2(void);
 static void UserApp1SM_AntConfigureSlave2(void);
+static void UserApp1SM_AntConfigureMaster3(void);
+static void UserApp1SM_AntConfigureSlave3(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);

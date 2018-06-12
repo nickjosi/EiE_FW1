@@ -80,6 +80,8 @@ static AntAssignChannelInfoType UserApp1_sMasterChannel;
 static AntAssignChannelInfoType UserApp1_sSlaveChannel;
 static AntAssignChannelInfoType UserApp1_sMasterChannel2;
 static AntAssignChannelInfoType UserApp1_sSlaveChannel2;
+static AntAssignChannelInfoType UserApp1_sMasterChannel3;
+static AntAssignChannelInfoType UserApp1_sSlaveChannel3;
 
 static u8 UserApp1_u8BPressed;
   
@@ -204,7 +206,7 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel2.AntTxPower = ANT_TX_POWER_DEFAULT;
   UserApp1_sMasterChannel2.AntNetwork = ANT_NETWORK_DEFAULT;
   
-  /* Slave 1 (Channel 3) */
+  /* Slave 2 (Channel 3) */
   UserApp1_sSlaveChannel2.AntChannel = ANT_CHANNEL_3;
   UserApp1_sSlaveChannel2.AntChannelType = CHANNEL_TYPE_SLAVE;
   UserApp1_sSlaveChannel2.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
@@ -219,12 +221,44 @@ void UserApp1Initialize(void)
   UserApp1_sSlaveChannel2.AntTxPower = ANT_TX_POWER_DEFAULT;
   UserApp1_sSlaveChannel2.AntNetwork = ANT_NETWORK_DEFAULT;
   
+  /* Master 3 (Channel 4) */
+  UserApp1_sMasterChannel3.AntChannel = ANT_CHANNEL_4;
+  UserApp1_sMasterChannel3.AntChannelType = CHANNEL_TYPE_MASTER;
+  UserApp1_sMasterChannel3.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
+  UserApp1_sMasterChannel3.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
+  
+  UserApp1_sMasterChannel3.AntDeviceIdHi = 0x11;
+  UserApp1_sMasterChannel3.AntDeviceIdLo = 0x17;
+  UserApp1_sMasterChannel3.AntDeviceType = EIE_DEVICE_TYPE;
+  UserApp1_sMasterChannel3.AntTransmissionType = EIE_TRANS_TYPE;
+  
+  UserApp1_sMasterChannel3.AntFrequency = ANT_FREQUENCY_DEFAULT;
+  UserApp1_sMasterChannel3.AntTxPower = ANT_TX_POWER_DEFAULT;
+  UserApp1_sMasterChannel3.AntNetwork = ANT_NETWORK_DEFAULT;
+  
+  /* Slave 3 (Channel 5) */
+  UserApp1_sSlaveChannel3.AntChannel = ANT_CHANNEL_5;
+  UserApp1_sSlaveChannel3.AntChannelType = CHANNEL_TYPE_SLAVE;
+  UserApp1_sSlaveChannel3.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
+  UserApp1_sSlaveChannel3.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
+  
+  UserApp1_sSlaveChannel3.AntDeviceIdHi = 0x11;
+  UserApp1_sSlaveChannel3.AntDeviceIdLo = 0x17;
+  UserApp1_sSlaveChannel3.AntDeviceType = EIE_DEVICE_TYPE;
+  UserApp1_sSlaveChannel3.AntTransmissionType = EIE_TRANS_TYPE;
+  
+  UserApp1_sSlaveChannel3.AntFrequency = ANT_FREQUENCY_DEFAULT;
+  UserApp1_sSlaveChannel3.AntTxPower = ANT_TX_POWER_DEFAULT;
+  UserApp1_sSlaveChannel3.AntNetwork = ANT_NETWORK_DEFAULT;
+  
   for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
   {
     UserApp1_sMasterChannel.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     UserApp1_sSlaveChannel.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     UserApp1_sMasterChannel2.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     UserApp1_sSlaveChannel2.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+    UserApp1_sMasterChannel3.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+    UserApp1_sSlaveChannel3.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
   }
   
   /* Queue configuration of Master channel */
@@ -317,7 +351,7 @@ static void UserApp1SM_AntConfigureSlave(void)
   {
     DebugPrintf("Slave channel configured\n\n\r");
     
-    /* Queue configuration of Slave channel */
+    /* Queue configuration of Master 2 channel */
     AntAssignChannel(&UserApp1_sMasterChannel2);
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_AntConfigureMaster2;
@@ -344,9 +378,9 @@ static void UserApp1SM_AntConfigureMaster2(void)
   /* Wait for the ANT master channel to be configured */
   if(AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_CONFIGURED)
   {
-    DebugPrintf("Master2 channel configured\n\n\r");
+    DebugPrintf("Master 2 channel configured\n\n\r");
     
-    /* Queue configuration of Slave channel */
+    /* Queue configuration of Slave 2 channel */
     AntAssignChannel(&UserApp1_sSlaveChannel2);
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_AntConfigureSlave2;
@@ -356,11 +390,11 @@ static void UserApp1SM_AntConfigureMaster2(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Master2 config failed");
+    LCDMessage(LINE1_START_ADDR, "Master 2 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
-} /* end UserApp1SM_AntConfigureMaster() */
+} /* end UserApp1SM_AntConfigureMaster2() */
     
 
 /*!-------------------------------------------------------------------------------------------------------------------
@@ -373,13 +407,73 @@ static void UserApp1SM_AntConfigureSlave2(void)
   /* Wait for the ANT slave channel to be configured */
   if(AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_CONFIGURED)
   {
-    DebugPrintf("Slave2 channel configured\n\n\r");
+    DebugPrintf("Slave 2 channel configured\n\n\r");
+    
+    /* Queue configuration of Master 3 channel */
+    AntAssignChannel(&UserApp1_sMasterChannel3);
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_AntConfigureMaster3;
+  }
+  
+  /* Check for timeout */
+  if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR, "Slave 2 config failed");
+    UserApp1_StateMachine = UserApp1SM_Error;    
+  }
+
+} /* end UserApp1SM_AntConfigureSlave2() */
+
+
+/*!-------------------------------------------------------------------------------------------------------------------
+@fn static void UserApp1SM_AntConfigureMaster3(void)
+
+@brief Wait for Master channel configuration to be completed.
+*/
+static void UserApp1SM_AntConfigureMaster3(void)
+{
+  /* Wait for the ANT master channel to be configured */
+  if(AntRadioStatusChannel(ANT_CHANNEL_4) == ANT_CONFIGURED)
+  {
+    DebugPrintf("Master 3 channel configured\n\n\r");
+    
+    /* Queue configuration of Slave 3 channel */
+    AntAssignChannel(&UserApp1_sSlaveChannel3);
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_AntConfigureSlave3;
+  }
+  
+  /* Check for timeout */
+  if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR, "Master 3 config failed");
+    UserApp1_StateMachine = UserApp1SM_Error;    
+  }
+
+} /* end UserApp1SM_AntConfigureMaster3() */
+    
+
+/*!-------------------------------------------------------------------------------------------------------------------
+@fn static void UserApp1SM_AntConfigureSlave3(void)
+
+@brief Wait for Slave channel configuration to be completed.
+*/
+static void UserApp1SM_AntConfigureSlave3(void)
+{
+  /* Wait for the ANT slave channel to be configured */
+  if(AntRadioStatusChannel(ANT_CHANNEL_5) == ANT_CONFIGURED)
+  {
+    DebugPrintf("Slave 3 channel configured\n\n\r");
     
     /* Update the broadcast message data to send the user's name the go to Idle */
     AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8MasterName);
     AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8MasterName);
     AntQueueBroadcastMessage(ANT_CHANNEL_2, "01234567");
     AntQueueBroadcastMessage(ANT_CHANNEL_3, "01234567");
+    AntQueueBroadcastMessage(ANT_CHANNEL_4, "76543210");
+    AntQueueBroadcastMessage(ANT_CHANNEL_5, "76543210");
 
     UserApp1_StateMachine = UserApp1SM_Idle;
   }
@@ -388,11 +482,11 @@ static void UserApp1SM_AntConfigureSlave2(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Slave2 config failed");
+    LCDMessage(LINE1_START_ADDR, "Slave 3 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
-} /* end UserApp1SM_AntConfigureSlave() */
+} /* end UserApp1SM_AntConfigureSlave3() */
 
 
 /*!-------------------------------------------------------------------------------------------------------------------
@@ -428,6 +522,19 @@ static void UserApp1SM_Idle(void)
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
   }
+  
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    UserApp1_u8BPressed = 2;
+    
+    /* Queue the Channel Open messages and then go to wait state */
+    AntOpenChannelNumber(ANT_CHANNEL_4);
+    AntOpenChannelNumber(ANT_CHANNEL_5);
+    
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
+  }
 
 } /* end UserApp1SM_Idle() */
 
@@ -441,13 +548,17 @@ static void UserApp1SM_OpeningChannels(void)
 {
   /* Ensure that both channels have opened */
   if( 
-      ((UserApp1_u8BPressed == 0) &&
+     ((UserApp1_u8BPressed == 0) &&
       (AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_OPEN) &&
       (AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_OPEN)) 
       ||
-      ((UserApp1_u8BPressed == 1) &&
+     ((UserApp1_u8BPressed == 1) &&
       (AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_OPEN) &&
-      (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN) ))
+      (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN))
+      ||
+     ((UserApp1_u8BPressed == 2) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_4) == ANT_OPEN) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_5) == ANT_OPEN)) )
   {
     /* Update LCD and go to main Radio monitoring state */
     LCDCommand(LCD_CLEAR_CMD);
@@ -498,7 +609,8 @@ static void UserApp1SM_RadioActive(void)
       
       /* Slave devices get different event codes than masters, so handle seperately */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 0 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 2)
+         G_sAntApiCurrentMessageExtData.u8Channel == 2 ||
+         G_sAntApiCurrentMessageExtData.u8Channel == 4)
       {
         switch (u8EventCode)
         {
@@ -526,7 +638,8 @@ static void UserApp1SM_RadioActive(void)
       } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 0) */
 
       if(G_sAntApiCurrentMessageExtData.u8Channel == 1 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 3)
+         G_sAntApiCurrentMessageExtData.u8Channel == 3 ||
+         G_sAntApiCurrentMessageExtData.u8Channel == 5)
       {
         /* Check the Event code and respond */
         switch (u8EventCode)
@@ -555,7 +668,8 @@ static void UserApp1SM_RadioActive(void)
     {
       /* Check the channel number and update LED */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 0 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 2)
+         G_sAntApiCurrentMessageExtData.u8Channel == 2 ||
+         G_sAntApiCurrentMessageExtData.u8Channel == 4)
       {
         /* Reset the message counter */
         u32MasterMessageCounter = 0;
@@ -569,7 +683,8 @@ static void UserApp1SM_RadioActive(void)
       }
       
       if(G_sAntApiCurrentMessageExtData.u8Channel == 1 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 3)
+         G_sAntApiCurrentMessageExtData.u8Channel == 3 ||
+         G_sAntApiCurrentMessageExtData.u8Channel == 5)
       {
         /* When the slave receives a message, queue a response message */
         if(UserApp1_u8BPressed == 0)
@@ -579,6 +694,10 @@ static void UserApp1SM_RadioActive(void)
         if(UserApp1_u8BPressed == 1)
         {
           AntQueueBroadcastMessage(ANT_CHANNEL_3, "01234567");
+        }
+        if(UserApp1_u8BPressed == 2)
+        {
+          AntQueueBroadcastMessage(ANT_CHANNEL_5, "76543210");
         }
         
         /* Channel 1 is Blue (but don't touch red or green) */
@@ -668,6 +787,11 @@ static void UserApp1SM_RadioActive(void)
       AntCloseChannelNumber(ANT_CHANNEL_2);
       AntCloseChannelNumber(ANT_CHANNEL_3);
     }
+    if(UserApp1_u8BPressed == 2)
+    {
+      AntCloseChannelNumber(ANT_CHANNEL_4);
+      AntCloseChannelNumber(ANT_CHANNEL_5);
+    }
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_ClosingChannels;    
   }
@@ -683,13 +807,17 @@ static void UserApp1SM_RadioActive(void)
 static void UserApp1SM_ClosingChannels(void)
 {
   /* Ensure that both channels have closed */
-  if( ((UserApp1_u8BPressed == 0) &&
+  if(((UserApp1_u8BPressed == 0) &&
       (AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_CLOSED) &&
       (AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_CLOSED)) 
       ||
-      ((UserApp1_u8BPressed == 1) &&
+     ((UserApp1_u8BPressed == 1) &&
       (AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_CLOSED) &&
-      (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_CLOSED) ))
+      (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_CLOSED))
+      ||
+     ((UserApp1_u8BPressed == 2) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_4) == ANT_CLOSED) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_5) == ANT_CLOSED)) )
   {
     UserApp1_StateMachine = UserApp1SM_Idle;    
   }

@@ -64,6 +64,32 @@ static void UserApp1SM_Error(void);
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
+#define SEEKER          (u8)0
+#define RUNNER_1        (u8)1
+#define RUNNER_2        (u8)2
+#define RUNNER_3        (u8)3
+
+/* Board name maximum 8 characters
+                        "12345678" */
+#define NAME_SEEKER     "Seeker"
+#define NAME_RUNNER_1   "Runner 1"
+#define NAME_RUNNER_2   "Runner 2"
+#define NAME_RUNNER_3   "Runner 3"
+
+#define DEVICE_ID_HI_1  (u8)0x88
+#define DEVICE_ID_LO_1  (u8)0x88
+
+#define DEVICE_ID_HI_2  (u8)0x25  
+#define DEVICE_ID_LO_2  (u8)0x19
+
+#define DEVICE_ID_HI_3  (u8)0x11
+#define DEVICE_ID_LO_3  (u8)0x17
+
+#define B0              (u8)0
+#define B1              (u8)1
+#define B2              (u8)2
+
+
 #define INDEX_MASTER_DBM           (u8)2                    /*!< @brief Position in au8LcdInformationMessage to write the Master's RSSI level */
 #define INDEX_SLAVE_DBM            (u8)13                   /*!< @brief Position in au8LcdInformationMessage to write the Slave's RSSI level */
 #define ADDRESS_LCD_SLAVE_NAME     (u8)(LINE2_END_ADDR - 8) /*!< @brief LCD address where to write Slave's name */

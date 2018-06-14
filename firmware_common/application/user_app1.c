@@ -76,11 +76,11 @@ static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout co
 
 /* Enter role below
 CHOICES: SEEKER, RUNNER_1, RUNNER_2, RUNNER_3 */
-static u8 UserApp1_u8Role = RUNNER_1;
+static u8 UserApp1_u8Role = RUNNER_2;
 
 /* Enter the corresponding name below
 FORMAT: NAME_[ROLE CHOSEN ABOVE] */
-static u8 UserApp1_au8MyName[] = NAME_RUNNER_1;
+static u8 UserApp1_au8MyName[] = NAME_RUNNER_2;
 
 /* --- End of values to be edited ------------------------------------------ */
 

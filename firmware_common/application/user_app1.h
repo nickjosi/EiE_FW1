@@ -67,48 +67,40 @@ Constants / Definitions
 #define RUNNER_2        (u8)2
 #define RUNNER_3        (u8)3
 
-/* Board name maximum 8 characters
-                        "12345678" */
-#define NAME_SEEKER     "Seeker"
-#define NAME_RUNNER_1   "Runner 1"
-#define NAME_RUNNER_2   "Runner 2"
-#define NAME_RUNNER_3   "Runner 3"
-
-#define DEVICE_ID_HI_1  (u8)0x88
-#define DEVICE_ID_LO_1  (u8)0x88
-
-#define DEVICE_ID_HI_2  (u8)0x25  
-#define DEVICE_ID_LO_2  (u8)0x19
-
-#define DEVICE_ID_HI_3  (u8)0x11
-#define DEVICE_ID_LO_3  (u8)0x17
+///* Board name maximum 8 characters
+//                        "12345678" */
+//#define NAME_SEEKER_1   "Seeker 1"
+//#define NAME_SEEKER_2   "Seeker 2"
+//#define NAME_SEEKER_3   "Seeker 3"
+//#define NAME_SEEKER_4   "Seeker 4"
                           
-#define DEVICE_ID_HI_4  (u8)0x83
-#define DEVICE_ID_LO_4  (u8)0x12
-
-/* To be used soon
 #define DEVICE_ID_HI    (u8)0x11
-#define DEVICE_ID_LO_1  (u8)0x70  
-#define DEVICE_ID_LO_2  (u8)0x71
-#define DEVICE_ID_LO_3  (u8)0x72
-#define DEVICE_ID_LO_4  (u8)0x73
-#define DEVICE_ID_LO_5  (u8)0x74
-#define DEVICE_ID_LO_6  (u8)0x75
-#define DEVICE_ID_LO_7  (u8)0x76
-#define DEVICE_ID_LO_8  (u8)0x77
-*/
+                          
+#define TEAM_1          (u8)0
+#define TEAM_2          (u8)1
+#define TEAM_3          (u8)2
+#define TEAM_4          (u8)3
+                          
+#define BOARD_1         (u8)0
+#define BOARD_2         (u8)1
+#define BOARD_3         (u8)2
+#define BOARD_4         (u8)3
+#define BOARD_5         (u8)4
+#define BOARD_6         (u8)5
+#define BOARD_7         (u8)6
+#define BOARD_8         (u8)7
 
-#define B0              (u8)0
-#define B1              (u8)1
-#define B2              (u8)2
-#define B3              (u8)3
+#define CLUE_1          (u8)0
+#define CLUE_2          (u8)1
+#define CLUE_3          (u8)2
+#define CLUE_4          (u8)3
 
 
-#define INDEX_MASTER_DBM           (u8)2                    /*!< @brief Position in au8LcdInformationMessage to write the Master's RSSI level */
-#define INDEX_SLAVE_DBM            (u8)13                   /*!< @brief Position in au8LcdInformationMessage to write the Slave's RSSI level */
-#define ADDRESS_LCD_SLAVE_NAME     (u8)(LINE2_END_ADDR - 8) /*!< @brief LCD address where to write Slave's name */
+#define INDEX_MASTER_DBM           (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the Master's RSSI level */
+#define INDEX_SLAVE_DBM            (u8)13                     /*!< @brief Position in au8LcdInformationMessage to write the Slave's RSSI level */
+#define ADDRESS_LCD_CLUE           (u8)(LINE2_START_ADDR + 8) /*!< @brief LCD address where to write Slave's name */
 
-#define ALLOWED_MISSED_MESSAGES    (u32)8                   /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
+#define ALLOWED_MISSED_MESSAGES    (u32)8                     /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
 
 #define DBM_LEVEL1          (s8)-99
 #define DBM_LEVEL2          (s8)-84

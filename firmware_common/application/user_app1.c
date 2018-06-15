@@ -72,31 +72,48 @@ static fnCode_type UserApp1_StateMachine;                 /*!< @brief The state 
 static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout counter used across states */
 
 
+
 /* --- Values to be edited ------------------------------------------------- */
 
-/* Enter role below
-CHOICES: SEEKER, RUNNER_1, RUNNER_2, RUNNER_3 */
-static u8 UserApp1_u8Role = SEEKER;
+/* Enter team number below. 
+Choices: TEAM_1, TEAM_2, TEAM_3, TEAM_4 */
+static u8 UserApp1_u8TeamNumber = TEAM_2;
 
-/* Enter the corresponding name below
-FORMAT: NAME_[ROLE CHOSEN ABOVE] */
-static u8 UserApp1_au8MyName[] = NAME_SEEKER;
+/* Enter the 4-board sequence that corresponds to the team above.
+Choices: BOARD_1, BOARD_2, ..., BOARD_8 */
+static u8 UserApp1_au8BoardSequence[] = {BOARD_1, BOARD_2, BOARD_8, BOARD_4};
+
+/* Enter the 4 clues in order. 
+Choices: A colour or row #. */
+static u8 UserApp1_au8Clue1[] = "Blue.";
+static u8 UserApp1_au8Clue2[] = "Row 5.";
+static u8 UserApp1_au8Clue3[] = "Orange.";
+static u8 UserApp1_au8Clue4[] = "Yellow.";
 
 /* --- End of values to be edited ------------------------------------------ */
+
+
 
 static AntAssignChannelInfoType UserApp1_sMasterChannel1;
 static AntAssignChannelInfoType UserApp1_sMasterChannel2;
 static AntAssignChannelInfoType UserApp1_sMasterChannel3;
 static AntAssignChannelInfoType UserApp1_sMasterChannel4;
   
-static u8 UserApp1_au8LcdStartLine1[] = "Hi \0\0\0\0\0\0\0\0";
-static u8 UserApp1_au8LcdStartLine2_Seeker[] = "Push B0-B2 to search";
-static u8 UserApp1_au8LcdStartLine2_Runner[] = "Push B0 to search";
-static u8 UserApp1_au8MasterName[9]   = "0\0\0\0\0\0\0\0";
-static u8 UserApp1_au8LcdInformationMessage[] = "M:-xx dBm  S:-xx dBm";
+static u8 UserApp1_au8LcdStartLine1[] =         "Hi Seeker           ";
+static u8 UserApp1_au8LcdStartLine2[] =         "Push B0-B3 to search";
+static u8 UserApp1_au8MasterName[9]   =         "Seeker  \0";
+static u8 UserApp1_au8LcdInformationMessage[] = "RSSI:-xx dBm        ";
 
 
-static u8 UserApp1_u8BPressed;
+static u8 UserApp1_au8DeviceIdLo[4];
+static u8 UserApp1_au8DeviceIdLoLibrary[4][8] = {
+  {0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67},
+  {0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77},
+  {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87},
+  {0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97}
+};
+
+static u8 UserApp1_u8ClueNum;
 
 
 /**********************************************************************************************************************
@@ -129,9 +146,7 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  u8 u8NameSize;
-
-  /* Start with all LEDs off except red blacklight */
+  /* Start with all LEDs off except green blacklight */
   LedOff(RED);
   LedOff(ORANGE);
   LedOff(YELLOW);
@@ -144,47 +159,38 @@ void UserApp1Initialize(void)
   LedOff(LCD_BLUE);
   LedOff(LCD_RED);
   
-  /* Check the size of the name */
-  u8NameSize = sizeof(UserApp1_au8MyName);
-  if(u8NameSize > 8)
-  {
-    u8NameSize = 8;
-  }
-  
-  /* Update the name message and UserApp1_au8MasterName*/
-  for(u8 i = 0; i < u8NameSize; i++)
-  {
-    UserApp1_au8LcdStartLine1[3 + i] = UserApp1_au8MyName[i];
-    UserApp1_au8MasterName[i] = UserApp1_au8MyName[i];
-  }
-  
+  /* Update the name message and UserApp1_au8MasterName with team number */
+  /* (+48 for ASCII conversion, +1 to get correct number) */
+  UserApp1_au8LcdStartLine1[10] = UserApp1_u8TeamNumber + 49;
+  UserApp1_au8MasterName[7] = UserApp1_u8TeamNumber + 49;
+   
   /* Update LCD to starting screen. */
   LCDCommand(LCD_CLEAR_CMD);
   
   /* This delay is usually required after LCDCommand during INIT */
   for(u32 i = 0; i < 100000; i++);
   
-  
   LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdStartLine1);
-  if(UserApp1_u8Role == SEEKER)
+  LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2);
+  
+  
+  /* Fill UserApp1_au8DeviceIdLo array */
+  for(int i = 0; i < 4; i++)
   {
-    LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2_Seeker);
-  }
-  else
-  {
-    LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2_Runner);
+    UserApp1_au8DeviceIdLo[i] = 
+      UserApp1_au8DeviceIdLoLibrary[UserApp1_u8TeamNumber][UserApp1_au8BoardSequence[i]];
   }
   
   /* Set up the ANT channels that will be used for the task */
-  
+    
   /* Master 1 (Channel 0) */
   UserApp1_sMasterChannel1.AntChannel = ANT_CHANNEL_0;
   UserApp1_sMasterChannel1.AntChannelType = CHANNEL_TYPE_MASTER;
   UserApp1_sMasterChannel1.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel1.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
 
-  UserApp1_sMasterChannel1.AntDeviceIdHi = DEVICE_ID_HI_1;
-  UserApp1_sMasterChannel1.AntDeviceIdLo = DEVICE_ID_LO_1;
+  UserApp1_sMasterChannel1.AntDeviceIdHi = DEVICE_ID_HI;
+  UserApp1_sMasterChannel1.AntDeviceIdLo = UserApp1_au8DeviceIdLo[0];
   UserApp1_sMasterChannel1.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel1.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -198,8 +204,8 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel2.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel2.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
-  UserApp1_sMasterChannel2.AntDeviceIdHi = DEVICE_ID_HI_2;
-  UserApp1_sMasterChannel2.AntDeviceIdLo = DEVICE_ID_LO_2;
+  UserApp1_sMasterChannel2.AntDeviceIdHi = DEVICE_ID_HI;
+  UserApp1_sMasterChannel2.AntDeviceIdLo = UserApp1_au8DeviceIdLo[1];
   UserApp1_sMasterChannel2.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel2.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -213,8 +219,8 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel3.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel3.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
-  UserApp1_sMasterChannel3.AntDeviceIdHi = DEVICE_ID_HI_3;
-  UserApp1_sMasterChannel3.AntDeviceIdLo = DEVICE_ID_LO_3;
+  UserApp1_sMasterChannel3.AntDeviceIdHi = DEVICE_ID_HI;
+  UserApp1_sMasterChannel3.AntDeviceIdLo = UserApp1_au8DeviceIdLo[2];
   UserApp1_sMasterChannel3.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel3.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -228,8 +234,8 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel4.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel4.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
-  UserApp1_sMasterChannel4.AntDeviceIdHi = DEVICE_ID_HI_4;
-  UserApp1_sMasterChannel4.AntDeviceIdLo = DEVICE_ID_LO_4;
+  UserApp1_sMasterChannel4.AntDeviceIdHi = DEVICE_ID_HI;
+  UserApp1_sMasterChannel4.AntDeviceIdLo = UserApp1_au8DeviceIdLo[3];
   UserApp1_sMasterChannel4.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel4.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -307,21 +313,11 @@ static void UserApp1SM_AntConfigureMaster1(void)
   {
     DebugPrintf("Master 1 channel configured\n\n\r");
     
-    /* If Seeker, Queue configuration of Master 2 channel */
-    if(UserApp1_u8Role == SEEKER)
-    {
-      AntAssignChannel(&UserApp1_sMasterChannel2);
-      UserApp1_u32Timeout = G_u32SystemTime1ms;
-      UserApp1_StateMachine = UserApp1SM_AntConfigureMaster2;
-    }
-    /* If a Runner, update the broadcast message data to send the user's name 
-    then go to Idle */
-    else
-    {
-      AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8MasterName);
-      AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8MasterName);
-      UserApp1_StateMachine = UserApp1SM_Idle;
-    }
+    /* Queue configuration of Master 2 channel */
+    AntAssignChannel(&UserApp1_sMasterChannel2);
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_AntConfigureMaster2;
+    
   }
   
   /* Check for timeout */
@@ -407,9 +403,9 @@ static void UserApp1SM_AntConfigureMaster4(void)
     
     /* Update the broadcast message data to send the user's name the go to Idle */
     AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8MasterName);
-    AntQueueBroadcastMessage(ANT_CHANNEL_1, "01234567");
-    AntQueueBroadcastMessage(ANT_CHANNEL_2, "76543210");
-    AntQueueBroadcastMessage(ANT_CHANNEL_3, "07162534");
+    AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8MasterName);
+    AntQueueBroadcastMessage(ANT_CHANNEL_2, UserApp1_au8MasterName);
+    AntQueueBroadcastMessage(ANT_CHANNEL_3, UserApp1_au8MasterName);
 
     UserApp1_StateMachine = UserApp1SM_Idle;
   }
@@ -432,11 +428,11 @@ static void UserApp1SM_AntConfigureMaster4(void)
 */
 static void UserApp1SM_Idle(void)
 {
-  /* Write the one line of code to use the BUTTON API to check if BUTTON0 was pressed */ 
+  /* BUTTON0 opens channel 0 for Clue 1 */ 
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
-    UserApp1_u8BPressed = B0;
+    UserApp1_u8ClueNum = CLUE_1;
     
     /* Queue the Channel Open messages and then go to wait state */
     AntOpenChannelNumber(ANT_CHANNEL_0);
@@ -445,44 +441,43 @@ static void UserApp1SM_Idle(void)
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
   }
   
-  /* Button 1 and 2 only have functionality for the Seeker */
-  if(UserApp1_u8Role == SEEKER)
+  /* BUTTON1 opens channel 1 for Clue 2 */ 
+  if(WasButtonPressed(BUTTON1))
   {
-    if(WasButtonPressed(BUTTON1))
-    {
-      ButtonAcknowledge(BUTTON1);
-      UserApp1_u8BPressed = B1;
-      
-      /* Queue the Channel Open messages and then go to wait state */
-      AntOpenChannelNumber(ANT_CHANNEL_1);
-      
-      UserApp1_u32Timeout = G_u32SystemTime1ms;
-      UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-    }
+    ButtonAcknowledge(BUTTON1);
+    UserApp1_u8ClueNum = CLUE_2;
     
-    if(WasButtonPressed(BUTTON2))
-    {
-      ButtonAcknowledge(BUTTON2);
-      UserApp1_u8BPressed = B2;
-      
-      /* Queue the Channel Open messages and then go to wait state */
-      AntOpenChannelNumber(ANT_CHANNEL_2);
-      
-      UserApp1_u32Timeout = G_u32SystemTime1ms;
-      UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-    }
+    /* Queue the Channel Open messages and then go to wait state */
+    AntOpenChannelNumber(ANT_CHANNEL_1);
     
-    if(WasButtonPressed(BUTTON3))
-    {
-      ButtonAcknowledge(BUTTON3);
-      UserApp1_u8BPressed = B3;
-      
-      /* Queue the Channel Open messages and then go to wait state */
-      AntOpenChannelNumber(ANT_CHANNEL_3);
-      
-      UserApp1_u32Timeout = G_u32SystemTime1ms;
-      UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-    }
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
+  }
+  
+  /* BUTTON2 opens channel 2 for Clue 3 */ 
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    UserApp1_u8ClueNum = CLUE_3;
+    
+    /* Queue the Channel Open messages and then go to wait state */
+    AntOpenChannelNumber(ANT_CHANNEL_2);
+    
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
+  }
+  
+  /* BUTTON3 opens channel 3 for Clue 4 */ 
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    UserApp1_u8ClueNum = CLUE_4;
+    
+    /* Queue the Channel Open messages and then go to wait state */
+    AntOpenChannelNumber(ANT_CHANNEL_3);
+    
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
   }
 
 } /* end UserApp1SM_Idle() */
@@ -495,24 +490,31 @@ static void UserApp1SM_Idle(void)
 */
 static void UserApp1SM_OpeningChannels(void)
 {
-  /* Ensure that the correct channels have opened */
+  /* Ensure that the correct channel has opened */
   if( 
-     ((UserApp1_u8BPressed == B0) &&
+     ((UserApp1_u8ClueNum == CLUE_1) &&
       (AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_OPEN))
       ||
-     ((UserApp1_u8BPressed == B1) &&
+     ((UserApp1_u8ClueNum == CLUE_2) &&
       (AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_OPEN))
       ||
-     ((UserApp1_u8BPressed == B2) &&
+     ((UserApp1_u8ClueNum == CLUE_3) &&
       (AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_OPEN))
       ||
-     ((UserApp1_u8BPressed == B3) &&
+     ((UserApp1_u8ClueNum == CLUE_4) &&
       (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN)) )
   {
     /* Update LCD and go to main Radio monitoring state */
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
-    LCDMessage(LINE2_START_ADDR, UserApp1_au8MasterName);
+    if(UserApp1_u8ClueNum == CLUE_1)
+      LCDMessage(LINE2_START_ADDR, "Clue 1:");
+    else if(UserApp1_u8ClueNum == CLUE_2)
+      LCDMessage(LINE2_START_ADDR, "Clue 2:");
+    else if(UserApp1_u8ClueNum == CLUE_3)
+      LCDMessage(LINE2_START_ADDR, "Clue 3:");
+    else if(UserApp1_u8ClueNum == CLUE_4)
+      LCDMessage(LINE2_START_ADDR, "Clue 4:");
     
     UserApp1_StateMachine = UserApp1SM_RadioActive;    
   }
@@ -539,11 +541,9 @@ static void UserApp1SM_RadioActive(void)
   s8 as8dBmLevels[] = {DBM_LEVEL1, DBM_LEVEL2, DBM_LEVEL3, DBM_LEVEL4, 
                        DBM_LEVEL5, DBM_LEVEL6, DBM_LEVEL7, DBM_LEVEL8};
   u8 u8EventCode;
-  u8 au8UserName[9];
     
   static u8 u32MasterMessageCounter = 0;
-  static s8 s8RssiChannel0 = -99;
-  static s8 s8RssiChannel1 = -99;
+  static s8 s8Rssi = -99;
   static s8 s8StrongestRssi = -99;
 
   /* Monitor ANT messages: looking for any incoming messages
@@ -556,133 +556,62 @@ static void UserApp1SM_RadioActive(void)
       /* Get the EVENT code from the ANT_TICK message */ 
       u8EventCode = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
       
-      /* Slave devices get different event codes than masters, so handle seperately */
-      if(G_sAntApiCurrentMessageExtData.u8Channel == 0 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 1 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 2 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 3)
+      switch (u8EventCode)
       {
-        switch (u8EventCode)
+      case EVENT_TX:
         {
-          case EVENT_TX:
+          /* Keep track of message and update LCD if too many messages have been sent
+          without any being received.  The counter is cleared whenever the Master channel
+          receives a message from the Slave it is trying to talk to. */
+          u32MasterMessageCounter++;
+          if(u32MasterMessageCounter >= ALLOWED_MISSED_MESSAGES)
           {
-            /* Keep track of message and update LCD if too many messages have been sent
-            without any being received.  The counter is cleared whenever the Master channel
-            receives a message from the Slave it is trying to talk to. */
-            u32MasterMessageCounter++;
-            if(u32MasterMessageCounter >= ALLOWED_MISSED_MESSAGES)
-            {
-              s8RssiChannel0 = DBM_LEVEL1;
-              LedOff(LCD_RED);
-              UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM + 1] = 'x';
-              UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM + 2] = 'x';
-            }
-            break;
+            s8Rssi = DBM_LEVEL1;
+            LedOff(LCD_RED);
+            UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM + 1] = 'x';
+            UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM + 2] = 'x';
           }
-          default:
-          {
-            DebugPrintf("Master unhandled event\n\n\r");
-            break;
-          }
-        } /* end switch u8EventCode */
-      } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 0) */
-
-      if(G_sAntApiCurrentMessageExtData.u8Channel == 4 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 5 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 6 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 7)
-      {
-        /* Check the Event code and respond */
-        switch (u8EventCode)
+          break;
+        }
+      default:
         {
-          case EVENT_RX_FAIL_GO_TO_SEARCH:
-          {
-            s8RssiChannel1 = DBM_LEVEL1;
-            LedOff(LCD_BLUE);
-            UserApp1_au8LcdInformationMessage[INDEX_SLAVE_DBM + 1] = 'x';
-            UserApp1_au8LcdInformationMessage[INDEX_SLAVE_DBM + 2] = 'x';
-            break;
-          }
-          
-          default:
-          {
-            DebugPrintf("Slave unhandled event\n\n\r");
-            break;
-          }
-        } /* end switch u8EventCode */
-      } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 1) */
+          DebugPrintf("Master unhandled event\n\n\r");
+          break;
+        }
+      } /* end switch u8EventCode */      
     } /* end if(G_eAntApiCurrentMessageClass == ANT_TICK) */
 
     
     /* Check for DATA messages */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
-      /* Check the channel number and update LED */
-      if(G_sAntApiCurrentMessageExtData.u8Channel == 0 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 1 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 2 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 3)
-      {
-        /* Reset the message counter */
-        u32MasterMessageCounter = 0;
-        
-        /* Channel 0 is red (but don't touch blue or green) */
-        LedOn(LCD_RED);
-        
-        /* Record RSSI level and update LCD message */
-        s8RssiChannel0 = G_sAntApiCurrentMessageExtData.s8RSSI;
-        AntGetdBmAscii(s8RssiChannel0, &UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM]);
-      }
+      /* Reset the message counter */
+      u32MasterMessageCounter = 0;
       
-      if(G_sAntApiCurrentMessageExtData.u8Channel == 4 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 5 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 6 ||
-         G_sAntApiCurrentMessageExtData.u8Channel == 7)
-      {
-        /* When the slave receives a message, queue a response message */
-        if(UserApp1_u8BPressed == B0)
-        {
-          AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8MasterName);
-        }
-        if(UserApp1_u8BPressed == B1)
-        {
-          AntQueueBroadcastMessage(ANT_CHANNEL_1, "01234567");
-        }
-        if(UserApp1_u8BPressed == B2)
-        {
-          AntQueueBroadcastMessage(ANT_CHANNEL_2, "76543210");
-        }
-        if(UserApp1_u8BPressed == B3)
-        {
-          AntQueueBroadcastMessage(ANT_CHANNEL_3, "07162534");
-        }
-        
-        /* Channel 1 is Blue (but don't touch red or green) */
-        LedOn(LCD_BLUE);
-
-        /* Record RSSI level and update LCD message */
-        s8RssiChannel1 = G_sAntApiCurrentMessageExtData.s8RSSI;
-        AntGetdBmAscii(s8RssiChannel1, &UserApp1_au8LcdInformationMessage[INDEX_SLAVE_DBM]);
-      }
-                             
+      /* Channel 0 is red (but don't touch blue or green) */
+      LedOn(LCD_RED);
+      
+      /* Record RSSI level and update LCD message */
+      s8Rssi = G_sAntApiCurrentMessageExtData.s8RSSI;
+      AntGetdBmAscii(s8Rssi, &UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM]);
+      
+      
       /* Read and display user name if level is high enough */
       if(s8StrongestRssi > DBM_MAX_LEVEL)
       {
-        /* Assume that the format of the name in the DATA message is letters with trailing
-        spaces so we always read 8 characters and don't need to worry about checking. */
-        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
-        {
-          au8UserName[i] = G_au8AntApiCurrentMessageBytes[i];
-        }
-
-        /* Add the NULL and write the name to the LCD */
-        au8UserName[8] = '\0';
-        LCDMessage(ADDRESS_LCD_SLAVE_NAME, au8UserName);
+        if(UserApp1_u8ClueNum == CLUE_1)        
+          LCDMessage(ADDRESS_LCD_CLUE, UserApp1_au8Clue1);    
+        else if(UserApp1_u8ClueNum == CLUE_2)
+          LCDMessage(ADDRESS_LCD_CLUE, UserApp1_au8Clue2);    
+        else if(UserApp1_u8ClueNum == CLUE_3)
+          LCDMessage(ADDRESS_LCD_CLUE, UserApp1_au8Clue3);    
+        else if(UserApp1_u8ClueNum == CLUE_4)
+          LCDMessage(ADDRESS_LCD_CLUE, UserApp1_au8Clue4);    
       }
       else
       {
         /* Otherwise clear the name area */
-        LCDClearChars(ADDRESS_LCD_SLAVE_NAME, 8);
+        LCDClearChars(ADDRESS_LCD_CLUE, 8);
       }
       
     } /* end if(G_eAntApiCurrentMessageClass == ANT_DATA) */
@@ -692,11 +621,7 @@ static void UserApp1SM_RadioActive(void)
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
     
     /* Update the strongest signal being received */
-    s8StrongestRssi = s8RssiChannel0;
-    if(s8RssiChannel1 > s8RssiChannel0)
-    {
-      s8StrongestRssi = s8RssiChannel1;
-    }
+    s8StrongestRssi = s8Rssi;
 
     /* Loop through all of the levels to check which LEDs to turn on */
     for(u8 i = 0; i < NUM_DBM_LEVELS; i++)
@@ -731,32 +656,19 @@ static void UserApp1SM_RadioActive(void)
     /* Update LCD back to the starting screen */
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdStartLine1);
-    if(UserApp1_u8Role == SEEKER)
-    {
-      LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2_Seeker);
-    }
-    else
-    {
-      LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2_Runner);
-    }
+    LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2);
     
-    /* Queue requests to close both channels */
-    if(UserApp1_u8BPressed == B0)
-    {
+      
+    /* Queue request to close the channel */
+    if(UserApp1_u8ClueNum == CLUE_1)
       AntCloseChannelNumber(ANT_CHANNEL_0);
-    }
-    if(UserApp1_u8BPressed == B1)
-    {
+    if(UserApp1_u8ClueNum == CLUE_2)
       AntCloseChannelNumber(ANT_CHANNEL_1);
-    }
-    if(UserApp1_u8BPressed == B2)
-    {
+    if(UserApp1_u8ClueNum == CLUE_3)
       AntCloseChannelNumber(ANT_CHANNEL_2);
-    }
-    if(UserApp1_u8BPressed == B3)
-    {
+    if(UserApp1_u8ClueNum == CLUE_4)
       AntCloseChannelNumber(ANT_CHANNEL_3);
-    }
+
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_ClosingChannels;    
   }
@@ -771,18 +683,18 @@ static void UserApp1SM_RadioActive(void)
 */
 static void UserApp1SM_ClosingChannels(void)
 {
-  /* Ensure that both channels have closed */
+  /* Ensure that the channel has closed */
   if( 
-     ((UserApp1_u8BPressed == B0) &&
+     ((UserApp1_u8ClueNum == CLUE_1) &&
       (AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_CLOSED))
       ||
-     ((UserApp1_u8BPressed == B1) &&
+     ((UserApp1_u8ClueNum == CLUE_2) &&
       (AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_CLOSED))
       ||
-     ((UserApp1_u8BPressed == B2) &&
+     ((UserApp1_u8ClueNum == CLUE_3) &&
       (AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_CLOSED))
       ||
-     ((UserApp1_u8BPressed == B3) &&
+     ((UserApp1_u8ClueNum == CLUE_4) &&
       (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_CLOSED)) )
   {
     UserApp1_StateMachine = UserApp1SM_Idle;    

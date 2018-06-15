@@ -47,12 +47,10 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_AntConfigureMaster(void);
-static void UserApp1SM_AntConfigureSlave(void);
-static void UserApp1SM_AntConfigureMaster2(void);
+static void UserApp1SM_AntConfigureSlave1(void);
 static void UserApp1SM_AntConfigureSlave2(void);
-static void UserApp1SM_AntConfigureMaster3(void);
 static void UserApp1SM_AntConfigureSlave3(void);
+static void UserApp1SM_AntConfigureSlave4(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);
@@ -84,10 +82,14 @@ Constants / Definitions
 
 #define DEVICE_ID_HI_3  (u8)0x11
 #define DEVICE_ID_LO_3  (u8)0x17
+                          
+#define DEVICE_ID_HI_4  (u8)0x83
+#define DEVICE_ID_LO_4  (u8)0x12
 
 #define B0              (u8)0
 #define B1              (u8)1
 #define B2              (u8)2
+#define B3              (u8)3
 
 
 #define INDEX_MASTER_DBM           (u8)2                    /*!< @brief Position in au8LcdInformationMessage to write the Master's RSSI level */

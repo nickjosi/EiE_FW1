@@ -62,20 +62,7 @@ static void UserApp1SM_Error(void);
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
-#define SEEKER          (u8)0
-#define RUNNER_1        (u8)1
-#define RUNNER_2        (u8)2
-#define RUNNER_3        (u8)3
-
-///* Board name maximum 8 characters
-//                        "12345678" */
-//#define NAME_SEEKER_1   "Seeker 1"
-//#define NAME_SEEKER_2   "Seeker 2"
-//#define NAME_SEEKER_3   "Seeker 3"
-//#define NAME_SEEKER_4   "Seeker 4"
-                          
-#define DEVICE_ID_HI    (u8)0x11
-                          
+                         
 #define TEAM_1          (u8)0
 #define TEAM_2          (u8)1
 #define TEAM_3          (u8)2
@@ -96,8 +83,7 @@ Constants / Definitions
 #define CLUE_4          (u8)3
 
 
-#define INDEX_MASTER_DBM           (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the Master's RSSI level */
-#define INDEX_SLAVE_DBM            (u8)13                     /*!< @brief Position in au8LcdInformationMessage to write the Slave's RSSI level */
+#define INDEX_RSSI_DBM             (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
 #define ADDRESS_LCD_CLUE           (u8)(LINE2_START_ADDR + 8) /*!< @brief LCD address where to write Slave's name */
 
 #define ALLOWED_MISSED_MESSAGES    (u32)8                     /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
@@ -115,8 +101,7 @@ Constants / Definitions
 
 #define EIE_DEVICE_TYPE     (u8)50
 #define EIE_TRANS_TYPE      (u8)50
-#define FOO                 (u8)0x88
-#define BAR                 (u8)0x88
+#define DEVICE_ID_HI        (u8)0x11
 
 
 

@@ -568,8 +568,8 @@ static void UserApp1SM_RadioActive(void)
           {
             s8Rssi = DBM_LEVEL1;
             LedOff(LCD_RED);
-            UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM + 1] = 'x';
-            UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM + 2] = 'x';
+            UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 1] = 'x';
+            UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 2] = 'x';
           }
           break;
         }
@@ -593,7 +593,7 @@ static void UserApp1SM_RadioActive(void)
       
       /* Record RSSI level and update LCD message */
       s8Rssi = G_sAntApiCurrentMessageExtData.s8RSSI;
-      AntGetdBmAscii(s8Rssi, &UserApp1_au8LcdInformationMessage[INDEX_MASTER_DBM]);
+      AntGetdBmAscii(s8Rssi, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM]);
       
       
       /* Read and display user name if level is high enough */

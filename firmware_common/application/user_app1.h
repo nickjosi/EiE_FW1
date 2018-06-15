@@ -47,10 +47,10 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_AntConfigureSlave1(void);
-static void UserApp1SM_AntConfigureSlave2(void);
-static void UserApp1SM_AntConfigureSlave3(void);
-static void UserApp1SM_AntConfigureSlave4(void);
+static void UserApp1SM_AntConfigureMaster1(void);
+static void UserApp1SM_AntConfigureMaster2(void);
+static void UserApp1SM_AntConfigureMaster3(void);
+static void UserApp1SM_AntConfigureMaster4(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);
@@ -85,6 +85,18 @@ Constants / Definitions
                           
 #define DEVICE_ID_HI_4  (u8)0x83
 #define DEVICE_ID_LO_4  (u8)0x12
+
+/* To be used soon
+#define DEVICE_ID_HI    (u8)0x11
+#define DEVICE_ID_LO_1  (u8)0x70  
+#define DEVICE_ID_LO_2  (u8)0x71
+#define DEVICE_ID_LO_3  (u8)0x72
+#define DEVICE_ID_LO_4  (u8)0x73
+#define DEVICE_ID_LO_5  (u8)0x74
+#define DEVICE_ID_LO_6  (u8)0x75
+#define DEVICE_ID_LO_7  (u8)0x76
+#define DEVICE_ID_LO_8  (u8)0x77
+*/
 
 #define B0              (u8)0
 #define B1              (u8)1

@@ -114,6 +114,7 @@ static u8 UserApp1_au8DeviceIdLoLibrary[4][8] = {
 };
 
 static u8 UserApp1_u8ClueNum;
+static u32 UserApp1_u32LCDTimer;
 
 
 /**********************************************************************************************************************
@@ -156,7 +157,7 @@ void UserApp1Initialize(void)
   LedOff(PURPLE);
   LedOff(WHITE);
   LedOn(LCD_GREEN);
-  LedOff(LCD_BLUE);
+  LedOn(LCD_BLUE);
   LedOff(LCD_RED);
   
   /* Update the name message and UserApp1_au8SlaveName with team number */
@@ -323,7 +324,7 @@ static void UserApp1SM_AntConfigureSlave1(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Slave 1 config failed");
+    LCDMessage(LINE1_START_ADDR, "Slave1 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
@@ -352,7 +353,7 @@ static void UserApp1SM_AntConfigureSlave2(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Slave 2 config failed");
+    LCDMessage(LINE1_START_ADDR, "Slave2 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
@@ -381,7 +382,7 @@ static void UserApp1SM_AntConfigureSlave3(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Slave 3 config failed");
+    LCDMessage(LINE1_START_ADDR, "Slave3 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
@@ -413,7 +414,7 @@ static void UserApp1SM_AntConfigureSlave4(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Slave 4 config failed");
+    LCDMessage(LINE1_START_ADDR, "Slave4 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
@@ -502,6 +503,7 @@ static void UserApp1SM_OpeningChannels(void)
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
     LCDMessage(LINE2_START_ADDR, UserApp1_au8SlaveName);
     
+    UserApp1_u32LCDTimer = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_RadioActive;   
   }
 
@@ -529,7 +531,6 @@ static void UserApp1SM_RadioActive(void)
   u8 u8EventCode;
   u8 au8UserName[9];
     
-  static u8 u32MasterMessageCounter = 0;
   static s8 s8RssiChannel0 = -99;
   static s8 s8RssiChannel1 = -99;
   static s8 s8RssiChannel2 = -99;
@@ -554,7 +555,7 @@ static void UserApp1SM_RadioActive(void)
         case EVENT_RX_FAIL_GO_TO_SEARCH:
           {
             s8RssiChannel0 = DBM_LEVEL1;
-            LedOff(LCD_BLUE);
+            //LedOff(LCD_BLUE);
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM1 + 1] = 'x';
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM1 + 2] = 'x';
             break;
@@ -576,7 +577,7 @@ static void UserApp1SM_RadioActive(void)
         case EVENT_RX_FAIL_GO_TO_SEARCH:
           {
             s8RssiChannel1 = DBM_LEVEL1;
-            LedOff(LCD_BLUE);
+            //LedOff(LCD_BLUE);
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM2 + 1] = 'x';
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM2 + 2] = 'x';
             break;
@@ -598,7 +599,7 @@ static void UserApp1SM_RadioActive(void)
         case EVENT_RX_FAIL_GO_TO_SEARCH:
           {
             s8RssiChannel2 = DBM_LEVEL1;
-            LedOff(LCD_BLUE);
+            //LedOff(LCD_BLUE);
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM3 + 1] = 'x';
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM3 + 2] = 'x';
             break;
@@ -620,7 +621,7 @@ static void UserApp1SM_RadioActive(void)
         case EVENT_RX_FAIL_GO_TO_SEARCH:
           {
             s8RssiChannel3 = DBM_LEVEL1;
-            LedOff(LCD_BLUE);
+            //LedOff(LCD_BLUE);
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM4 + 1] = 'x';
             UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM4 + 2] = 'x';
             break;
@@ -645,7 +646,7 @@ static void UserApp1SM_RadioActive(void)
         AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8SlaveName);
         
         /* Slave is Blue (but don't touch red or green) */
-        LedOn(LCD_BLUE);
+        //LedOn(LCD_BLUE);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel0 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -658,7 +659,7 @@ static void UserApp1SM_RadioActive(void)
         AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8SlaveName);
         
         /* Slave is Blue (but don't touch red or green) */
-        LedOn(LCD_BLUE);
+        //LedOn(LCD_BLUE);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel1 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -671,7 +672,7 @@ static void UserApp1SM_RadioActive(void)
         AntQueueBroadcastMessage(ANT_CHANNEL_2, UserApp1_au8SlaveName);
         
         /* Slave is Blue (but don't touch red or green) */
-        LedOn(LCD_BLUE);
+        //LedOn(LCD_BLUE);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel2 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -684,38 +685,42 @@ static void UserApp1SM_RadioActive(void)
         AntQueueBroadcastMessage(ANT_CHANNEL_3, UserApp1_au8SlaveName);
         
         /* Slave is Blue (but don't touch red or green) */
-        LedOn(LCD_BLUE);
+        //LedOn(LCD_BLUE);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel3 = G_sAntApiCurrentMessageExtData.s8RSSI;
         AntGetdBmAscii(s8RssiChannel3, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM4]);
       }
       
-      /* Read and display user name if level is high enough */
-      if(s8StrongestRssi > DBM_MAX_LEVEL)
-      {
-        /* Assume that the format of the name in the DATA message is letters with trailing
-        spaces so we always read 8 characters and don't need to worry about checking. */
-        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
-        {
-          au8UserName[i] = G_au8AntApiCurrentMessageBytes[i];
-        }
-        
-        /* Add the NULL and write the name to the LCD */
-        au8UserName[8] = '\0';
-        LCDMessage(ADDRESS_LCD_TEAM, au8UserName);  
-      }
-      else
-      {
-        /* Otherwise clear the name area */
-        LCDClearChars(ADDRESS_LCD_TEAM, 8);
-      }
+//      /* Read and display user name if level is high enough */
+//      if(s8StrongestRssi > DBM_MAX_LEVEL)
+//      {
+//        /* Assume that the format of the name in the DATA message is letters with trailing
+//        spaces so we always read 8 characters and don't need to worry about checking. */
+//        for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+//        {
+//          au8UserName[i] = G_au8AntApiCurrentMessageBytes[i];
+//        }
+//        
+//        /* Add the NULL and write the name to the LCD */
+//        au8UserName[8] = '\0';
+//        LCDMessage(ADDRESS_LCD_TEAM, au8UserName);  
+//      }
+//      else
+//      {
+//        /* Otherwise clear the name area */
+//        LCDClearChars(ADDRESS_LCD_TEAM, 8);
+//      }
       
     } /* end if(G_eAntApiCurrentMessageClass == ANT_DATA) */
-
+    
     /* Make sure LCD has the current message - this should happen infrequently
     enough to no cause problems, but if that's untrue this needs to be throttled back */
-    LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
+    if((G_u32SystemTime1ms - UserApp1_u32LCDTimer) > 500)
+    {
+      LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
+      UserApp1_u32LCDTimer = G_u32SystemTime1ms;
+    }
     
     /* Update the strongest signal being received */
     s8StrongestRssi = s8RssiChannel0;
@@ -740,15 +745,15 @@ static void UserApp1SM_RadioActive(void)
     }
     
   } /* end if( AntReadAppMessageBuffer() )*/
- 
   
+    
   /* Watch for button press to turn off radio */
   if(WasButtonPressed(BUTTON3))
   {
     /* Ack the button and turn off LCD backlight */
     ButtonAcknowledge(BUTTON3);
-    LedOff(LCD_RED);
-    LedOff(LCD_BLUE);
+    //LedOff(LCD_RED);
+    //LedOff(LCD_BLUE);
     
     /* Make sure all LEDs are off */
     for(u8 i = 0; i < 8; i++)

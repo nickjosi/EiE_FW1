@@ -47,10 +47,10 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_AntConfigureSlave1(void);
-static void UserApp1SM_AntConfigureSlave2(void);
-static void UserApp1SM_AntConfigureSlave3(void);
-static void UserApp1SM_AntConfigureSlave4(void);
+static void UserApp1SM_AntConfigureMaster1(void);
+static void UserApp1SM_AntConfigureMaster2(void);
+static void UserApp1SM_AntConfigureMaster3(void);
+static void UserApp1SM_AntConfigureMaster4(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);
@@ -67,27 +67,16 @@ Constants / Definitions
 #define HILL_2          (u8)1
 #define HILL_3          (u8)2
 #define HILL_4          (u8)3
+#define HILL_5          (u8)4
+#define HILL_6          (u8)5
+#define HILL_7          (u8)6
+#define HILL_8          (u8)7
                           
-#define BOARD_1         (u8)0
-#define BOARD_2         (u8)1
-#define BOARD_3         (u8)2
-#define BOARD_4         (u8)3
-#define BOARD_5         (u8)4
-#define BOARD_6         (u8)5
-#define BOARD_7         (u8)6
-#define BOARD_8         (u8)7
-
-#define CLUE_1          (u8)0
-#define CLUE_2          (u8)1
-#define CLUE_3          (u8)2
-#define CLUE_4          (u8)3
-
-
-#define INDEX_RSSI_DBM1            (u8)0                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
-#define INDEX_RSSI_DBM2            (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
-#define INDEX_RSSI_DBM3            (u8)11                     /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
-#define INDEX_RSSI_DBM4            (u8)16                     /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
-#define ADDRESS_LCD_TEAM           (u8)(LINE2_START_ADDR + 8) /*!< @brief LCD address where to write Slave's name */
+#define INDEX_RSSI_DBM0            (u8)0                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
+#define INDEX_RSSI_DBM1            (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
+#define INDEX_RSSI_DBM2            (u8)11                     /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
+#define INDEX_RSSI_DBM3            (u8)16                     /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
+#define ADDRESS_LCD_TEAM           (u8)(LINE2_START_ADDR + 12) /*!< @brief LCD address where to write Slave's name */
 
 #define ALLOWED_MISSED_MESSAGES    (u32)8                     /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
 

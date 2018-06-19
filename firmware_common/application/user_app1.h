@@ -67,6 +67,10 @@ Constants / Definitions
 #define HILL_2          (u8)1
 #define HILL_3          (u8)2
 #define HILL_4          (u8)3
+#define HILL_5          (u8)4
+#define HILL_6          (u8)5
+#define HILL_7          (u8)6
+#define HILL_8          (u8)7
                           
 #define BOARD_1         (u8)0
 #define BOARD_2         (u8)1

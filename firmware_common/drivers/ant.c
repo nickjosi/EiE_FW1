@@ -1381,6 +1381,13 @@ static u8 AntProcessMessage(void)
             break;
           }
           
+          case EVENT_CHANNEL_COLLISION: /* Two ANT channels have overlapped causing one to be blocked*/
+          {
+            /* Forward this to application */
+            AntTickExtended(au8MessageCopy);
+            break;
+          }
+          
           /* All other messages are unexpected for now */
           default:
             DebugPrintNumber(au8MessageCopy[BUFFER_INDEX_RESPONSE_CODE]);

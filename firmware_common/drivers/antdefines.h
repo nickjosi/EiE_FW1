@@ -150,6 +150,7 @@
 #define EVENT_TRANSFER_TX_FAILED                   ((UCHAR)0x06)           ///< ANT EVENT CODE when an Acknowledged data message or Burst transfer failed 
 #define EVENT_CHANNEL_CLOSED                       ((UCHAR)0x07)           ///< ANT EVENT CODE when an open channel has been closed
 #define EVENT_RX_FAIL_GO_TO_SEARCH                 ((UCHAR)0x08)           ///< ANT EVENT CODE when a slave has missed too many consecutive messages and drops back to search mode
+#define EVENT_CHANNEL_COLLISION                    ((UCHAR)0x09)           ///< ANT EVENT CODE when one channel has become blocked as a result of two channels overlapping
 
 #define CHANNEL_IN_WRONG_STATE                     ((UCHAR)0x15)           ///< ANT RESPONSE CODE attempt to perform an action from the wrong channel state
 #define CHANNEL_NOT_OPENED                         ((UCHAR)0x16)           ///< ANT RESPONSE CODE  on attempt to communicate on a channel that is not open

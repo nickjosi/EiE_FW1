@@ -77,7 +77,7 @@ static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout co
 
 /* Enter team number below. 
 Choices: TEAM_1, TEAM_2, TEAM_3, TEAM_4 */
-static u8 UserApp1_u8TeamNumber = TEAM_1;
+static u8 UserApp1_u8TeamNumber = TEAM_4;
 
 /* Enter the 4-board sequence that corresponds to the team above.
 Choices: BOARD_1, BOARD_2, ..., BOARD_8 */
@@ -585,15 +585,21 @@ static void UserApp1SM_RadioActive(void)
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
       /* When the slave receives a message, queue a response message */
-        //AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8MasterName);
-
-        /* Channel 1 is Blue (but don't touch red or green) */
-        LedOn(LCD_RED);
-
-        /* Record RSSI level and update LCD message */
-        s8Rssi = G_sAntApiCurrentMessageExtData.s8RSSI;
-        AntGetdBmAscii(s8Rssi, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM]);
-        
+      if((AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_OPEN))
+        AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8SlaveName);
+      if((AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_OPEN))
+        AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8SlaveName);
+      if((AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_OPEN))
+        AntQueueBroadcastMessage(ANT_CHANNEL_2, UserApp1_au8SlaveName);
+      if((AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN))
+        AntQueueBroadcastMessage(ANT_CHANNEL_3, UserApp1_au8SlaveName);
+      
+      /* Channel 1 is Blue (but don't touch red or green) */
+      LedOn(LCD_RED);
+      
+      /* Record RSSI level and update LCD message */
+      s8Rssi = G_sAntApiCurrentMessageExtData.s8RSSI;
+      AntGetdBmAscii(s8Rssi, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM]);
       
       
       /* Read and display user name if level is high enough */

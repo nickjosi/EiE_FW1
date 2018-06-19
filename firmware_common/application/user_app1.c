@@ -522,7 +522,7 @@ static void UserApp1SM_RadioActive(void)
             if(u32MessageCounter0 >= ALLOWED_MISSED_MESSAGES)
             {
               s8RssiChannel0 = DBM_LEVEL1;
-              //LedOff(LCD_RED);
+              LedOff(PURPLE);
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM0 + 1] = 'x';
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM0 + 2] = 'x';
             }
@@ -549,7 +549,7 @@ static void UserApp1SM_RadioActive(void)
             if(u32MessageCounter1 >= ALLOWED_MISSED_MESSAGES)
             {
               s8RssiChannel1 = DBM_LEVEL1;
-              //LedOff(LCD_RED);
+              LedOff(CYAN);
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM1 + 1] = 'x';
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM1 + 2] = 'x';
             }
@@ -576,7 +576,7 @@ static void UserApp1SM_RadioActive(void)
             if(u32MessageCounter2 >= ALLOWED_MISSED_MESSAGES)
             {
               s8RssiChannel2 = DBM_LEVEL1;
-              //LedOff(LCD_RED);
+              LedOff(YELLOW);
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM2 + 1] = 'x';
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM2 + 2] = 'x';
             }
@@ -603,7 +603,7 @@ static void UserApp1SM_RadioActive(void)
             if(u32MessageCounter3 >= ALLOWED_MISSED_MESSAGES)
             {
               s8RssiChannel3 = DBM_LEVEL1;
-              //LedOff(LCD_RED);
+              LedOff(RED);
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM3 + 1] = 'x';
               UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM3 + 2] = 'x';
             }
@@ -628,7 +628,7 @@ static void UserApp1SM_RadioActive(void)
         u32MessageCounter0 = 0;
         
         /* Channel 0 is red (but don't touch blue or green) */
-        //LedOn(LCD_RED);
+        LedOn(PURPLE);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel0 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -641,7 +641,7 @@ static void UserApp1SM_RadioActive(void)
         u32MessageCounter1 = 0;
         
         /* Channel 0 is red (but don't touch blue or green) */
-        //LedOn(LCD_RED);
+        LedOn(CYAN);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel1 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -654,7 +654,7 @@ static void UserApp1SM_RadioActive(void)
         u32MessageCounter2 = 0;
         
         /* Channel 0 is red (but don't touch blue or green) */
-        //LedOn(LCD_RED);
+        LedOn(YELLOW);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel2 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -667,7 +667,7 @@ static void UserApp1SM_RadioActive(void)
         u32MessageCounter3 = 0;
         
         /* Channel 0 is red (but don't touch blue or green) */
-        //LedOn(LCD_RED);
+        LedOn(RED);
         
         /* Record RSSI level and update LCD message */
         s8RssiChannel3 = G_sAntApiCurrentMessageExtData.s8RSSI;
@@ -698,11 +698,11 @@ static void UserApp1SM_RadioActive(void)
     {
       if(s8StrongestRssi > as8dBmLevels[i])
       {
-        LedOn(aeLedDisplayLevels[i]);
+        //LedOn(aeLedDisplayLevels[i]);
       }
       else
       {
-        LedOff(aeLedDisplayLevels[i]);
+        //LedOff(aeLedDisplayLevels[i]);
       }
     }
     

@@ -92,7 +92,7 @@ static AntAssignChannelInfoType UserApp1_sMasterChannel4;
   
 static u8 UserApp1_au8LcdStartLine1[] =         "ANT-Hill            ";
 static u8 UserApp1_au8LcdStartLine2[] =         "Push B0 to open     ";
-static u8 UserApp1_au8MasterName[11]   =        "ANT-Hill  \0";
+static u8 UserApp1_au8MasterName[11] =          "ANT-Hill  \0";
 static u8 UserApp1_au8LcdInformationMessage[] = "-xx  -xx   -xx  -xx ";
 
 
@@ -147,7 +147,7 @@ void UserApp1Initialize(void)
   LedOff(PURPLE);
   LedOff(WHITE);
   LedOn(LCD_GREEN);
-  LedOff(LCD_BLUE);
+  LedOn(LCD_BLUE);
   LedOff(LCD_RED);
   
   /* Update the name message and UserApp1_au8MasterName with team number */
@@ -462,7 +462,6 @@ static void UserApp1SM_OpeningChannels(void)
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
     LCDMessage(LINE2_START_ADDR, UserApp1_au8MasterName);
     
-    LedOn(LCD_BLUE);
     UserApp1_u32LCDTimer = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_RadioActive;   
   }
@@ -715,7 +714,6 @@ static void UserApp1SM_RadioActive(void)
   {
     /* Ack the button and turn off LCD backlight */
     ButtonAcknowledge(BUTTON3);
-    LedOff(LCD_BLUE);
     
     /* Make sure all LEDs are off */
     for(u8 i = 0; i < 8; i++)

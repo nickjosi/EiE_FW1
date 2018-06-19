@@ -47,10 +47,10 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_AntConfigureMaster1(void);
-static void UserApp1SM_AntConfigureMaster2(void);
-static void UserApp1SM_AntConfigureMaster3(void);
-static void UserApp1SM_AntConfigureMaster4(void);
+static void UserApp1SM_AntConfigureSlave0(void);
+static void UserApp1SM_AntConfigureSlave1(void);
+static void UserApp1SM_AntConfigureSlave2(void);
+static void UserApp1SM_AntConfigureSlave3(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);

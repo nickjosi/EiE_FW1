@@ -85,14 +85,14 @@ static u8 UserApp1_u8HillNumber = HILL_1;
 
 
 
+static AntAssignChannelInfoType UserApp1_sMasterChannel0;
 static AntAssignChannelInfoType UserApp1_sMasterChannel1;
 static AntAssignChannelInfoType UserApp1_sMasterChannel2;
 static AntAssignChannelInfoType UserApp1_sMasterChannel3;
-static AntAssignChannelInfoType UserApp1_sMasterChannel4;
   
-static u8 UserApp1_au8LcdStartLine1[] =         "ANT-Hill            ";
+static u8 UserApp1_au8LcdStartLine1[] =         "ANThill             ";
 static u8 UserApp1_au8LcdStartLine2[] =         "Push B0 to open     ";
-static u8 UserApp1_au8MasterName[11] =          "ANT-Hill  \0";
+static u8 UserApp1_au8MasterName[10] =          "ANThill  \0";
 static u8 UserApp1_au8LcdInformationMessage[] = "-xx  -xx   -xx  -xx ";
 
 
@@ -152,8 +152,8 @@ void UserApp1Initialize(void)
   
   /* Update the name message and UserApp1_au8MasterName with team number */
   /* (+48 for ASCII conversion, +1 to get correct number) */
-  UserApp1_au8LcdStartLine1[9] = UserApp1_u8HillNumber + 49;
-  UserApp1_au8MasterName[9] = UserApp1_u8HillNumber + 49;
+  UserApp1_au8LcdStartLine1[8] = UserApp1_u8HillNumber + 49;
+  UserApp1_au8MasterName[8] = UserApp1_u8HillNumber + 49;
    
   /* Update LCD to starting screen. */
   LCDCommand(LCD_CLEAR_CMD);
@@ -173,14 +173,29 @@ void UserApp1Initialize(void)
   
   /* Set up the ANT channels that will be used for the task */
     
-  /* Master 1 (Channel 0) */
-  UserApp1_sMasterChannel1.AntChannel = ANT_CHANNEL_0;
+  /* Master 0 (Channel 0) */
+  UserApp1_sMasterChannel0.AntChannel = ANT_CHANNEL_0;
+  UserApp1_sMasterChannel0.AntChannelType = CHANNEL_TYPE_MASTER;
+  UserApp1_sMasterChannel0.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
+  UserApp1_sMasterChannel0.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
+
+  UserApp1_sMasterChannel0.AntDeviceIdHi = DEVICE_ID_HI;
+  UserApp1_sMasterChannel0.AntDeviceIdLo = UserApp1_au8DeviceIdLo[0];
+  UserApp1_sMasterChannel0.AntDeviceType = EIE_DEVICE_TYPE;
+  UserApp1_sMasterChannel0.AntTransmissionType = EIE_TRANS_TYPE;
+  
+  UserApp1_sMasterChannel0.AntFrequency = ANT_FREQUENCY_DEFAULT;
+  UserApp1_sMasterChannel0.AntTxPower = ANT_TX_POWER_DEFAULT;
+  UserApp1_sMasterChannel0.AntNetwork = ANT_NETWORK_DEFAULT;
+  
+  /* Master 1 (Channel 1) */
+  UserApp1_sMasterChannel1.AntChannel = ANT_CHANNEL_1;
   UserApp1_sMasterChannel1.AntChannelType = CHANNEL_TYPE_MASTER;
   UserApp1_sMasterChannel1.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel1.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
-
+  
   UserApp1_sMasterChannel1.AntDeviceIdHi = DEVICE_ID_HI;
-  UserApp1_sMasterChannel1.AntDeviceIdLo = UserApp1_au8DeviceIdLo[0];
+  UserApp1_sMasterChannel1.AntDeviceIdLo = UserApp1_au8DeviceIdLo[1];
   UserApp1_sMasterChannel1.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel1.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -188,14 +203,14 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel1.AntTxPower = ANT_TX_POWER_DEFAULT;
   UserApp1_sMasterChannel1.AntNetwork = ANT_NETWORK_DEFAULT;
   
-  /* Master 2 (Channel 1) */
-  UserApp1_sMasterChannel2.AntChannel = ANT_CHANNEL_1;
+  /* Master 2 (Channel 2) */
+  UserApp1_sMasterChannel2.AntChannel = ANT_CHANNEL_2;
   UserApp1_sMasterChannel2.AntChannelType = CHANNEL_TYPE_MASTER;
   UserApp1_sMasterChannel2.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel2.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
   UserApp1_sMasterChannel2.AntDeviceIdHi = DEVICE_ID_HI;
-  UserApp1_sMasterChannel2.AntDeviceIdLo = UserApp1_au8DeviceIdLo[1];
+  UserApp1_sMasterChannel2.AntDeviceIdLo = UserApp1_au8DeviceIdLo[2];
   UserApp1_sMasterChannel2.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel2.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -203,14 +218,14 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel2.AntTxPower = ANT_TX_POWER_DEFAULT;
   UserApp1_sMasterChannel2.AntNetwork = ANT_NETWORK_DEFAULT;
   
-  /* Master 3 (Channel 2) */
-  UserApp1_sMasterChannel3.AntChannel = ANT_CHANNEL_2;
+  /* Master 3 (Channel 3) */
+  UserApp1_sMasterChannel3.AntChannel = ANT_CHANNEL_3;
   UserApp1_sMasterChannel3.AntChannelType = CHANNEL_TYPE_MASTER;
   UserApp1_sMasterChannel3.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel3.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
   UserApp1_sMasterChannel3.AntDeviceIdHi = DEVICE_ID_HI;
-  UserApp1_sMasterChannel3.AntDeviceIdLo = UserApp1_au8DeviceIdLo[2];
+  UserApp1_sMasterChannel3.AntDeviceIdLo = UserApp1_au8DeviceIdLo[3];
   UserApp1_sMasterChannel3.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel3.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -218,38 +233,23 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel3.AntTxPower = ANT_TX_POWER_DEFAULT;
   UserApp1_sMasterChannel3.AntNetwork = ANT_NETWORK_DEFAULT;
   
-  /* Master 4 (Channel 3) */
-  UserApp1_sMasterChannel4.AntChannel = ANT_CHANNEL_3;
-  UserApp1_sMasterChannel4.AntChannelType = CHANNEL_TYPE_MASTER;
-  UserApp1_sMasterChannel4.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
-  UserApp1_sMasterChannel4.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
-  
-  UserApp1_sMasterChannel4.AntDeviceIdHi = DEVICE_ID_HI;
-  UserApp1_sMasterChannel4.AntDeviceIdLo = UserApp1_au8DeviceIdLo[3];
-  UserApp1_sMasterChannel4.AntDeviceType = EIE_DEVICE_TYPE;
-  UserApp1_sMasterChannel4.AntTransmissionType = EIE_TRANS_TYPE;
-  
-  UserApp1_sMasterChannel4.AntFrequency = ANT_FREQUENCY_DEFAULT;
-  UserApp1_sMasterChannel4.AntTxPower = ANT_TX_POWER_DEFAULT;
-  UserApp1_sMasterChannel4.AntNetwork = ANT_NETWORK_DEFAULT;
-  
   
   for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
   {
+    UserApp1_sMasterChannel0.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     UserApp1_sMasterChannel1.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     UserApp1_sMasterChannel2.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     UserApp1_sMasterChannel3.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
-    UserApp1_sMasterChannel4.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
   }
   
-  /* Queue configuration of Master channel 1 */
-  AntAssignChannel(&UserApp1_sMasterChannel1);
+  /* Queue configuration of Master channel 0 */
+  AntAssignChannel(&UserApp1_sMasterChannel0);
   UserApp1_u32Timeout = G_u32SystemTime1ms;
     
-  /* If good initialization, set state to AntConifgureMaster1 */
+  /* If good initialization, set state to AntConifgureMaster0 */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1SM_AntConfigureMaster1;
+    UserApp1_StateMachine = UserApp1SM_AntConfigureMaster0;
   }
   else
   {
@@ -292,6 +292,36 @@ State Machine Function Definitions
 **********************************************************************************************************************/
 
 /*!-------------------------------------------------------------------------------------------------------------------
+@fn static void UserApp1SM_AntConfigureMaster0(void)
+
+@brief Wait for Master 0 channel configuration to be completed.
+*/
+static void UserApp1SM_AntConfigureMaster0(void)
+{
+  /* Wait for the ANT Master channel to be configured */
+  if(AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_CONFIGURED)
+  {
+    DebugPrintf("Master 0 channel configured\n\n\r");
+    
+    /* Queue configuration of Master 1 channel */
+    AntAssignChannel(&UserApp1_sMasterChannel1);
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_AntConfigureMaster1;
+    
+  }
+  
+  /* Check for timeout */
+  if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR, "Mast0 config failed");
+    UserApp1_StateMachine = UserApp1SM_Error;    
+  }
+
+} /* end UserApp1SM_AntConfigureMaster0() */
+
+
+/*!-------------------------------------------------------------------------------------------------------------------
 @fn static void UserApp1SM_AntConfigureMaster1(void)
 
 @brief Wait for Master 1 channel configuration to be completed.
@@ -299,7 +329,7 @@ State Machine Function Definitions
 static void UserApp1SM_AntConfigureMaster1(void)
 {
   /* Wait for the ANT Master channel to be configured */
-  if(AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_CONFIGURED)
+  if(AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_CONFIGURED)
   {
     DebugPrintf("Master 1 channel configured\n\n\r");
     
@@ -314,7 +344,7 @@ static void UserApp1SM_AntConfigureMaster1(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Master1 config failed");
+    LCDMessage(LINE1_START_ADDR, "Mast1 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
@@ -329,7 +359,7 @@ static void UserApp1SM_AntConfigureMaster1(void)
 static void UserApp1SM_AntConfigureMaster2(void)
 {
   /* Wait for the ANT Master channel to be configured */
-  if(AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_CONFIGURED)
+  if(AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_CONFIGURED)
   {
     DebugPrintf("Master 2 channel configured\n\n\r");
     
@@ -343,7 +373,7 @@ static void UserApp1SM_AntConfigureMaster2(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Master2 config failed");
+    LCDMessage(LINE1_START_ADDR, "Mast2 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
@@ -358,38 +388,9 @@ static void UserApp1SM_AntConfigureMaster2(void)
 static void UserApp1SM_AntConfigureMaster3(void)
 {
   /* Wait for the ANT Master channel to be configured */
-  if(AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_CONFIGURED)
-  {
-    DebugPrintf("Master 3 channel configured\n\n\r");
-    
-    /* Queue configuration of Master 4 channel */
-    AntAssignChannel(&UserApp1_sMasterChannel4);
-    UserApp1_u32Timeout = G_u32SystemTime1ms;
-    UserApp1_StateMachine = UserApp1SM_AntConfigureMaster4;
-  }
-  
-  /* Check for timeout */
-  if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
-  {
-    LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Master3 config failed");
-    UserApp1_StateMachine = UserApp1SM_Error;    
-  }
-
-} /* end UserApp1SM_AntConfigureMaster3() */
-    
-
-/*!-------------------------------------------------------------------------------------------------------------------
-@fn static void UserApp1SM_AntConfigureMaster4(void)
-
-@brief Wait for Master 4 channel configuration to be completed.
-*/
-static void UserApp1SM_AntConfigureMaster4(void)
-{
-  /* Wait for the ANT Master channel to be configured */
   if(AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_CONFIGURED)
   {
-    DebugPrintf("Master 4 channel configured\n\n\r");
+    DebugPrintf("Master 3 channel configured\n\n\r");
     
     /* Update the broadcast message data to send the user's name the go to Idle */
     AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8MasterName);
@@ -404,12 +405,12 @@ static void UserApp1SM_AntConfigureMaster4(void)
   if( IsTimeUp(&UserApp1_u32Timeout, ANT_CONFIGURE_TIMEOUT_MS) )
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "Master4 config failed");
+    LCDMessage(LINE1_START_ADDR, "Mast3 config failed");
     UserApp1_StateMachine = UserApp1SM_Error;    
   }
 
-} /* end UserApp1SM_AntConfigureMaster4() */
-
+} /* end UserApp1SM_AntConfigureMaster3() */
+    
 
 /*!-------------------------------------------------------------------------------------------------------------------
 @fn static void UserApp1SM_Idle(void)
@@ -418,7 +419,7 @@ static void UserApp1SM_AntConfigureMaster4(void)
 */
 static void UserApp1SM_Idle(void)
 {
-  /* BUTTON0 opens channel 0 for Clue 1 */ 
+  /* BUTTON0 opens the channels */ 
   if(WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
@@ -433,7 +434,7 @@ static void UserApp1SM_Idle(void)
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
   }
   
-  /* Check for other button presses to avoid any bugs */
+  /* Check for other button presses to avoid any unintended events */
   if(WasButtonPressed(BUTTON1))
     ButtonAcknowledge(BUTTON1);
   if(WasButtonPressed(BUTTON2))
@@ -451,11 +452,11 @@ static void UserApp1SM_Idle(void)
 */
 static void UserApp1SM_OpeningChannels(void)
 {
-  /* Ensure that the correct channel has opened */
-  if((AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_OPEN) &&
-     (AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_OPEN) &&
-     (AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_OPEN) &&
-     (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN) )
+  /* Ensure that the channels have opened */
+  if( (AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_OPEN) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_OPEN) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_OPEN) &&
+      (AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN) )
   {
     /* Update LCD and go to main Radio monitoring state */
     LCDCommand(LCD_CLEAR_CMD);
@@ -485,30 +486,32 @@ static void UserApp1SM_OpeningChannels(void)
 static void UserApp1SM_RadioActive(void)
 {
   LedNumberType aeLedDisplayLevels[] = {RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE};
-  s8 as8dBmLevels[] = {DBM_LEVEL1, DBM_LEVEL2, DBM_LEVEL3, DBM_LEVEL4, 
-                       DBM_LEVEL5, DBM_LEVEL6, DBM_LEVEL7, DBM_LEVEL8};
   u8 u8EventCode;
   
   static u8 u32MessageCounter0 = 0;
   static u8 u32MessageCounter1 = 0;
   static u8 u32MessageCounter2 = 0;
   static u8 u32MessageCounter3 = 0;
+  
   static s8 s8RssiChannel0 = -99;
   static s8 s8RssiChannel1 = -99;
   static s8 s8RssiChannel2 = -99;
   static s8 s8RssiChannel3 = -99;
-  static s8 s8StrongestRssi = -99;
+
   
   /* Monitor ANT messages: looking for any incoming messages
   that indicates a matching device has been located. */
   if( AntReadAppMessageBuffer() )
   {
     /* Check the message class to determine how to process the message */
+    
+    /* --- TICK MESSAGE ------------------------------------------------------*/
     if(G_eAntApiCurrentMessageClass == ANT_TICK)
     {
       /* Get the EVENT code from the ANT_TICK message */ 
       u8EventCode = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
       
+      /* Channel 0 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 0)
       {
         switch (u8EventCode)
@@ -536,6 +539,7 @@ static void UserApp1SM_RadioActive(void)
         } /* end switch u8EventCode */
       } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 0) */
       
+      /* Channel 1 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
       {
         switch (u8EventCode)
@@ -563,6 +567,7 @@ static void UserApp1SM_RadioActive(void)
         } /* end switch u8EventCode */
       } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 1) */
       
+      /* Channel 2 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
       {
         switch (u8EventCode)
@@ -590,6 +595,7 @@ static void UserApp1SM_RadioActive(void)
         } /* end switch u8EventCode */
       } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 2) */
       
+      /* Channel 3 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 3)
       {
         switch (u8EventCode)
@@ -617,11 +623,14 @@ static void UserApp1SM_RadioActive(void)
         } /* end switch u8EventCode */
       } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 3) */
     } /* end if(G_eAntApiCurrentMessageClass == ANT_TICK) */
+    
+    /* --- end TICK MESSAGE --------------------------------------------------*/
 
     
-    /* Check for DATA messages */
+    /* --- DATA MESSAGE ----------------------------------------------------- */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
+      /* Channel 0 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 0)
       {
         /* Reset the message counter */
@@ -633,8 +642,9 @@ static void UserApp1SM_RadioActive(void)
         /* Record RSSI level and update LCD message */
         s8RssiChannel0 = G_sAntApiCurrentMessageExtData.s8RSSI;
         AntGetdBmAscii(s8RssiChannel0, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM0]);
-      }
+      } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 0) */
       
+      /* Channel 1 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
       {
         /* Reset the message counter */
@@ -646,8 +656,9 @@ static void UserApp1SM_RadioActive(void)
         /* Record RSSI level and update LCD message */
         s8RssiChannel1 = G_sAntApiCurrentMessageExtData.s8RSSI;
         AntGetdBmAscii(s8RssiChannel1, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM1]);
-      }
+      } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 1) */
       
+      /* Channel 2 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
       {
         /* Reset the message counter */
@@ -659,8 +670,9 @@ static void UserApp1SM_RadioActive(void)
         /* Record RSSI level and update LCD message */
         s8RssiChannel2 = G_sAntApiCurrentMessageExtData.s8RSSI;
         AntGetdBmAscii(s8RssiChannel2, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM2]);
-      }
+      } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 2) */
       
+      /* Channel 3 */
       if(G_sAntApiCurrentMessageExtData.u8Channel == 3)
       {
         /* Reset the message counter */
@@ -672,38 +684,17 @@ static void UserApp1SM_RadioActive(void)
         /* Record RSSI level and update LCD message */
         s8RssiChannel3 = G_sAntApiCurrentMessageExtData.s8RSSI;
         AntGetdBmAscii(s8RssiChannel3, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM3]);
-      }
-      
+      } /* end if(G_sAntApiCurrentMessageExtData.u8Channel == 3) */
     } /* end if(G_eAntApiCurrentMessageClass == ANT_DATA) */
     
-    /* Make sure LCD has the current message - this should happen infrequently
-    enough to no cause problems, but if that's untrue this needs to be throttled back */
+    /* --- end DATA MESSAGE --------------------------------------------------*/
+    
+    
+    /* Make sure LCD has the correct message every time >500ms have passed */
     if((G_u32SystemTime1ms - UserApp1_u32LCDTimer) > 500)
     {
       LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
       UserApp1_u32LCDTimer = G_u32SystemTime1ms;
-    }
-    
-    /* Update the strongest signal being received */
-    s8StrongestRssi = s8RssiChannel0;
-    if(s8RssiChannel1 > s8StrongestRssi)
-      s8StrongestRssi = s8RssiChannel1;
-    if(s8RssiChannel2 > s8StrongestRssi)
-      s8StrongestRssi = s8RssiChannel2;
-    if(s8RssiChannel3 > s8StrongestRssi)
-      s8StrongestRssi = s8RssiChannel3;
-
-    /* Loop through all of the levels to check which LEDs to turn on */
-    for(u8 i = 0; i < NUM_DBM_LEVELS; i++)
-    {
-      if(s8StrongestRssi > as8dBmLevels[i])
-      {
-        //LedOn(aeLedDisplayLevels[i]);
-      }
-      else
-      {
-        //LedOff(aeLedDisplayLevels[i]);
-      }
     }
     
   } /* end if( AntReadAppMessageBuffer() )*/
@@ -736,7 +727,7 @@ static void UserApp1SM_RadioActive(void)
     UserApp1_StateMachine = UserApp1SM_ClosingChannels;    
   }
   
-  /* Check for other button presses to avoid any bugs */
+  /* Check for other button presses to avoid any unintended events */
   if(WasButtonPressed(BUTTON0))
     ButtonAcknowledge(BUTTON0);
   if(WasButtonPressed(BUTTON1))

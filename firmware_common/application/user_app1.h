@@ -47,10 +47,10 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
+static void UserApp1SM_AntConfigureMaster0(void);
 static void UserApp1SM_AntConfigureMaster1(void);
 static void UserApp1SM_AntConfigureMaster2(void);
 static void UserApp1SM_AntConfigureMaster3(void);
-static void UserApp1SM_AntConfigureMaster4(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);
@@ -76,7 +76,7 @@ Constants / Definitions
 #define INDEX_RSSI_DBM1            (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
 #define INDEX_RSSI_DBM2            (u8)11                     /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
 #define INDEX_RSSI_DBM3            (u8)16                     /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
-#define ADDRESS_LCD_TEAM           (u8)(LINE2_START_ADDR + 12) /*!< @brief LCD address where to write Slave's name */
+#define ADDRESS_LCD_TEAM           (u8)(LINE2_START_ADDR + 11) /*!< @brief LCD address where to write Slave's name */
 
 #define ALLOWED_MISSED_MESSAGES    (u32)8                     /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
 

@@ -77,7 +77,7 @@ static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout co
 
 /* Enter team number below. 
 Choices: HILL_1, HILL_2, ..., HILL_8 */
-static u8 UserApp1_u8HillNumber = HILL_1;
+static u8 UserApp1_u8HillNumber = HILL_7;
 
 
 

@@ -51,6 +51,10 @@ static void UserApp1SM_AntConfigureSlave0(void);
 static void UserApp1SM_AntConfigureSlave1(void);
 static void UserApp1SM_AntConfigureSlave2(void);
 static void UserApp1SM_AntConfigureSlave3(void);
+static void UserApp1SM_AntConfigureSlave4(void);
+static void UserApp1SM_AntConfigureSlave5(void);
+static void UserApp1SM_AntConfigureSlave6(void);
+static void UserApp1SM_AntConfigureSlave7(void);
 static void UserApp1SM_OpeningChannels(void);
 static void UserApp1SM_ClosingChannels(void);
 static void UserApp1SM_RadioActive(void);
@@ -85,6 +89,7 @@ Constants / Definitions
 
 #define INDEX_RSSI_DBM             (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
 #define ADDRESS_LCD_CLUE           (u8)(LINE2_START_ADDR + 8) /*!< @brief LCD address where to write Slave's name */
+#define INDEX_CHANNEL_NUM          (u8)10
 
 #define ALLOWED_MISSED_MESSAGES    (u32)8                     /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
 

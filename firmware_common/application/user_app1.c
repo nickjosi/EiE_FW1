@@ -96,10 +96,10 @@ static AntAssignChannelInfoType UserApp1_sSlaveChannel7;
 
 static AntChannelNumberType UserApp1_CurrentChannel = ANT_CHANNEL_0;
   
-static u8 UserApp1_au8LcdStartLine1[] =         "Hi ANTseeker        ";
+static u8 UserApp1_au8LcdStartLine1[] =         "Seeking ANT   Team  ";
 static u8 UserApp1_au8LcdStartLine2[] =         "< Channel   >   Open";
 static u8 UserApp1_au8SlaveName[9] =            "Seeker  \0";
-static u8 UserApp1_au8LcdInformationMessage[] = "RSSI:-xx dBm        ";
+static u8 UserApp1_au8LcdInformationMessage[] = "RSSI:-xx dBm  Team  ";
 
 
 static u8 UserApp1_au8DeviceIdLo[8];
@@ -156,9 +156,10 @@ void UserApp1Initialize(void)
   LedOff(LCD_BLUE);
   LedOff(LCD_RED);
   
-  /* Update the name message and UserApp1_au8SlaveName with team number */
-  /* (+48 for ASCII conversion, +1 to get correct number) */
-  UserApp1_au8LcdStartLine1[13] = UserApp1_u8TeamNumber + 49;
+  /* Update the name message, information message, and UserApp1_au8SlaveName 
+  with team number (+48 for ASCII conversion, +1 to get correct number) */
+  UserApp1_au8LcdStartLine1[19] = UserApp1_u8TeamNumber + 49;
+  UserApp1_au8LcdInformationMessage[19] = UserApp1_u8TeamNumber + 49;
   UserApp1_au8SlaveName[7] = UserApp1_u8TeamNumber + 49;
   
   /* Set the starting current channel number (Channel 1) */
@@ -745,23 +746,23 @@ static void UserApp1SM_OpeningChannels(void)
   {
     /* Update LCD and go to main Radio monitoring state */
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR, "RSSI:-xx dBm");
+    LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
     
-    if(AntRadioStatusChannel(ANT_CHANNEL_0) == ANT_OPEN)
+    if(UserApp1_CurrentChannel == ANT_CHANNEL_0)
       LCDMessage(LINE2_START_ADDR, "Channel 1      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_1) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_1)
       LCDMessage(LINE2_START_ADDR, "Channel 2      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_2) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_2)
       LCDMessage(LINE2_START_ADDR, "Channel 3      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_3)
       LCDMessage(LINE2_START_ADDR, "Channel 4      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_4) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_4)
       LCDMessage(LINE2_START_ADDR, "Channel 5      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_5) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_5)
       LCDMessage(LINE2_START_ADDR, "Channel 6      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_6) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_6)
       LCDMessage(LINE2_START_ADDR, "Channel 7      Close");
-    else if(AntRadioStatusChannel(ANT_CHANNEL_7) == ANT_OPEN)
+    else if(UserApp1_CurrentChannel == ANT_CHANNEL_7)
       LCDMessage(LINE2_START_ADDR, "Channel 8      Close");
       
     UserApp1_u32SearchingTime = G_u32SystemTime1ms;

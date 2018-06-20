@@ -85,7 +85,7 @@ static u8 UserApp1_au8BoardSequence[] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
 
 /* Enter the 4 clues in order. 
 Choices: A colour or row #. */
-static u8 UserApp1_au8Clue1[] = "Blue.";
+static u8 UserApp1_au8Clue1[] = "Purple.";
 static u8 UserApp1_au8Clue2[] = "Row 5.";
 static u8 UserApp1_au8Clue3[] = "Orange.";
 static u8 UserApp1_au8Clue4[] = "Yellow.";
@@ -99,7 +99,7 @@ static AntAssignChannelInfoType UserApp1_sSlaveChannel1;
 static AntAssignChannelInfoType UserApp1_sSlaveChannel2;
 static AntAssignChannelInfoType UserApp1_sSlaveChannel3;
   
-static u8 UserApp1_au8LcdStartLine1[] =         "Hi Seeker           ";
+static u8 UserApp1_au8LcdStartLine1[] =         "Hi ANTseeker        ";
 static u8 UserApp1_au8LcdStartLine2[] =         "Push B0-B3 to search";
 static u8 UserApp1_au8SlaveName[9] =            "Seeker  \0";
 static u8 UserApp1_au8LcdInformationMessage[] = "RSSI:-xx dBm        ";
@@ -162,7 +162,7 @@ void UserApp1Initialize(void)
   
   /* Update the name message and UserApp1_au8SlaveName with team number */
   /* (+48 for ASCII conversion, +1 to get correct number) */
-  UserApp1_au8LcdStartLine1[10] = UserApp1_u8TeamNumber + 49;
+  UserApp1_au8LcdStartLine1[13] = UserApp1_u8TeamNumber + 49;
   UserApp1_au8SlaveName[7] = UserApp1_u8TeamNumber + 49;
    
   /* Update LCD to starting screen. */
@@ -402,7 +402,7 @@ static void UserApp1SM_AntConfigureSlave3(void)
   {
     DebugPrintf("Slave 3 channel configured\n\n\r");
     
-    /* Update the broadcast message data to send the user's name the go to Idle */
+    /* Update the broadcast message data to send the seeker name then go to Idle */
     AntQueueBroadcastMessage(ANT_CHANNEL_0, UserApp1_au8SlaveName);
     AntQueueBroadcastMessage(ANT_CHANNEL_1, UserApp1_au8SlaveName);
     AntQueueBroadcastMessage(ANT_CHANNEL_2, UserApp1_au8SlaveName);
@@ -441,7 +441,7 @@ static void UserApp1SM_Idle(void)
     
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-  }
+  } /* end BUTTON0 */
   
   /* BUTTON1 opens channel 1 for Clue 2 */ 
   if(WasButtonPressed(BUTTON1))
@@ -454,7 +454,7 @@ static void UserApp1SM_Idle(void)
     
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-  }
+  } /* end BUTTON1 */
   
   /* BUTTON2 opens channel 2 for Clue 3 */ 
   if(WasButtonPressed(BUTTON2))
@@ -467,7 +467,7 @@ static void UserApp1SM_Idle(void)
     
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-  }
+  } /* end BUTTON2 */
   
   /* BUTTON3 opens channel 3 for Clue 4 */ 
   if(WasButtonPressed(BUTTON3))
@@ -480,7 +480,7 @@ static void UserApp1SM_Idle(void)
     
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_OpeningChannels;    
-  }
+  } /* end BUTTON 3 */
 
 } /* end UserApp1SM_Idle() */
 
@@ -543,10 +543,8 @@ static void UserApp1SM_RadioActive(void)
   LedNumberType aeLedDisplayLevels[] = {RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE};
   s8 as8dBmLevels[] = {DBM_LEVEL1, DBM_LEVEL2, DBM_LEVEL3, DBM_LEVEL4, 
                        DBM_LEVEL5, DBM_LEVEL6, DBM_LEVEL7, DBM_LEVEL8};
-  u8 u8EventCode;
-    
+  u8 u8EventCode;    
   static s8 s8Rssi = -99;
-  static s8 s8StrongestRssi = -99;
   
   /* Monitor ANT messages: looking for any incoming messages
   that indicates a matching device has been located. */
@@ -555,33 +553,37 @@ static void UserApp1SM_RadioActive(void)
     UserApp1_u32SearchingTime = G_u32SystemTime1ms;
     
     /* Check the message class to determine how to process the message */
+    
+    /* --- TICK MESSAGE ------------------------------------------------------*/
     if(G_eAntApiCurrentMessageClass == ANT_TICK)
     {
       /* Get the EVENT code from the ANT_TICK message */ 
       u8EventCode = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
       
       /* Check the Event code and respond */
-        switch (u8EventCode)
+      switch (u8EventCode)
+      {
+      case EVENT_RX_FAIL_GO_TO_SEARCH:
         {
-          case EVENT_RX_FAIL_GO_TO_SEARCH:
-          {
-            s8Rssi = DBM_LEVEL1;
-            LedOff(LCD_RED);
-            UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 1] = 'x';
-            UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 2] = 'x';
-            break;
-          }
-          
-          default:
-          {
-            DebugPrintf("Slave unhandled event\n\n\r");
-            break;
-          }
-        } /* end switch u8EventCode */      
+          s8Rssi = DBM_LEVEL1;
+          LedOff(LCD_RED);
+          UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 1] = 'x';
+          UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 2] = 'x';
+          break;
+        }
+        
+      default:
+        {
+          DebugPrintf("Slave unhandled event\n\n\r");
+          break;
+        }
+      } /* end switch u8EventCode */      
     } /* end if(G_eAntApiCurrentMessageClass == ANT_TICK) */
+    
+    /* --- end TICK MESSAGE --------------------------------------------------*/
 
     
-    /* Check for DATA messages */
+    /* --- DATA MESSAGE ----------------------------------------------------- */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
       /* When the slave receives a message, queue a response message */
@@ -594,7 +596,7 @@ static void UserApp1SM_RadioActive(void)
       if((AntRadioStatusChannel(ANT_CHANNEL_3) == ANT_OPEN))
         AntQueueBroadcastMessage(ANT_CHANNEL_3, UserApp1_au8SlaveName);
       
-      /* Channel 1 is Blue (but don't touch red or green) */
+      /* Turn on Red LCD backlight (LCD turns yellow) */
       LedOn(LCD_RED);
       
       /* Record RSSI level and update LCD message */
@@ -602,8 +604,8 @@ static void UserApp1SM_RadioActive(void)
       AntGetdBmAscii(s8Rssi, &UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM]);
       
       
-      /* Read and display user name if level is high enough */
-      if(s8StrongestRssi > DBM_MAX_LEVEL)
+      /* Display clue if level is high enough */
+      if(s8Rssi > DBM_MAX_LEVEL)
       {
         if(UserApp1_u8ClueNum == CLUE_1)        
           LCDMessage(ADDRESS_LCD_CLUE, UserApp1_au8Clue1);    
@@ -616,24 +618,23 @@ static void UserApp1SM_RadioActive(void)
       }
       else
       {
-        /* Otherwise clear the name area */
+        /* Otherwise clear the clue area */
         LCDClearChars(ADDRESS_LCD_CLUE, 8);
       }
       
     } /* end if(G_eAntApiCurrentMessageClass == ANT_DATA) */
+    
+    /* --- end DATA MESSAGE --------------------------------------------------*/
 
+    
     /* Make sure LCD has the current message - this should happen infrequently
     enough to no cause problems, but if that's untrue this needs to be throttled back */
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdInformationMessage);
-
     
-    /* Update the strongest signal being received */
-    s8StrongestRssi = s8Rssi;
-
     /* Loop through all of the levels to check which LEDs to turn on */
     for(u8 i = 0; i < NUM_DBM_LEVELS; i++)
     {
-      if(s8StrongestRssi > as8dBmLevels[i])
+      if(s8Rssi > as8dBmLevels[i])
       {
         LedOn(aeLedDisplayLevels[i]);
       }
@@ -645,10 +646,11 @@ static void UserApp1SM_RadioActive(void)
     
   } /* end if( AntReadAppMessageBuffer() )*/
 
+  
+  /* Reset LCD and LEDs if no message has been recieved for >500ms */
   if(G_u32SystemTime1ms - UserApp1_u32SearchingTime > 500)
   {
     s8Rssi = DBM_LEVEL1;
-    s8StrongestRssi = DBM_LEVEL1;
     UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 1] = 'x';
     UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 2] = 'x';
     
@@ -662,7 +664,7 @@ static void UserApp1SM_RadioActive(void)
     UserApp1_u32SearchingTime = G_u32SystemTime1ms;
   }
   
-  /* Watch for button press to turn off radio */
+  /* Watch for BUTTON3 press to turn off radio */
   if(WasButtonPressed(BUTTON3))
   {
     /* Ack the button and turn off LCD backlight */
@@ -670,8 +672,8 @@ static void UserApp1SM_RadioActive(void)
     LedOff(LCD_RED);
     LedOff(LCD_BLUE);
     
+    /* Reset the RSSI variables and information message */
     s8Rssi = DBM_LEVEL1;
-    s8StrongestRssi = DBM_LEVEL1;
     UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 1] = 'x';
     UserApp1_au8LcdInformationMessage[INDEX_RSSI_DBM + 2] = 'x';
     
@@ -685,7 +687,6 @@ static void UserApp1SM_RadioActive(void)
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR, UserApp1_au8LcdStartLine1);
     LCDMessage(LINE2_START_ADDR, UserApp1_au8LcdStartLine2);
-    
       
     /* Queue request to close the channel */
     if(UserApp1_u8ClueNum == CLUE_1)
@@ -700,6 +701,14 @@ static void UserApp1SM_RadioActive(void)
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_ClosingChannels;    
   }
+  
+  /* Check for other button presses to avoid any unintended events */
+  if(WasButtonPressed(BUTTON0))
+    ButtonAcknowledge(BUTTON0);
+  if(WasButtonPressed(BUTTON1))
+    ButtonAcknowledge(BUTTON1);
+  if(WasButtonPressed(BUTTON2))
+    ButtonAcknowledge(BUTTON3);
 
 } /* end UserApp1SM_RadioActive() */
 

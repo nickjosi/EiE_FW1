@@ -85,6 +85,7 @@ Constants / Definitions
 
 #define INDEX_RSSI_DBM             (u8)5                      /*!< @brief Position in au8LcdInformationMessage to write the RSSI level */
 #define ADDRESS_LCD_CLUE           (u8)(LINE2_START_ADDR + 8) /*!< @brief LCD address where to write Slave's name */
+#define INDEX_CLUE_NUM             (u8)8
 
 #define ALLOWED_MISSED_MESSAGES    (u32)8                     /*!< @brief Number of message cycles allowed before the Master decides no Slave is listening */
 

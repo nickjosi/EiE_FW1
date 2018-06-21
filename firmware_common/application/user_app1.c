@@ -71,10 +71,22 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;                 /*!< @brief The state machine function pointer */
 static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout counter used across states */
 
-/* #EIE Task 1
-Enter your name below where it says "YOURNAME"  
-MAXIMUM 8 CHARACTERS:             12345678               */
-static u8 UserApp1_au8MyName[] = "JRLEiE88";
+
+
+/* --- Values to be edited ---------------------------------------------------*/
+
+/* Enter your name below.  
+MAXIMUM 8 CHARACTERS:             12345678 */
+static u8 UserApp1_au8MyName[] = "John";
+
+/* Enter device ID below. 
+Ensure that you enter the same device ID as your partner! */
+static u8 UserApp1_u8DeviceIdHi = 0x17;
+static u8 UserApp1_u8DeviceIdLo = 0x17;
+
+/* --- End of values to be edited --------------------------------------------*/
+
+
 
 static AntAssignChannelInfoType UserApp1_sMasterChannel;
 static AntAssignChannelInfoType UserApp1_sSlaveChannel;
@@ -161,8 +173,8 @@ void UserApp1Initialize(void)
   UserApp1_sMasterChannel.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sMasterChannel.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
-  UserApp1_sMasterChannel.AntDeviceIdHi = FOO;
-  UserApp1_sMasterChannel.AntDeviceIdLo = BAR;
+  UserApp1_sMasterChannel.AntDeviceIdHi = UserApp1_u8DeviceIdHi;
+  UserApp1_sMasterChannel.AntDeviceIdLo = UserApp1_u8DeviceIdLo;
   UserApp1_sMasterChannel.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sMasterChannel.AntTransmissionType = EIE_TRANS_TYPE;
   
@@ -176,8 +188,8 @@ void UserApp1Initialize(void)
   UserApp1_sSlaveChannel.AntChannelPeriodHi = ANT_CHANNEL_PERIOD_HI_DEFAULT;
   UserApp1_sSlaveChannel.AntChannelPeriodLo = ANT_CHANNEL_PERIOD_LO_DEFAULT;
   
-  UserApp1_sSlaveChannel.AntDeviceIdHi = FOO;
-  UserApp1_sSlaveChannel.AntDeviceIdLo = BAR;
+  UserApp1_sSlaveChannel.AntDeviceIdHi = UserApp1_u8DeviceIdHi;
+  UserApp1_sSlaveChannel.AntDeviceIdLo = UserApp1_u8DeviceIdLo;
   UserApp1_sSlaveChannel.AntDeviceType = EIE_DEVICE_TYPE;
   UserApp1_sSlaveChannel.AntTransmissionType = EIE_TRANS_TYPE;
   

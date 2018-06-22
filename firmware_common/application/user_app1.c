@@ -60,7 +60,7 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
-static u8 UserApp1_au8LcdStartLine1[] = "               Clear";
+static u8 UserApp1_au8LcdStartLine1[] = "RGB MIXER      Clear";
 static u8 UserApp1_au8LcdStartLine2[] = "R:00  G:00  B:00   v";
 static u8 UserApp1_au8PwmMessages[11][4] = {
   {'0', '0', ' ', '\0'},

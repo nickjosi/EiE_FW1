@@ -29,6 +29,10 @@ Type Definitions
 Constants / Definitions
 **********************************************************************************************************************/
 
+#define RED_PWM_ADDR        (u8)(LINE2_START_ADDR + 2)
+#define GREEN_PWM_ADDR      (u8)(LINE2_START_ADDR + 8)
+#define BLUE_PWM_ADDR       (u8)(LINE2_START_ADDR + 14)
+
 
 /**********************************************************************************************************************
 Function Declarations

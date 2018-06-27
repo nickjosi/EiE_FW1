@@ -718,7 +718,7 @@ static void UserApp1SM_CompareSequence(void)
     LedOff(LCD_BLUE);
     
     UserApp1_u8AttemptCounter++;
-    UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 3;
+    UserApp1_u8LockTimer = UserApp1_u8AttemptCounter * 10;
     
     u8 u8TimerTensTEMP = (UserApp1_u8LockTimer / 10) + 48;
     u8 u8TimerOnesTEMP = (UserApp1_u8LockTimer % 10) + 48;

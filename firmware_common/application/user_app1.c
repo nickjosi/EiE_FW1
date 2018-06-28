@@ -77,7 +77,7 @@ static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout co
 
 /* Enter team number below. 
 Choices: TEAM_1, TEAM_2, TEAM_3, TEAM_4 */
-static u8 UserApp1_u8TeamNumber = TEAM_4;
+static u8 UserApp1_u8TeamNumber = TEAM_3;
 
 /* Enter the 4-board sequence that corresponds to the team above.
 Choices: BOARD_1, BOARD_2, ..., BOARD_8 */

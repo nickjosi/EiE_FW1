@@ -60,6 +60,27 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+static u8 UserApp1_au8Key[11][6] = {
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'A', 'B', 'C', 'D', 'E', 'F'}
+}
+
+static u8 UserApp1_au8DeviceIdLoLibrary[4][8] = {
+  {0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67},
+  {0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77},
+  {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87},
+  {0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97}
+};
+
 static u8 UserApp1_au8CorrectSequence[6];            /* Key sequence array */
 static u8 UserApp1_u8CorrectSequenceIndex;           /* Tracks cursor within the key sequence array */
 static u8 UserApp1_au8Sequence[6];                   /* Entered sequence array */

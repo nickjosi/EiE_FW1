@@ -60,18 +60,22 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+static u8 UserApp1_au8MainMenu2_Config[] = "< Sequence1 >       ";
+
+
+static u8 UserApp1_u8SequenceNum = 0;
 static u8 UserApp1_au8Set1Keys[11][6] = {
-  {'F', 'B', 'D', 'A', 'E', 'C'},
-  {'A', 'C', 'D', 'B', ' ', ' '},
-  {'C', 'E', 'A', 'D', 'F', 'B'},
+  {'A', 'A', ' ', ' ', ' ', ' '},
+  {'B', 'B', ' ', ' ', ' ', ' '},
+  {'C', 'C', ' ', ' ', ' ', ' '},
+  {'D', 'D', ' ', ' ', ' ', ' '},
+  {'E', 'E', ' ', ' ', ' ', ' '},
+  {'F', 'F', ' ', ' ', ' ', ' '},
   {'A', 'B', 'C', 'D', 'E', 'F'},
   {'A', 'B', 'C', 'D', 'E', 'F'},
   {'A', 'B', 'C', 'D', 'E', 'F'},
   {'A', 'B', 'C', 'D', 'E', 'F'},
   {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'}
 };
 
 static u8 UserApp1_au8CorrectSequence[6];            /* Key sequence array */
@@ -232,7 +236,7 @@ Promises:
 */
 void UpdateLCD(void)
 {
-  static u8 au8MainMenu1_Config[] = "Set sequence:       ";
+  static u8 au8MainMenu1_Config[] = "Select Sequence #:  ";
   static u8 au8MainMenu1[] =        "UNSCRAMBLE ||       ";
   static u8 au8MainMenu2[] =        ">A,B  >C,D  >E,F  Op";
   static u8 au8AB[] =               ">A    >B        Back";
@@ -245,52 +249,53 @@ void UpdateLCD(void)
   if(!UserApp1_bConfig)
   {
     LCDMessage(LINE1_START_ADDR, au8MainMenu1_Config);
-    LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8CorrectSequence);
+    LCDMessage(LINE2_START_ADDR, UserApp1_au8MainMenu2_Config);
   }
-  /* Line 1 of standard main menu */
+ 
   else
-  {
+  { 
+    /* Line 1 of standard main menu */
     LCDMessage(LINE1_START_ADDR, au8MainMenu1);
     LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
-  }
-  
-  /* Line 2 for Enter Sequence Mode menus */
-  if(!UserApp1_bFull)
-  {
-    if(!UserApp1_bSequenceTBE)
+    
+    /* Line 2 for Enter Sequence Mode menus */
+    if(!UserApp1_bFull)
     {
-      LCDMessage(LINE2_START_ADDR, au8MainMenu2);
+      if(!UserApp1_bSequenceTBE)
+      {
+        LCDMessage(LINE2_START_ADDR, au8MainMenu2);
+      }
+      else
+      {
+        if(UserApp1_bAB)
+        {
+          LCDMessage(LINE2_START_ADDR, au8AB);
+        }
+        if(UserApp1_bCD)
+        {
+          LCDMessage(LINE2_START_ADDR, au8CD);
+        }
+        if(UserApp1_bEF)
+        {
+          LCDMessage(LINE2_START_ADDR, au8EF);
+        }
+        if(UserApp1_bOp)
+        {
+          LCDMessage(LINE2_START_ADDR, au8Op);
+        }
+      }
     }
-    else
+    
+    /* Line 2 for Full Sequence Entered Mode menu */
+    if(UserApp1_bFull)
     {
-      if(UserApp1_bAB)
-      {
-        LCDMessage(LINE2_START_ADDR, au8AB);
-      }
-      if(UserApp1_bCD)
-      {
-        LCDMessage(LINE2_START_ADDR, au8CD);
-      }
-      if(UserApp1_bEF)
-      {
-        LCDMessage(LINE2_START_ADDR, au8EF);
-      }
-      if(UserApp1_bOp)
-      {
-        LCDMessage(LINE2_START_ADDR, au8Op);
-      }
+      LCDMessage(LINE2_START_ADDR, au8Full);
     }
+    
+    /* (draw cursor) */
+    LCDCommand(LCD_ADDRESS_CMD | UserApp1_u8CursorPosition);
+    
   }
-  
-  /* Line 2 for Full Sequence Entered Mode menu */
-  if(UserApp1_bFull)
-  {
-    LCDMessage(LINE2_START_ADDR, au8Full);
-  }
-  
-  /* (draw cursor) */
-  LCDCommand(LCD_ADDRESS_CMD | UserApp1_u8CursorPosition);
-  
 } /* end UpdateLCD() */
 
 
@@ -608,9 +613,167 @@ State Machine Function Definitions
 /* Wait for good initialization / return from Correct state */
 static void UserApp1SM_Config(void)
 {
-  /* Interfaces game facilitator to set UserApp1_au8CorrectSequence */
-  EnterSequence(UserApp1_au8CorrectSequence, &UserApp1_u8CorrectSequenceIndex);
+  /* Button 0 goes backward through list */
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    
+    if(UserApp1_u8SequenceNum == 0)
+    {
+      UserApp1_u8SequenceNum = 10;
+      UserApp1_au8MainMenu2_Config[10] = 49;  // Display 11 on the LCD
+      UserApp1_au8MainMenu2_Config[11] = 49;
+    }
+    else if(UserApp1_u8SequenceNum == 1)
+    {
+      UserApp1_u8SequenceNum = 0;
+      UserApp1_au8MainMenu2_Config[10] = 49;  // Display 1 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 2)
+    {
+      UserApp1_u8SequenceNum = 1;
+      UserApp1_au8MainMenu2_Config[10] = 50;  // Display 2 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 3)
+    {
+      UserApp1_u8SequenceNum = 2;
+      UserApp1_au8MainMenu2_Config[10] = 51;  // Display 3 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 4)
+    {
+      UserApp1_u8SequenceNum = 3;
+      UserApp1_au8MainMenu2_Config[10] = 52;  // Display 4 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 5)
+    {
+      UserApp1_u8SequenceNum = 4;
+      UserApp1_au8MainMenu2_Config[10] = 53;  // Display 5 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 6)
+    {
+      UserApp1_u8SequenceNum = 5;
+      UserApp1_au8MainMenu2_Config[10] = 54;  // Display 6 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 7)
+    {
+      UserApp1_u8SequenceNum = 6;
+      UserApp1_au8MainMenu2_Config[10] = 55;  // Display 7 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 8)
+    {
+      UserApp1_u8SequenceNum = 7;
+      UserApp1_au8MainMenu2_Config[10] = 56;  // Display 8 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 9)
+    {
+      UserApp1_u8SequenceNum = 8;
+      UserApp1_au8MainMenu2_Config[10] = 57;  // Display 9 on the LCD
+      UserApp1_au8MainMenu2_Config[11] = ' ';
+    }
+    else if(UserApp1_u8SequenceNum == 10)
+    {
+      UserApp1_u8SequenceNum = 9;
+      UserApp1_au8MainMenu2_Config[10] = 49;  // Display 10 on the LCD
+      UserApp1_au8MainMenu2_Config[11] = 48;
+    }
+    
+    UpdateLCD();
+  }
   
+  /* Button 1 to select */
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    
+    for(u8 i = 0; i < 6; i++)
+    {
+      UserApp1_au8CorrectSequence[i] = 
+        UserApp1_au8Set1Keys[UserApp1_u8SequenceNum][i];
+    }
+   
+    UserApp1_bConfig = TRUE;
+    UserApp1_bFinalBoard = FALSE;
+    UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
+    
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    LedOff(LCD_BLUE);
+    
+    UpdateLCD();
+    UserApp1_StateMachine = UserApp1SM_Unactivated;
+  }
+  
+  /* Button 2 goes forward through the list */
+  else if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    
+    if(UserApp1_u8SequenceNum == 0)
+    {
+      UserApp1_u8SequenceNum = 1;
+      UserApp1_au8MainMenu2_Config[10] = 50;  // Display 2 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 1)
+    {
+      UserApp1_u8SequenceNum = 2;
+      UserApp1_au8MainMenu2_Config[10] = 51;  // Display 3 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 2)
+    {
+      UserApp1_u8SequenceNum = 3;
+      UserApp1_au8MainMenu2_Config[10] = 52;  // Display 4 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 3)
+    {
+      UserApp1_u8SequenceNum = 4;
+      UserApp1_au8MainMenu2_Config[10] = 53;  // Display 5 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 4)
+    {
+      UserApp1_u8SequenceNum = 5;
+      UserApp1_au8MainMenu2_Config[10] = 54;  // Display 6 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 5)
+    {
+      UserApp1_u8SequenceNum = 6;
+      UserApp1_au8MainMenu2_Config[10] = 55;  // Display 7 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 6)
+    {
+      UserApp1_u8SequenceNum = 7;
+      UserApp1_au8MainMenu2_Config[10] = 56;  // Display 8 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 7)
+    {
+      UserApp1_u8SequenceNum = 8;
+      UserApp1_au8MainMenu2_Config[10] = 57;  // Display 9 on the LCD
+    }
+    else if(UserApp1_u8SequenceNum == 8)
+    {
+      UserApp1_u8SequenceNum = 9;
+      UserApp1_au8MainMenu2_Config[10] = 49;  // Display 10 on the LCD
+      UserApp1_au8MainMenu2_Config[11] = 48;
+    }
+    else if(UserApp1_u8SequenceNum == 9)
+    {
+      UserApp1_u8SequenceNum = 10;
+      UserApp1_au8MainMenu2_Config[10] = 49;  // Display 11 on the LCD
+      UserApp1_au8MainMenu2_Config[11] = 49;
+    }
+    else if(UserApp1_u8SequenceNum == 10)
+    {
+      UserApp1_u8SequenceNum = 0;
+      UserApp1_au8MainMenu2_Config[10] = 49;  // Display 1 on the LCD
+      UserApp1_au8MainMenu2_Config[11] = ' ';
+    }
+    
+    UpdateLCD();
+  }
+  
+  else if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+  }
 } /* end UserApp1SM_Config() */
  
 

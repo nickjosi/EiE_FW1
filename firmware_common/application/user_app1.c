@@ -60,26 +60,65 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
-static u8 UserApp1_au8MainMenu2_Config[] = "< Sequence1 >       ";
+
+/* --- Define set number here ------------------------------------------------*/
+#define SET1
+/* ---------------------------------------------------------------------------*/
+
 
 
 static u8 UserApp1_u8SequenceNum = 0;
 static u8 UserApp1_au8Set1Keys[11][6] = {
-  {'A', 'A', ' ', ' ', ' ', ' '},
-  {'B', 'B', ' ', ' ', ' ', ' '},
-  {'C', 'C', ' ', ' ', ' ', ' '},
-  {'D', 'D', ' ', ' ', ' ', ' '},
-  {'E', 'E', ' ', ' ', ' ', ' '},
-  {'F', 'F', ' ', ' ', ' ', ' '},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
-  {'A', 'B', 'C', 'D', 'E', 'F'},
+  {'D', 'B', 'C', 'A', ' ', ' '},
+  {'C', 'B', 'A', ' ', ' ', ' '},
+  {'B', 'E', 'C', 'A', 'D', ' '},
+  {'C', 'A', 'D', 'B', ' ', ' '},
+  {'C', 'B', 'D', 'A', 'E', ' '},
+  {'A', 'C', 'D', 'B', ' ', ' '},
+  {'C', 'A', 'D', 'B', 'E', ' '},
+  {'D', 'A', 'F', 'C', 'B', 'E'},
+  {'C', 'A', 'D', 'E', 'B', ' '},
+  {'D', 'E', 'C', 'A', 'F', 'B'},
+  {'C', 'E', 'A', 'D', 'F', 'B'},
+};
+static u8 UserApp1_au8Set2Keys[11][6] = {
+  {'C', 'A', 'B', ' ', ' ', ' '},
+  {'A', 'C', 'B', ' ', ' ', ' '},
+  {'A', 'F', 'B', 'E', 'C', 'D'},
+  {'D', 'A', 'B', 'C', ' ', ' '},
+  {'E', 'B', 'D', 'A', 'C', 'F'},
+  {'C', 'A', 'D', 'B', ' ', ' '},
+  {'E', 'F', 'B', 'D', 'C', 'A'},
+  {'B', 'C', 'E', 'A', 'F', 'D'},
+  {'D', 'F', 'C', 'A', 'B', 'E'},
+  {'A', 'D', 'F', 'C', 'B', 'E'},
+  {'B', 'A', 'E', 'C', 'D', 'F'},
+};
+static u8 UserApp1_au8Set3Keys[11][6] = {
+  {'B', 'C', 'A', ' ', ' ', ' '},
+  {'C', 'B', 'D', 'A', ' ', ' '},
+  {'D', 'B', 'A', 'F', 'C', 'E'},
+  {'B', 'A', 'D', 'C', ' ', ' '},
+  {'D', 'A', 'C', 'B', ' ', ' '},
+  {'B', 'C', 'A', ' ', ' ', ' '},
+  {'C', 'A', 'E', 'F', 'B', 'D'},
+  {' ', ' ', ' ', ' ', ' ', ' '},
+  {' ', ' ', ' ', ' ', ' ', ' '},
+  {' ', ' ', ' ', ' ', ' ', ' '},
+  {' ', ' ', ' ', ' ', ' ', ' '},
 };
 
+static u8 UserApp1_au8MainMenu1_Config[] = "Select Sequence #:  ";
+static u8 UserApp1_au8MainMenu2_Config[] = "< Sequence1 >  Set  ";
+static u8 UserApp1_au8MainMenu1[] =        "Seq.  Set  ||       ";
+static u8 UserApp1_au8MainMenu2[] =        ">A,B  >C,D  >E,F  Op";
+static u8 UserApp1_au8AB[] =               ">A    >B        Back";
+static u8 UserApp1_au8CD[] =               ">C    >D        Back";
+static u8 UserApp1_au8EF[] =               ">E    >F        Back";
+static u8 UserApp1_au8Op[] =               "Entr  Del  Clr  Back";
+static u8 UserApp1_au8Full[] =             "Entr  Del  Clr      ";
+
 static u8 UserApp1_au8CorrectSequence[6];            /* Key sequence array */
-static u8 UserApp1_u8CorrectSequenceIndex;           /* Tracks cursor within the key sequence array */
 static u8 UserApp1_au8Sequence[6];                   /* Entered sequence array */
 static u8 UserApp1_u8SequenceIndex;                  /* Tracks cursor within the entered sequence array */
 static u8 UserApp1_u8CursorPosition;                 /* Cursor position on LCD */
@@ -125,9 +164,29 @@ Promises:
   - NONE
 */
 void UserApp1Initialize(void)
-{ 
+{
+#ifdef SET1
+#define SET_KEYS    UserApp1_au8Set1Keys
+  UserApp1_au8MainMenu2_Config[19] = 49;
+  UserApp1_au8MainMenu1[9] =         49;
+  UserApp1_bFinalBoard =             FALSE;
+#endif
+  
+#ifdef SET2
+#define SET_KEYS    UserApp1_au8Set2Keys
+  UserApp1_au8MainMenu2_Config[19] = 50;
+  UserApp1_au8MainMenu1[9] =         50;
+  UserApp1_bFinalBoard =             FALSE;
+#endif
+  
+#ifdef SET3
+#define SET_KEYS    UserApp1_au8Set3Keys
+  UserApp1_au8MainMenu2_Config[19] = 51;
+  UserApp1_au8MainMenu1[9] =         51;
+  UserApp1_bFinalBoard =             TRUE;
+#endif
+  
   UserApp1_bConfig =        FALSE;
-  UserApp1_bFinalBoard =    FALSE;
   UserApp1_bSequenceTBE =   FALSE;
   UserApp1_bAB =            FALSE;
   UserApp1_bCD =            FALSE;
@@ -139,8 +198,7 @@ void UserApp1Initialize(void)
     UserApp1_au8CorrectSequence[i] = ' ';
     UserApp1_au8Sequence[i] = ' ';
   }
-  
-  UserApp1_u8CorrectSequenceIndex = 0;
+
   UserApp1_u8SequenceIndex = 0;
   UserApp1_u8AttemptCounter = 0;
   
@@ -235,27 +293,19 @@ Promises:
   - The correct messages/menus will be displayed on the LCD
 */
 void UpdateLCD(void)
-{
-  static u8 au8MainMenu1_Config[] = "Select Sequence #:  ";
-  static u8 au8MainMenu1[] =        "UNSCRAMBLE ||       ";
-  static u8 au8MainMenu2[] =        ">A,B  >C,D  >E,F  Op";
-  static u8 au8AB[] =               ">A    >B        Back";
-  static u8 au8CD[] =               ">C    >D        Back";
-  static u8 au8EF[] =               ">E    >F        Back";
-  static u8 au8Op[] =               "Entr  Del  Clr  Back";
-  static u8 au8Full[] =             "Entr  Del  Clr      ";
+{  
   
   /* Line 1 of config main menu */
   if(!UserApp1_bConfig)
   {
-    LCDMessage(LINE1_START_ADDR, au8MainMenu1_Config);
+    LCDMessage(LINE1_START_ADDR, UserApp1_au8MainMenu1_Config);
     LCDMessage(LINE2_START_ADDR, UserApp1_au8MainMenu2_Config);
   }
  
   else
   { 
     /* Line 1 of standard main menu */
-    LCDMessage(LINE1_START_ADDR, au8MainMenu1);
+    LCDMessage(LINE1_START_ADDR, UserApp1_au8MainMenu1);
     LCDMessage(LINE1_START_ADDR + 14, UserApp1_au8Sequence);
     
     /* Line 2 for Enter Sequence Mode menus */
@@ -263,25 +313,25 @@ void UpdateLCD(void)
     {
       if(!UserApp1_bSequenceTBE)
       {
-        LCDMessage(LINE2_START_ADDR, au8MainMenu2);
+        LCDMessage(LINE2_START_ADDR, UserApp1_au8MainMenu2);
       }
       else
       {
         if(UserApp1_bAB)
         {
-          LCDMessage(LINE2_START_ADDR, au8AB);
+          LCDMessage(LINE2_START_ADDR, UserApp1_au8AB);
         }
         if(UserApp1_bCD)
         {
-          LCDMessage(LINE2_START_ADDR, au8CD);
+          LCDMessage(LINE2_START_ADDR, UserApp1_au8CD);
         }
         if(UserApp1_bEF)
         {
-          LCDMessage(LINE2_START_ADDR, au8EF);
+          LCDMessage(LINE2_START_ADDR, UserApp1_au8EF);
         }
         if(UserApp1_bOp)
         {
-          LCDMessage(LINE2_START_ADDR, au8Op);
+          LCDMessage(LINE2_START_ADDR, UserApp1_au8Op);
         }
       }
     }
@@ -289,7 +339,7 @@ void UpdateLCD(void)
     /* Line 2 for Full Sequence Entered Mode menu */
     if(UserApp1_bFull)
     {
-      LCDMessage(LINE2_START_ADDR, au8Full);
+      LCDMessage(LINE2_START_ADDR, UserApp1_au8Full);
     }
     
     /* (draw cursor) */
@@ -375,7 +425,7 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
           /* If in Config state, go to Config2 */
           if(!UserApp1_bConfig)
           {
-            UserApp1_StateMachine = UserApp1SM_Config2;
+            //UserApp1_StateMachine = UserApp1SM_Config2;
             UserApp1_bConfig = TRUE;
             UserApp1_bOp = FALSE;
             UserApp1_bSequenceTBE = FALSE;
@@ -544,7 +594,7 @@ void EnterSequence(u8* au8Sequence, u8* u8Index)
       
       if(!UserApp1_bConfig)
       {
-        UserApp1_StateMachine = UserApp1SM_Config2;
+        //UserApp1_StateMachine = UserApp1SM_Config2;
         UserApp1_bConfig = TRUE;
         UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
         
@@ -685,14 +735,25 @@ static void UserApp1SM_Config(void)
   {
     ButtonAcknowledge(BUTTON1);
     
+    /* Fill CorrectSequence with the sequence key from the 2D array */
     for(u8 i = 0; i < 6; i++)
     {
-      UserApp1_au8CorrectSequence[i] = 
-        UserApp1_au8Set1Keys[UserApp1_u8SequenceNum][i];
+      UserApp1_au8CorrectSequence[i] = SET_KEYS[UserApp1_u8SequenceNum][i];
     }
+    
+    /* Update MainMenu LCD message with correct sequence number */
+    if(UserApp1_u8SequenceNum < 9)
+    {
+      UserApp1_au8MainMenu1[4] = UserApp1_u8SequenceNum + 49;
+      UserApp1_au8MainMenu1[5] = ' ';
+    }
+    else
+    {
+      UserApp1_au8MainMenu1[4] = 49;
+      UserApp1_au8MainMenu1[5] = ((UserApp1_u8SequenceNum+1)%10) + 48;
+    } 
    
     UserApp1_bConfig = TRUE;
-    UserApp1_bFinalBoard = FALSE;
     UserApp1_u8CursorPosition = LINE1_START_ADDR + 14;
     
     LedOn(LCD_RED);
@@ -779,45 +840,7 @@ static void UserApp1SM_Config(void)
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for configuration 1 */
-static void UserApp1SM_Config2(void)
-{
-  if(WasButtonPressed(BUTTON0))
-  {
-    ButtonAcknowledge(BUTTON0);
-    
-    LedOn(LCD_RED);
-    LedOn(LCD_GREEN);
-    LedOff(LCD_BLUE);
-    
-    UserApp1_bFinalBoard = TRUE;
-    UserApp1_StateMachine = UserApp1SM_Unactivated;
-    UpdateLCD();
-  }
-  if(WasButtonPressed(BUTTON1))
-  {
-    ButtonAcknowledge(BUTTON1);
-    
-    LedOn(LCD_RED);
-    LedOn(LCD_GREEN);
-    LedOff(LCD_BLUE);
-    
-    UserApp1_StateMachine = UserApp1SM_Unactivated;
-    UpdateLCD();
-  }
-  if(WasButtonPressed(BUTTON2) || WasButtonPressed(BUTTON3))
-  {
-    ButtonAcknowledge(BUTTON2);
-    ButtonAcknowledge(BUTTON3);
-  }
-  
-  
-} /* end UserApp1SM_Config2() */
-
-
-
-/*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for configuration 2 */
+/* Wait for configuration */
 static void UserApp1SM_Unactivated(void)
 {
   
